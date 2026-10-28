@@ -5,6 +5,7 @@ import sys
 from datetime import date
 from pathlib import Path
 import requests
+import slavic_calendar    # Круголет Числобога
 
 BASE      = Path(__file__).resolve().parent
 _cfg_name = next((a for a in sys.argv[1:]
@@ -132,16 +133,18 @@ def main(dry_run=False, test=False):
         if key and key in state["posted"]:
             print(f"уже постили: {key}")
             continue
-        if dry_run:
-            mark = f"  [фото: {image_path.name}]" if image_path else ""
-            print(f"[DRY] «{text}»{mark}")
-            continue
-
         message = text
+        if today_d:
+            message += f"\n{slavic_calendar.header(today_d)}"
         if today_d and CONFIG.get("add_krug"):
             message += f"\n\nЛето {summer_from_smzh(today_d)} от С.М.З.Х."
         if info:
             message += "\n" + "\n".join(info)
+
+        if dry_run:
+            mark = f"  [фото: {image_path.name}]" if image_path else ""
+            print(f"[DRY]\n{message}{mark}\n{'-' * 40}")
+            continue
 
         try:
             try:
