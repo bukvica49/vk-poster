@@ -31,3 +31,4 @@ venv*/
 slavic_calendar.py.bak.*
 make_preview.py.bak.*
 *.prebak.*
+*.bak
