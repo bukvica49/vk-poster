@@ -24,17 +24,19 @@ def load_holidays():
         m, d = (int(x) for x in h["date"].split("-"))
         img = h.get("image")
         image_path = (BASE / img.lstrip('/')) if img else None
-        _info = h.get("info")
-        if not _info:
-            try:
-                from slavic_auto import build_info
-                _today = date.today()
-                _cand = date(_today.year, m, d)
-                if _cand < _today:
-                    _cand = date(_today.year + 1, m, d)
-                _info = build_info(_cand)
-            except Exception:
-                _info = []
+        _manual = h.get("info") or []
+        if isinstance(_manual, str):
+            _manual = [_manual]
+        try:
+            from slavic_auto import build_info
+            _today = date.today()
+            _cand = date(_today.year, m, d)
+            if _cand < _today:
+                _cand = date(_today.year + 1, m, d)
+            _auto = build_info(_cand)
+        except Exception:
+            _auto = []
+        _info = _auto + _manual
         out.append((m, d, h["text"], image_path, _info))
     return out
 
