@@ -1,5 +1,5 @@
 #!/bin/bash
-# VPS cron wrapper: pull через deploy-ключ + poster.py (main → test)
+# VPS cron wrapper: pull через deploy-ключ + poster.py (main)
 set -u
 cd "$(dirname "$0")" || exit 1
 
@@ -13,8 +13,8 @@ MAIN_RC="skip"; TEST_RC="skip"
 if [ "${DRY:-0}" != "1" ]; then
   /usr/bin/python3 poster.py config.main.json >> log-main.txt 2>&1
   MAIN_RC=$?
-  /usr/bin/python3 poster.py config.test.json >> log-test.txt 2>&1
-  TEST_RC=$?
+  # TEST убран — чтобы не было дубля в VK (шлёт в чужую группу 179225207)
+  TEST_RC="skip"
 fi
 
 # 3. Однострочный итог прогона
