@@ -47,7 +47,7 @@ def build():
         info = h.get('info') or build_info(occ)
         img_name = None
         if h.get('image'):
-            p = HERE / h['image']
+            p = HERE / h['image'].lstrip('/')
             if p.is_file(): img_name = p.name
         rows.append({'occ': occ, 'delta': (occ - today).days,
                      'text': h['text'], 'info': info, 'img': img_name})
