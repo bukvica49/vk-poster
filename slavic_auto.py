@@ -50,8 +50,21 @@ def day_in_summer(d: date) -> int:
 def element_number(d: date) -> int:
     return ((skz(d) - 1) // 2) % 9 + 1
 
+# Границы Чертогов Сварожьего Круга (1 Рамхатъ = день 1)
+# Сумма: 22+22+21+22+22+24+25+25+23+22+23+22+23+22+24+23 = 365
+CHERTOG_STARTS = [1, 23, 45, 66, 88, 110, 134, 159, 184,
+                  207, 229, 252, 274, 297, 319, 343]
+
 def chertog_number(d: date) -> int:
-    return skl(d)
+    """Номер Чертога (1..16) по Сварожьему Кругу (день в лѣте)."""
+    day = day_in_summer(d)
+    n = 16
+    for i, s in enumerate(CHERTOG_STARTS):
+        if day >= s:
+            n = i + 1
+        else:
+            break
+    return n
 
 def krugolyet_number(d: date) -> int:
     return skl(d)
