@@ -3,6 +3,7 @@ import json, os, shutil, subprocess
 from datetime import date
 from pathlib import Path
 from slavic_auto import build_info
+import slavic_calendar
 
 HERE = Path(__file__).parent
 HOLIDAYS = HERE / 'holidays.json'
@@ -50,7 +51,8 @@ def build():
             p = HERE / h['image'].lstrip('/')
             if p.is_file(): img_name = p.name
         rows.append({'occ': occ, 'delta': (occ - today).days,
-                     'text': h['text'], 'info': info, 'img': img_name})
+                     'text': h['text'], 'info': info, 'img': img_name,
+                     'slavic': slavic_calendar.header(occ)})
     rows.sort(key=lambda r: r['occ'])
 
     cards = []
@@ -66,7 +68,7 @@ def build():
       <div class="head"><div><span class="when">{when}</span> <span class="in">{delta}</span></div>
       <a class="edit" href="{edit_url}" target="_blank" rel="noopener">✎ изменить</a></div>
       <div class="body"><div class="img">{img_html}</div>
-      <div class="meta"><h2>{r['text']}</h2><ul>{info_html}</ul></div></div>
+      <div class="meta"><h2>{r['text']}</h2><div class="slavic">{r['slavic']}</div><ul>{info_html}</ul></div></div>
     </div>''')
 
     html = f'''<!doctype html><html lang="ru"><head><meta charset="utf-8">
@@ -83,6 +85,7 @@ def build():
  .img img{{width:160px;height:160px;object-fit:cover;border-radius:8px}}
  .no-img{{width:160px;height:160px;background:#eee;border-radius:8px;display:flex;align-items:center;justify-content:center;color:#999;font-size:12px}}
  h2{{margin:0 0 8px;font-size:16px}} ul{{margin:0;padding-left:16px;font-size:13px;line-height:1.7}}
+ .slavic{{margin:6px 0 10px;font-size:13px;color:#4a5568;font-style:italic;padding:4px 10px;background:#edf2f7;border-radius:4px;display:inline-block}}
  @media(max-width:600px){{.body{{grid-template-columns:1fr}}.img img,.no-img{{width:100%;height:auto;max-height:280px}}}}
 </style></head><body><h1>📅 VK Poster</h1>
 <div class="toolbar"><span>{len(rows)} праздников · {today.strftime('%d.%m.%Y')}</span>

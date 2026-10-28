@@ -29,3 +29,4 @@ venv*/
 # ═══ ИСКЛЮЧЕНИЯ ═══
 !config.example.json
 slavic_calendar.py.bak.*
+make_preview.py.bak.*
