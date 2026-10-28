@@ -17,27 +17,91 @@ API        = "https://api.vk.com/method/"
 
 
 # ─── праздники из holidays.json ─────────────────────────────────
-def load_holidays():
+
+from datetime import timedelta
+
+
+def _load_holidays_dicts():
+    """Сырые dict'ы из holidays.json."""
     data = json.loads(HOLIDAYS.read_text(encoding="utf-8"))
+    return data["holidays"]
+
+
+def _slavic_parse(gr_date):
+    """'ВТОРНИКЪ · 40 Рамхатъ · Лѣто 7535' -> (40, 'Рамхатъ', 7535)"""
+    try:
+        h = slavic_calendar.header(gr_date)
+    except Exception:
+        return None
+    parts = h.split(" · ")
+    if len(parts) < 3:
+        return None
+    try:
+        dm = parts[1].split(" ")
+        leto = int(parts[2].replace("Лѣто ", "").replace("Лето ", "").strip())
+        return (int(dm[0]), dm[1] if len(dm) > 1 else "", leto)
+    except (ValueError, IndexError):
+        return None
+
+
+def slavic_to_gregorian(year, slavic_month, slavic_day):
+    """Gregorian-дата в указанном году, где Slavic = (месяц, день)."""
+    cur, end = date(year, 1, 1), date(year, 12, 31)
+    while cur <= end:
+        p = _slavic_parse(cur)
+        if p and p[0] == slavic_day and p[1] == slavic_month:
+            return cur
+        cur += timedelta(days=1)
+    return None
+
+
+def _holiday_date(h, year):
+    """Дата праздника в году: slavic -> reverse, иначе date."""
+    sl = h.get("slavic")
+    if sl and sl.get("month") and sl.get("day"):
+        d = slavic_to_gregorian(year, sl["month"], sl["day"])
+        if d is not None:
+            return d
+    try:
+        mm, dd = h["date"].split("-")
+        return date(year, int(mm), int(dd))
+    except (KeyError, ValueError, AttributeError):
+        return None
+
+
+def _build_info_safe(d):
+    try:
+        from slavic_auto import build_info
+        return build_info(d)
+    except Exception:
+        return []
+
+
+def _resolve_image(h):
+    img = h.get("image")
+    return (BASE / img.lstrip("/")) if img else None
+
+
+def _resolve_manual_info(h):
+    manual = h.get("info") or []
+    if isinstance(manual, str):
+        manual = [manual]
+    return [s.strip() for s in manual]
+
+
+def load_holidays():
+    """Backward-compat: (m, d, text, img, info) для текущего/следующего года."""
+    today = date.today()
     out = []
-    for h in data["holidays"]:
-        m, d = (int(x) for x in h["date"].split("-"))
-        img = h.get("image")
-        image_path = (BASE / img.lstrip('/')) if img else None
-        _manual = h.get("info") or []
-        if isinstance(_manual, str):
-            _manual = [_manual]
-        try:
-            from slavic_auto import build_info
-            _today = date.today()
-            _cand = date(_today.year, m, d)
-            if _cand < _today:
-                _cand = date(_today.year + 1, m, d)
-            _auto = build_info(_cand)
-        except Exception:
-            _auto = []
-        _info = _auto + _manual
-        out.append((m, d, h["text"], image_path, _info))
+    for h in _load_holidays_dicts():
+        d_this = _holiday_date(h, today.year)
+        if d_this is None or d_this < today:
+            d_this = _holiday_date(h, today.year + 1)
+        if d_this is None:
+            continue
+        out.append((d_this.month, d_this.day, h["text"],
+                    _resolve_image(h),
+                    _build_info_safe(d_this) + _resolve_manual_info(h)))
     return out
 
 
@@ -48,8 +112,16 @@ def summer_from_smzh(d: date) -> int:
 
 
 def holidays_for_year(year: int):
-    return sorted((date(year, m, d), text, img, info)
-                  for m, d, text, img, info in load_holidays())
+    """Все праздники указанного года, отсортированные по дате."""
+    rows = []
+    for h in _load_holidays_dicts():
+        d = _holiday_date(h, year)
+        if d is None or d.year != year:
+            continue
+        rows.append((d, h["text"],
+                     _resolve_image(h),
+                     _build_info_safe(d) + _resolve_manual_info(h)))
+    return sorted(rows)
 
 
 def holidays_today(today=None):

@@ -15,10 +15,23 @@ content:
         list: true
         fields:
           - name: date
-            label: Дата (MM-DD)
+            label: Дата (MM-DD) — fallback
             type: string
             required: true
             pattern: '\d{2}-\d{2}'
+            description: "Грегорианская дата. Если ниже задан slavic — используется как fallback и для превью."
+          - name: slavic
+            label: Slavic-дата (опционально, авто-пересчёт)
+            type: object
+            required: false
+            description: "Если задан — дата автоматически пересчитывается Slavic→Gregorian каждый год. Пример: month=Рамхатъ, day=40."
+            fields:
+              - name: month
+                label: Месяц (напр. Рамхатъ)
+                type: string
+              - name: day
+                label: День (1–41)
+                type: number
           - name: text
             label: Текст поста
             type: string

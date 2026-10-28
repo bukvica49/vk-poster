@@ -70,6 +70,10 @@
     },
     {
       "date": "10-29",
+      "slavic": {
+        "month": "Рамхатъ",
+        "day": 40
+      },
       "text": "Дидовъ День",
       "image": "/images/did.jpg",
       "info": [
