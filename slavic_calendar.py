@@ -12,7 +12,18 @@ SLAVIC_MONTHS = [
     "Рамхатъ", "Айлѣтъ", "Бейлѣтъ", "Гэйлѣтъ", "Дайлѣтъ",
     "Элѣтъ", "Вэйлѣтъ", "Хэйлѣтъ", "Тайлѣтъ",
 ]
-MONTH_LENS = [41, 40, 41, 40, 41, 40, 41, 40, 41]  # Σ = 365
+MONTH_LENS_SIMPLE = [41, 40, 41, 40, 41, 40, 41, 40, 41]  # Σ = 365
+MONTH_LENS_SACRED = [41, 41, 41, 41, 41, 41, 41, 41, 41]  # Σ = 369
+
+
+def is_sacred(leto: int) -> bool:
+    """16-е лѣто в 16-летнем круге — святое (369 дней)."""
+    return leto % 16 == 0
+
+
+def month_lens(leto: int):
+    """Массив длин 9 месяцев для указанного лѣта."""
+    return MONTH_LENS_SACRED if is_sacred(leto) else MONTH_LENS_SIMPLE
 
 # ───── ЯКОРЬ ─────
 ANCHOR_DATE  = date(2026, 9, 20)   # 1 Рамхатъ, начало лѣта 7535 (по info)
@@ -31,8 +42,8 @@ def _shift(leto, mi, d, wi, days):
             if mi < 0:
                 mi = 8
                 leto -= 1
-            d = MONTH_LENS[mi]
-        elif d > MONTH_LENS[mi]:
+            d = month_lens(leto)[mi]
+        elif d > month_lens(leto)[mi]:
             d = 1
             mi += 1
             if mi > 8:
