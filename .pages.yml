@@ -1,0 +1,32 @@
+media:
+  input: images
+  output: /images
+
+content:
+  - name: holidays
+    label: Праздники
+    type: file
+    path: holidays.json
+    format: json
+    fields:
+      - name: holidays
+        label: Список праздников
+        type: object
+        list: true
+        fields:
+          - name: date
+            label: Дата (MM-DD)
+            type: string
+            required: true
+            pattern: '\d{2}-\d{2}'
+          - name: text
+            label: Текст поста
+            type: string
+            required: true
+          - name: image
+            label: Фото
+            type: image
+          - name: info
+            label: Ручной инфо-блок (пусто = авто)
+            type: string
+            list: true

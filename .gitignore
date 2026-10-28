@@ -1,0 +1,27 @@
+# ═══ СЕКРЕТЫ — НИКОГДА В РЕПО ═══
+config*.json
+.env
+.env.*
+token*
+
+# ═══ БЭКАПЫ ═══
+*.bak
+*.bak-*
+*.before-*
+crontab.bak-*
+
+# ═══ ЛОГИ ═══
+*.log
+log-*.txt
+pull.log
+poster.log
+
+# ═══ СГЕНЕРИРОВАННОЕ ═══
+_site/
+__pycache__/
+*.pyc
+venv/
+venv*/
+
+# ═══ OS ═══
+.DS_Store
