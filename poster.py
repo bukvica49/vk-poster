@@ -22,7 +22,7 @@ def load_holidays():
     for h in data["holidays"]:
         m, d = (int(x) for x in h["date"].split("-"))
         img = h.get("image")
-        image_path = (BASE / img) if img else None
+        image_path = (BASE / img.lstrip('/')) if img else None
         _info = h.get("info")
         if not _info:
             try:
