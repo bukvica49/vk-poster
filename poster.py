@@ -222,7 +222,8 @@ def main(dry_run=False, test=False):
 
         try:
             try:
-                attach = upload_photo(CONFIG["token"], CONFIG["group_id"], image_path) if image_path else None
+                upload_token = CONFIG.get("user_token") or CONFIG["token"]
+                attach = upload_photo(upload_token, CONFIG["group_id"], image_path) if image_path else None
             except Exception as e:
                 print(f"WARN фото не загружено, постим текстом: {e}", file=sys.stderr)
                 attach = None
