@@ -4,6 +4,7 @@ from datetime import date, timedelta
 from pathlib import Path
 from slavic_auto import build_info
 import slavic_calendar
+from md_render import md_to_html
 
 HERE = Path(__file__).parent
 HOLIDAYS = HERE / 'holidays.json'
@@ -62,7 +63,7 @@ def build():
         key = f"{occ.isoformat()}|{h['text']}"
         rows.append({'occ': occ, 'fire_civil': fire_civil,
                      'delta': (fire_civil - today_civil).days,
-                     'text': h['text'], 'info': info, 'img': img_name,
+                     'text': h['text'], 'info': info, 'info_md': h.get('info_md'), 'img': img_name,
                      'slavic': slavic_calendar.header(occ),
                      'posted': key in posted})
     rows.sort(key=lambda r: r['occ'])
@@ -78,13 +79,16 @@ def build():
           '<span style="background:#e5e7eb;color:#666;padding:2px 8px;border-radius:4px;font-size:12px">⏳ ожидает</span>')
         img_html = (f'<img src="images/{r["img"]}" alt="">' if r['img']
                     else '<div class="no-img">нет фото</div>')
-        info_html = ''.join(f'<li>{ln}</li>' for ln in r['info'])
+        if r.get('info_md'):
+            info_html = f'<div class="info-md">{md_to_html(r["info_md"])}</div>'
+        else:
+            info_html = '<ul>' + ''.join(f'<li>{ln}</li>' for ln in r['info']) + '</ul>'
         cards.append(f'''
     <div class="card">
       <div class="head"><div>{badge} <span class="when">{when}</span> <span class="in">{delta}</span></div>
       <a class="edit" href="{edit_url}" target="_blank" rel="noopener">✎ изменить</a></div>
       <div class="body"><div class="img">{img_html}</div>
-      <div class="meta"><h2>{r['text']}</h2><div class="slavic">{r['slavic']}</div><ul>{info_html}</ul></div></div>
+      <div class="meta"><h2>{r['text']}</h2><div class="slavic">{r['slavic']}</div>{info_html}</div></div>
     </div>''')
 
     html = f'''<!doctype html><html lang="ru"><head><meta charset="utf-8">
@@ -104,6 +108,21 @@ def build():
  h2{{margin:0 0 8px;font-size:16px}} ul{{margin:0;padding-left:16px;font-size:13px;line-height:1.7}}
  .slavic{{margin:6px 0 10px;font-size:13px;color:#4a5568;font-style:italic;padding:4px 10px;background:#edf2f7;border-radius:4px;display:inline-block}}
  @media(max-width:600px){{.body{{grid-template-columns:1fr}}.img img,.no-img{{width:100%;height:auto;max-height:280px}}}}
+
+.info-md {{ font-size: 0.94em; line-height: 1.55; }}
+.info-md h1, .info-md h2, .info-md h3 {{ margin: 12px 0 6px; line-height: 1.25; color: #2d1a4d; }}
+.info-md h1 {{ font-size: 1.4em; }}
+.info-md h2 {{ font-size: 1.25em; }}
+.info-md h3 {{ font-size: 1.1em; }}
+.info-md p  {{ margin: 8px 0; }}
+.info-md ul, .info-md ol {{ margin: 8px 0 8px 22px; padding: 0; }}
+.info-md li {{ margin: 3px 0; }}
+.info-md blockquote {{ border-left: 3px solid #b59; margin: 10px 0; padding: 4px 12px; color: #555; font-style: italic; }}
+.info-md a {{ color: #6a3d9a; text-decoration: underline; }}
+.info-md a:hover {{ color: #b06; }}
+.info-md img {{ max-width: 100%; border-radius: 6px; margin: 8px 0; }}
+.info-md code {{ background: #f0eef3; padding: 1px 5px; border-radius: 3px; font-size: 0.92em; color: #a30; }}
+.info-md hr {{ border: none; border-top: 1px solid #ddd; margin: 12px 0; }}
 </style></head><body><h1>📅 VK Poster</h1>
 <div class="toolbar"><span>{len(rows)} праздников · {today_civil.strftime('%d.%m.%Y')}</span>
 <div><a href="https://app.pagescms.org/bukvica49/vk-poster/main/file/holidays" target="_blank" rel="noopener">📅 Праздники</a><a class="secondary" href="https://app.pagescms.org/bukvica49/vk-poster/main/file/chertogs" target="_blank" rel="noopener">🕯 Чертоги</a><a class="secondary" href="https://app.pagescms.org/bukvica49/vk-poster/main/file/krugolyety" target="_blank" rel="noopener">🌀 Круголеты</a></div></div>
