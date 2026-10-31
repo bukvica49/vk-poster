@@ -91,8 +91,6 @@ def build_info(d: date) -> list[str]:
         f"Лѣто в круге Лѣт: {sl}/16",
         f"Круголѣт: {k_name}",
         f"Чертог: {ch_name}",
-        f"Дата начала лѣта: {sd.strftime('%d.%m.%Y')}",
-        f"Номер дня в лѣте: {dds}/365",
         f"Стихия: {e_name}",
         f"Покровитель: {ch_patron}",
         f"Цвет: {e_color}",
