@@ -63,7 +63,7 @@ def build():
         key = f"{occ.isoformat()}|{h['text']}"
         rows.append({'occ': occ, 'fire_civil': fire_civil,
                      'delta': (fire_civil - today_civil).days,
-                     'text': h['text'], 'info': info, 'info_md': h.get('info_md'), 'img': img_name,
+                     'text': h['text'], 'info': info, 'info_md': h.get('info_md'), 'text_md': h.get('text_md'), 'img': img_name,
                      'slavic': slavic_calendar.header(occ),
                      'posted': key in posted})
     rows.sort(key=lambda r: r['occ'])
@@ -79,8 +79,9 @@ def build():
           '<span style="background:#e5e7eb;color:#666;padding:2px 8px;border-radius:4px;font-size:12px">⏳ ожидает</span>')
         img_html = (f'<img src="images/{r["img"]}" alt="">' if r['img']
                     else '<div class="no-img">нет фото</div>')
-        if r.get('info_md'):
-            info_html = f'<div class="info-md">{md_to_html(r["info_md"])}</div>'
+        desc_md = r.get('info_md') or r.get('text_md')
+        if desc_md:
+            info_html = f'<div class="info-md">{md_to_html(desc_md)}</div>'
         else:
             info_html = '<ul>' + ''.join(f'<li>{ln}</li>' for ln in r['info']) + '</ul>'
         cards.append(f'''

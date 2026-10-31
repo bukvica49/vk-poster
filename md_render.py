@@ -5,6 +5,7 @@ def md_to_html(text):
     if not text:
         return ""
     text = text.replace("\r\n", "\n").replace("\r", "\n")
+    text = re.sub(r"^\s*•\s+", "- ", text, flags=re.M)  # VK-bullet → md
     text = text.replace("&", "&amp;").replace("<", "&lt;")
     lines = text.split("\n")
     out, para, list_mode, i = [], [], None, 0
