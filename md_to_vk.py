@@ -38,7 +38,11 @@ def md_to_vk(text):
             while i < len(lines) and lines[i].lstrip().startswith(">"):
                 parts.append(lines[i].lstrip().lstrip(">").strip())
                 i += 1
-            out.append("«" + " ".join(p for p in parts if p) + "»")
+            joined = " ".join(p for p in parts if p)
+            if joined.startswith("«") and joined.endswith("»"):
+                out.append(joined)
+            else:
+                out.append("«" + joined + "»")
         else:
             out.append(lines[i])
             i += 1
