@@ -193,7 +193,7 @@ def main(dry_run=False, test=False):
         today_iso, today_d = None, None
         items = [("🧪 Тест: автопостер на славянском календаре настроен и постит.", None, [])]
     else:
-        today_d    = date.today()
+        today_d    = slavic_calendar.slavic_now()
         today_iso  = today_d.isoformat()
         items      = holidays_today(today_d)
 
