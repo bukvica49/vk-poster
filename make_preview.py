@@ -1,6 +1,6 @@
 """Генерирует _site/index.html — превью следующих постов."""
 import json, os, shutil, subprocess
-from datetime import date
+from datetime import date, timedelta
 from pathlib import Path
 from slavic_auto import build_info
 import slavic_calendar
@@ -39,7 +39,12 @@ def build():
             if p.is_file(): shutil.copy2(p, img_out / p.name)
 
     data = json.loads(HOLIDAYS.read_text(encoding='utf-8'))
-    today = date.today()
+    today_civil = date.today()
+    state_path = HERE / 'state-200796423.json'
+    posted = set()
+    if state_path.is_file():
+        try: posted = set(json.loads(state_path.read_text(encoding='utf-8'))['posted'])
+        except Exception: pass
     repo = repo_full_name()
     edit_url = f'https://github.com/{repo}/edit/main/holidays.json'
     upload_url = f'https://github.com/{repo}/upload/main/images'
@@ -47,28 +52,36 @@ def build():
     rows = []
     for h in data['holidays']:
         m, dd = map(int, h['date'].split('-'))
-        occ = next_occurrence(m, dd, today)
+        occ = next_occurrence(m, dd, today_civil)
         info = h.get('info') or build_info(occ)
         img_name = None
         if h.get('image'):
             p = HERE / h['image'].lstrip('/')
             if p.is_file(): img_name = p.name
-        rows.append({'occ': occ, 'delta': (occ - today).days,
+        fire_civil = occ - timedelta(days=1)   # Slavic day starts 18:00 prev civil day
+        key = f"{occ.isoformat()}|{h['text']}"
+        rows.append({'occ': occ, 'fire_civil': fire_civil,
+                     'delta': (fire_civil - today_civil).days,
                      'text': h['text'], 'info': info, 'img': img_name,
-                     'slavic': slavic_calendar.header(occ)})
+                     'slavic': slavic_calendar.header(occ),
+                     'posted': key in posted})
     rows.sort(key=lambda r: r['occ'])
 
     cards = []
     for r in rows:
-        when = r['occ'].strftime('%d.%m.%Y')
+        when = r['fire_civil'].strftime('%d.%m.%Y') + ' 18:00'
         delta = ('сегодня' if r['delta'] == 0 else 'завтра' if r['delta'] == 1
-                 else f"через {r['delta']} дн.")
+                 else f"через {r['delta']} дн." if r['delta'] > 0 else 'прошло')
+        badge = (
+          '<span style="background:#16a34a;color:#fff;padding:2px 8px;border-radius:4px;font-size:12px">✅ отправлено</span>'
+          if r['posted'] else
+          '<span style="background:#e5e7eb;color:#666;padding:2px 8px;border-radius:4px;font-size:12px">⏳ ожидает</span>')
         img_html = (f'<img src="images/{r["img"]}" alt="">' if r['img']
                     else '<div class="no-img">нет фото</div>')
         info_html = ''.join(f'<li>{ln}</li>' for ln in r['info'])
         cards.append(f'''
     <div class="card">
-      <div class="head"><div><span class="when">{when}</span> <span class="in">{delta}</span></div>
+      <div class="head"><div>{badge} <span class="when">{when}</span> <span class="in">{delta}</span></div>
       <a class="edit" href="{edit_url}" target="_blank" rel="noopener">✎ изменить</a></div>
       <div class="body"><div class="img">{img_html}</div>
       <div class="meta"><h2>{r['text']}</h2><div class="slavic">{r['slavic']}</div><ul>{info_html}</ul></div></div>
@@ -92,7 +105,7 @@ def build():
  .slavic{{margin:6px 0 10px;font-size:13px;color:#4a5568;font-style:italic;padding:4px 10px;background:#edf2f7;border-radius:4px;display:inline-block}}
  @media(max-width:600px){{.body{{grid-template-columns:1fr}}.img img,.no-img{{width:100%;height:auto;max-height:280px}}}}
 </style></head><body><h1>📅 VK Poster</h1>
-<div class="toolbar"><span>{len(rows)} праздников · {today.strftime('%d.%m.%Y')}</span>
+<div class="toolbar"><span>{len(rows)} праздников · {today_civil.strftime('%d.%m.%Y')}</span>
 <div><a href="https://app.pagescms.org/bukvica49/vk-poster/main/file/holidays" target="_blank" rel="noopener">📅 Праздники</a><a class="secondary" href="https://app.pagescms.org/bukvica49/vk-poster/main/file/chertogs" target="_blank" rel="noopener">🕯 Чертоги</a><a class="secondary" href="https://app.pagescms.org/bukvica49/vk-poster/main/file/krugolyety" target="_blank" rel="noopener">🌀 Круголеты</a></div></div>
 {''.join(cards)}</body></html>'''
     (OUT / 'index.html').write_text(html, encoding='utf-8')
