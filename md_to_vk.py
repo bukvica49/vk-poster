@@ -9,6 +9,11 @@ def md_to_vk(text):
         return ""
     s = text.replace("\r\n", "\n").replace("\r", "\n")
 
+    # Safety net: PagesCMS иногда оборачивает в ```code fence```
+    # TODO: убрать когда починим pages.yml (см. ниже)
+    s = re.sub(r'^\s*```[a-zA-Z]*\n', '', s)
+    s = re.sub(r'\n```\s*$', '', s)
+
     # 1) Картинки: ![alt](url) → url (VK прикрепит отдельно)
     s = re.sub(r"!\[([^\]]*)\]\(([^)]+)\)", r"\2", s)
 
