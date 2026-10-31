@@ -48,6 +48,11 @@ content:
             type: rich-text
             required: false
             description: "Заголовки, списки, цитаты, ссылки, картинки. Если заполнено — перекрывает поле 'info'."
+          - name: text_md
+            label: "📣 Текст поста для VK (если пусто — берётся 'text')"
+            type: rich-text
+            required: false
+            description: "Форматирование для поста в VK. VK понимает: жирный, курсив, зачёркнутый, подчёркнутый, ссылки, хэштеги, emoji. Заголовки/списки/цитаты конвертируются в poster.py."
 
   - name: chertogs
     label: Чертоги
