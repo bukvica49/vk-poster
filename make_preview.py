@@ -93,7 +93,7 @@ def build():
  @media(max-width:600px){{.body{{grid-template-columns:1fr}}.img img,.no-img{{width:100%;height:auto;max-height:280px}}}}
 </style></head><body><h1>📅 VK Poster</h1>
 <div class="toolbar"><span>{len(rows)} праздников · {today.strftime('%d.%m.%Y')}</span>
-<div><a href="{edit_url}">+ праздник</a><a class="secondary" href="{upload_url}">+ фото</a></div></div>
+<div><a href="https://app.pagescms.org/bukvica49/vk-poster/main/file/holidays" target="_blank" rel="noopener">📅 Праздники</a><a class="secondary" href="https://app.pagescms.org/bukvica49/vk-poster/main/file/chertogs" target="_blank" rel="noopener">🕯 Чертоги</a><a class="secondary" href="https://app.pagescms.org/bukvica49/vk-poster/main/file/krugolyety" target="_blank" rel="noopener">🌀 Круголеты</a></div></div>
 {''.join(cards)}</body></html>'''
     (OUT / 'index.html').write_text(html, encoding='utf-8')
     print(f'✅ _site/index.html — {len(rows)} постов')

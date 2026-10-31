@@ -43,3 +43,51 @@ content:
             label: Ручной инфо-блок (пусто = авто)
             type: string
             list: true
+
+  - name: chertogs
+    label: Чертоги
+    type: file
+    path: chertogs.json
+    format: json
+    fields:
+      - {name: _comment, type: string, hidden: true}
+      - {name: "1",  label: "1. Вепрь",            type: object, fields: [{name: name, label: Название, type: string}, {name: patron, label: Покровитель, type: string}, {name: tree, label: Дерево, type: string}]}
+      - {name: "2",  label: "2. Щука",             type: object, fields: [{name: name, label: Название, type: string}, {name: patron, label: Покровитель, type: string}, {name: tree, label: Дерево, type: string}]}
+      - {name: "3",  label: "3. Лебедь",           type: object, fields: [{name: name, label: Название, type: string}, {name: patron, label: Покровитель, type: string}, {name: tree, label: Дерево, type: string}]}
+      - {name: "4",  label: "4. Змей",             type: object, fields: [{name: name, label: Название, type: string}, {name: patron, label: Покровитель, type: string}, {name: tree, label: Дерево, type: string}]}
+      - {name: "5",  label: "5. Ворон",            type: object, fields: [{name: name, label: Название, type: string}, {name: patron, label: Покровитель, type: string}, {name: tree, label: Дерево, type: string}]}
+      - {name: "6",  label: "6. Медведь",          type: object, fields: [{name: name, label: Название, type: string}, {name: patron, label: Покровитель, type: string}, {name: tree, label: Дерево, type: string}]}
+      - {name: "7",  label: "7. Бусл (аист)",      type: object, fields: [{name: name, label: Название, type: string}, {name: patron, label: Покровитель, type: string}, {name: tree, label: Дерево, type: string}]}
+      - {name: "8",  label: "8. Волк (Белый Пёс)", type: object, fields: [{name: name, label: Название, type: string}, {name: patron, label: Покровитель, type: string}, {name: tree, label: Дерево, type: string}]}
+      - {name: "9",  label: "9. Лиса",             type: object, fields: [{name: name, label: Название, type: string}, {name: patron, label: Покровитель, type: string}, {name: tree, label: Дерево, type: string}]}
+      - {name: "10", label: "10. Тур",             type: object, fields: [{name: name, label: Название, type: string}, {name: patron, label: Покровитель, type: string}, {name: tree, label: Дерево, type: string}]}
+      - {name: "11", label: "11. Лось",            type: object, fields: [{name: name, label: Название, type: string}, {name: patron, label: Покровитель, type: string}, {name: tree, label: Дерево, type: string}]}
+      - {name: "12", label: "12. Финист",          type: object, fields: [{name: name, label: Название, type: string}, {name: patron, label: Покровитель, type: string}, {name: tree, label: Дерево, type: string}]}
+      - {name: "13", label: "13. Конь",            type: object, fields: [{name: name, label: Название, type: string}, {name: patron, label: Покровитель, type: string}, {name: tree, label: Дерево, type: string}]}
+      - {name: "14", label: "14. Орёл",            type: object, fields: [{name: name, label: Название, type: string}, {name: patron, label: Покровитель, type: string}, {name: tree, label: Дерево, type: string}]}
+      - {name: "15", label: "15. Раса (Леопард)",  type: object, fields: [{name: name, label: Название, type: string}, {name: patron, label: Покровитель, type: string}, {name: tree, label: Дерево, type: string}]}
+      - {name: "16", label: "16. Дева",            type: object, fields: [{name: name, label: Название, type: string}, {name: patron, label: Покровитель, type: string}, {name: tree, label: Дерево, type: string}]}
+
+  - name: krugolyety
+    label: Круголеты
+    type: file
+    path: krugolyety.json
+    format: json
+    fields:
+      - {name: _comment, type: string, hidden: true}
+      - {name: "1",  type: string}
+      - {name: "2",  type: string}
+      - {name: "3",  type: string}
+      - {name: "4",  type: string}
+      - {name: "5",  type: string}
+      - {name: "6",  type: string}
+      - {name: "7",  type: string}
+      - {name: "8",  type: string}
+      - {name: "9",  type: string}
+      - {name: "10", type: string}
+      - {name: "11", type: string}
+      - {name: "12", type: string}
+      - {name: "13", type: string}
+      - {name: "14", type: string}
+      - {name: "15", type: string}
+      - {name: "16", type: string}
