@@ -43,6 +43,11 @@ content:
             label: Ручной инфо-блок (пусто = авто)
             type: string
             list: true
+          - name: info_md
+            label: "📝 Расширенное описание (Markdown / WYSIWYG)"
+            type: rich-text
+            required: false
+            description: "Заголовки, списки, цитаты, ссылки, картинки. Если заполнено — перекрывает поле 'info'."
 
   - name: chertogs
     label: Чертоги

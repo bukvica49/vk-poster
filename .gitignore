@@ -33,3 +33,4 @@ make_preview.py.bak.*
 *.prebak.*
 *.bak
 state-179225207.json
+*.bak.*
