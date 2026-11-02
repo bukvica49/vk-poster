@@ -48,3 +48,15 @@ MANUAL.md          — эта шпаргалка
 tail -5 ~/vk-poster/log-runs.txt        # какой запуск упал
 tail -20 ~/vk-poster/log-main.txt       # почему
 grep FAIL ~/vk-poster/log-main.txt      # только причины
+
+для ии
+
+Прочитай ~/vk-poster/HANDOFF.md и ~/vk-poster/MANUAL.md — это контекст по автопостеру.
+Продолжаем оттуда. Проблема: <одна строка что случилось>.
+
+🎯 Единственное правило на будущее
+Каждый месяц — 1 минута, профилактика:
+
+cd ~/vk-poster && tail -30 log-runs.txt | grep -c "main=1"
+0 → спи дальше
+>0 → grep "main=1" -B2 -A2 log-runs.txt → если повторится — в чат
