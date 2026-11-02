@@ -10,7 +10,7 @@ from md_to_vk import md_to_vk    # Круголет Числобога
 
 BASE      = Path(__file__).resolve().parent
 _cfg_name = next((a for a in sys.argv[1:]
-                  if a.endswith(".json") and a not in ("holidays.json",)), "config.test.json")
+                  if a.endswith(".json") and a not in ("holidays.json",)), "config.main.json")
 CONFIG    = json.loads((BASE / _cfg_name).read_text(encoding="utf-8"))
 STATE_FILE = BASE / f"state-{CONFIG['group_id']}.json"
 HOLIDAYS   = BASE / "holidays.json"
@@ -107,7 +107,7 @@ def load_holidays():
 
 
 def summer_from_smzh(d: date) -> int:
-    if (d.month, d.day) < (9, 21):
+    if (d.month, d.day) < (9, 20):
         return d.year + 5508
     return d.year + 5509
 
@@ -126,7 +126,7 @@ def holidays_for_year(year: int):
 
 
 def holidays_today(today=None):
-    today = today or date.today()
+    today = today or slavic_calendar.slavic_now()
     return [(t, i, info) for d, t, i, info in holidays_for_year(today.year) if d == today]
 
 
@@ -208,7 +208,8 @@ def main(dry_run=False, test=False):
         if key and key in state["posted"]:
             print(f"уже постили: {key}")
             continue
-        _tm = h.get('text_md')
+        h = next((hd for hd in _load_holidays_dicts() if hd.get('text') == text), None)
+        _tm = h.get('text_md') if h else None
         message = md_to_vk(_tm) if _tm else text
         if today_d:
             message += f"\n{slavic_calendar.header(today_d)}"
