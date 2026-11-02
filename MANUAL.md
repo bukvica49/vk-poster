@@ -43,3 +43,8 @@ config.main.json   — токены (не в git)
 state-200796423.json — что уже постил
 log-runs.txt       — итоги запусков
 MANUAL.md          — эта шпаргалка
+
+Если что-то сломается — три команды
+tail -5 ~/vk-poster/log-runs.txt        # какой запуск упал
+tail -20 ~/vk-poster/log-main.txt       # почему
+grep FAIL ~/vk-poster/log-main.txt      # только причины
