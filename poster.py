@@ -228,15 +228,25 @@ def main(dry_run=False, test=False):
                 upload_token = CONFIG.get("user_token") or CONFIG["token"]
                 attach = upload_photo(upload_token, CONFIG["group_id"], image_path) if image_path else None
             except Exception as e:
-                print(f"WARN фото не загружено, постим текстом: {e}", file=sys.stderr)
+                if image_path:
+                    raise RuntimeError(
+                        f"Photo planned ({image_path.name}) but upload failed: {e}"
+                    ) from e
                 attach = None
+
+            if image_path and not attach:
+                raise RuntimeError(
+                    f"upload_photo returned {attach!r} for {image_path.name} - refusing to post without photo"
+                )
+
             pid = post(CONFIG["token"], CONFIG["group_id"], message, attach)
-            print(f"OK post_id={pid}: «{text[:60]}»")
+            print(f"OK post_id={pid}: «{text[:60]}» attach={attach or 'none'}")
             if key:
                 state["posted"].append(key)
                 save_state(state)
         except Exception as e:
             print(f"FAIL: {e}", file=sys.stderr)
+            raise
 
 
 if __name__ == "__main__":
