@@ -208,7 +208,18 @@ def main(dry_run=False, test=False):
         if key and key in state["posted"]:
             print(f"уже постили: {key}")
             continue
-        h = next((hd for hd in _load_holidays_dicts() if hd.get('text') == text), None)
+        _img_name = image_path.name if image_path else None
+        h = None
+        for hd in _load_holidays_dicts():
+            if hd.get('text') != text:
+                continue
+            hd_img = hd.get('image')
+            if _img_name and hd_img == _img_name:
+                h = hd
+                break
+            if not _img_name and not hd_img:
+                h = hd
+                break
         _tm = h.get('text_md') if h else None
         message = md_to_vk(_tm) if _tm else text
         if today_d:
