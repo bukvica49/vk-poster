@@ -7,8 +7,13 @@ VK-группа: 200796423, «Родная Традиция»
 
 ## Что это
 Автопостер ВК на славянском календаре (9-дневная неделя, Коляды Дар).
-Cron: 0 18 * * * -> run_poster.sh -> git pull -> slavic_now() -> найти
-праздник на «завтрашний» слав. день -> пост в VK.
+Автозапуск: GitHub Actions, cron `0 11 * * *` UTC = 18:00 KRAT.
+Каждый день: slavic_now() -> найти праздник на «завтрашний» слав. день ->
+пост в VK -> git push state через DEPLOY_KEY. ПК может быть выключен.
+
+Секреты GitHub (Settings -> Secrets -> Actions):
+- `VK_CONFIG`  — содержимое config.main.json
+- `DEPLOY_KEY` — приватный SSH (fingerprint: SHA256:wIS9WCBCR9u2IzIPI4aiHTIXcwHLQiJgPUy/k0Kl278)
 
 ## Ключевые решения (НЕ переспрашивать)
 1. Пост 18:00 = слав. «завтра». Слав. день с заката.
