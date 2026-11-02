@@ -1,0 +1,56 @@
+name: VK Poster
+
+on:
+  schedule:
+    - cron: '0 11 * * *'      # 11:00 UTC = 18:00 Красноярск (UTC+7)
+  workflow_dispatch:           # кнопка ручного запуска
+
+permissions:
+  contents: write
+
+concurrency:
+  group: vk-poster
+  cancel-in-progress: false
+
+jobs:
+  post:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with: { python-version: '3.11' }
+
+      - name: Install deps
+        run: pip install --quiet requests
+
+      - name: Write config from secret
+        env: { VK_CONFIG: '${{ secrets.VK_CONFIG }}' }
+        run: printf '%s' "$VK_CONFIG" > config.main.json
+
+      - name: Setup SSH deploy key
+        run: |
+          mkdir -p ~/.ssh
+          echo "${{ secrets.DEPLOY_KEY }}" > ~/.ssh/deploy_key
+          chmod 600 ~/.ssh/deploy_key
+          ssh-keyscan -H github.com >> ~/.ssh/known_hosts 2>/dev/null
+          git config user.name  'vk-poster-bot'
+          git config user.email 'bot@users.noreply.github.com'
+          git remote set-url origin "git@github.com:${{ github.repository }}.git"
+
+      - name: Run poster
+        env:
+          TZ: Asia/Krasnoyarsk           # ⚠️ КРИТИЧНО — без этого slavic_now не сдвинется
+          GIT_SSH_COMMAND: 'ssh -i ~/.ssh/deploy_key -o IdentitiesOnly=yes'
+        run: python3 poster.py config.main.json
+
+      - name: Commit & push state → triggers Pages
+        run: |
+          if git diff --quiet -- 'state-*.json'; then
+            echo "state не изменился — пропуск"
+            exit 0
+          fi
+          git add 'state-*.json'
+          git commit -m "state: auto $(date -u +%Y-%m-%d_%H:%M)"
+          GIT_SSH_COMMAND='ssh -i ~/.ssh/deploy_key -o IdentitiesOnly=yes' \
+            git push origin main
