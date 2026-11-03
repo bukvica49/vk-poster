@@ -54,6 +54,18 @@ tail -20 ~/vk-poster/log-main.txt
 ## Токен сломается (раз в 1-2 года)
 vkhost.github.io/vk.html → "VK Admin" → права на группу → токен после #access_token= → заменить в config.main.json И в секрете VK_CONFIG на GitHub.
 
+## Сайт — синхронизация с автопостером
+После правки chertogs.json / CHERTOG_STARTS / формата шапки:
+
+    cd ~/vk-poster && python3 tools/build_site_slavic_js.py
+    cd ~/site/bukvica49.github.io-main
+    git add js/ index.html nav/
+    git commit -m "sync: славянская дата из chertogs.json"
+    git push
+
+Генератор сам поднимет ?v=N→N+1 в index.html и nav/*.html (cache-bust).
+Подробности: ~/site/bukvica49.github.io-main/MANUAL.md
+
 ## Файлы
 holidays.json               — праздники (PagesCMS)
 config.main.json            — токены (НЕ в git; копия в секрете VK_CONFIG)

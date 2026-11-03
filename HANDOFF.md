@@ -43,6 +43,7 @@ VK-группа: 200796423, «Родная Традиция»
 - slavic_auto.py        — build_info(day): Чертог + пол + Древо + Круголет
 - slavic_calendar.py    — календарь, header(day)
 - chertogs.json         — массив Чертогов + CHERTOG_STARTS (индекс начала)
+- tools/build_site_slavic_js.py — генератор js/slavic-date.js для сайта
 - md_to_vk.py           — Markdown -> VK
 - holidays.json         — праздники
 - config.main.json      — токены (НЕ в git, НЕ в чат)
@@ -74,6 +75,16 @@ cd ~/vk-poster && python3 poster.py config.main.json --dry-run   # что буд
 Порядок: шапка сверху → тело поста → фото.
 Сборка: poster.py (head) + slavic_auto.build_info(day) +
 slavic_calendar.header(day) + chertogs.json (данные).
+
+## Сайт (~/site/bukvica49.github.io-main)
+Отдельный репо bukvica49/bukvica49.github.io (~/site/...), GitHub Pages.
+js/slavic-date.js — СГЕНЕРИРОВАННЫЙ, не править руками.
+Синхронизация после правки Чертогов:
+
+    cd ~/vk-poster && python3 tools/build_site_slavic_js.py
+
+Генератор сам бампает ?v=N в index.html + nav/*.html.
+Подробности: ~/site/bukvica49.github.io-main/MANUAL.md
 
 ## Правила для AI в новом чате
 1. Сначала прочитай HANDOFF.md и MANUAL.md — весь контекст там.
