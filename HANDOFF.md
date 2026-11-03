@@ -125,3 +125,42 @@ js/slavic-date.js — СГЕНЕРИРОВАННЫЙ, не править рук
   вниз с ⏳ {след. год} (не ждут 18:00, не показывают ✅).
   Логика: `if f"{occ}|{text}" in posted: occ = occ.year + 1`.
   Badge всегда ⏳. Проверка: grep -c "✅ отправлено" _site/index.html → 0
+
+---
+
+## 🔒 ФИНАЛ 2026-11-03 — fire-логика подтверждена, 3 фикса
+
+### Что работает (НЕ ТРОГАТЬ)
+- `slavic_calendar.slavic_now()` возвращает `today + 1` после 18:00 KRAT.
+  Это **источник fire-логики**. State-key = target day (actual). 
+- `poster.py holidays_today(today)` фильтрует `d == today` где today уже сдвинут на +1 после 18:00 → пост выходит накануне в 18:00. **Правильно.**
+- Ручной пост Мирослава 31.10 → state-key `2026-11-01` — это target day, не fire. **Не путать.**
+
+### Что починено
+- **P1 (make_preview.py):** `today_civil = slavic_calendar.today_krat()` (было `date.today()` = UTC на GH Actions → превью отставало на 1 день в 00:00–07:00 KRAT)
+- **P2 (poster.py):** state-key = полный `text` (было `text[:40]` — длинные праздники «висели» в превью после публикации)
+- **P3 (content/holidays/den-miroslava-tariyskogo.json):** удалён битый `slavic` ({month:Айлетъ, day:2} → парсился как 21.09). Источник = `date=11-01` → fire всегда **31.10 18:00**. Проверено 2026/2027/2028.
+
+### Что НЕ ДЕЛАТЬ (потеряно 4 часа на ложные гипотезы)
+- ❌ **P4:** не сдвигать `holidays_today(today + 1)` — `slavic_now()` уже +1 → посты выйдут на 2 дня раньше.
+- ❌ **while-цикл для state** — не нужен, `slavic_now()` уже поднимает год.
+- ❌ **Удалять/пересоздавать 52 праздника** — данные чистые (51/52 OK, 1 битый = Мирослав, исправлен).
+- ❌ **Мигрировать state 2026** — корректен (target day, не fire day).
+
+### Расписание на 2027 (проверка)
+| Праздник | fire (KRAT) | target day (state) |
+|---|---|---|
+| Дидовъ | 28.10.2027 18:00 | 2027-10-29 |
+| Мирослав | 31.10.2027 18:00 | 2027-11-01 |
+| Харий | 02.11.2027 18:00 | 2027-11-03 |
+| Лебедь | 03.11.2027 18:00 | 2027-11-04 |
+
+### Контроль после любых правок
+
+```bash
+python3 -c "from slavic_calendar import slavic_now, today_krat; print(slavic_now(), today_krat())"
+python3 make_preview.py && python3 poster.py --dry-run
+```
+
+**Последний успешный HEAD:** `834409e` (TZ + state-key + Мирослав).
+**Покрыто фиксами:** `make_preview.py`, `poster.py`, `content/holidays/den-miroslava-tariyskogo.json`.
