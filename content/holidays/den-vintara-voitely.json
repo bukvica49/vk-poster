@@ -1,10 +1,6 @@
 {
-  "slug": "Den' Vintara Voitely",
+  "slug": "den-vintara-voitely",
   "date": "01-20",
-  "slavic": {
-    "month": "Гэилѣтъ",
-    "day": 3
-  },
   "text": "День Винитара Воителя",
   "image": "/images/vintar_voitel.jpg",
   "post_time": "18:00"
