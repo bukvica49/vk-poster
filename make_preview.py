@@ -95,7 +95,7 @@ def build():
         rows.append({'occ': occ, 'fire_civil': fire_civil,
                      'delta': (fire_civil - today_civil).days,
                      'text': h['text'], 'info': info, 'info_md': h.get('info_md'), 'text_md': h.get('text_md'), 'img': img_name,
-                     'slavic': slavic_calendar.header(occ) + (' от С.М.З.Х.' if add_krug else ''),
+                     'slavic': slavic_calendar.header_full(occ, add_smzh=add_krug),
                      'posted': key in posted, 'slug': h.get('slug') or ''})
     rows.sort(key=lambda r: r['occ'])
     def card_edit_url(slug):

@@ -70,9 +70,9 @@ cd ~/vk-poster && python3 poster.py config.main.json --dry-run   # что буд
 - «Файл не найден» -> фото нет в репо (залить через PagesCMS в корень)
 - sync!=0 -> конфликт git pull (смотреть log-sync.txt)
 
-## Формат шапки поста (2026-11-03, финальный)
+## Формат шапки поста (2026-11-04, финальный)
 
-СЕДМИЦА · 4 Айлѣтъ · Лѣто 7535 от С.М.З.Х.
+СЕДМИЦА · 4 Айлѣтъ Сороковнiкъ (Мѣсꙗцъ) Новых Даровъ · Лѣто ҂ЗФЛЕ(7535)  Ѿ  С.М.З.Х.
 ⚡ Чертог Щуки – Богиня-Покровительница Рожана ⚡
 🌳 Священное Древо: Слива.
 ● 15-є Лѣтъ (из 16-ти) в Крɣгє лѣтъ;
@@ -82,8 +82,9 @@ cd ~/vk-poster && python3 poster.py config.main.json --dry-run   # что буд
 ● Цвет: фиолѣт.
 
 Порядок: шапка сверху → тело поста → фото.
-Сборка: poster.py (head) + slavic_auto.build_info(day) +
-slavic_calendar.header(day) + chertogs.json (данные).
+Сборка: header_full() в slavic_calendar.py;
+        вызывается из poster.py (line 237) и make_preview.py (line 98);
+        тело поста = slavic_auto.build_info(day) + chertogs.json.
 
 ## Превью-сайт (bukvica49.github.io/vk-poster)
 Отдельно от `~/site/bukvica49.github.io-main` — страница праздников.
