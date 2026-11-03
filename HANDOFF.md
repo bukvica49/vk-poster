@@ -24,6 +24,8 @@ VK-группа: 200796423, «Родная Традиция»
 4. Несколько праздников в один день = норма, только `text` должен различаться.
 5. Фото в КОРНЕ vk-poster/, не в подпапке. Через PagesCMS Upload.
 6. Праздники правятся через app.pagescms.org/bukvica49/vk-poster
+7. Источник данных = `content/holidays/*.json` (PagesCMS collection,
+   1 файл = 1). Старый `holidays.json` (массив) удалён в c3e1b60.
 
 ## Что починено
 - fa4a1af: постинг без фото -> FAIL main=1 (раньше уходил без фото)
@@ -36,6 +38,11 @@ VK-группа: 200796423, «Родная Традиция»
   * «от С.М.З.Х.» приклеено к строке 1 (без строки-дубля)
   * сдвиг Чертогов +1 (индекс CHERTOG_STARTS в chertogs.json)
   проверка: python3 poster.py config.main.json --dry-run
+- c3e1b60: holidays.json → content/holidays/*.json (PagesCMS collection)
+- e30c509: кнопки ✏️/📋 в правом верхнем углу карточки превью
+- 0b2473b: ➕ Новый праздник в шапке превью
+- d30a506: toolbar ровно — убран inline-style margin-left:auto
+  (перебивал .secondary{margin-left:6px} → gap=0)
 
 ## Файлы
 - poster.py             — код (main(), holidays_today(), load_state(),
@@ -45,7 +52,9 @@ VK-группа: 200796423, «Родная Традиция»
 - chertogs.json         — массив Чертогов + CHERTOG_STARTS (индекс начала)
 - tools/build_site_slavic_js.py — генератор js/slavic-date.js для сайта
 - md_to_vk.py           — Markdown -> VK
-- holidays.json         — праздники
+- content/holidays/*.json — праздники (PagesCMS collection, 1 файл = 1)
+- make_preview.py       — генератор _site/ (кнопки + deep-link)
+- .github/workflows/pages.yml — автодеплой превью на push в main
 - config.main.json      — токены (НЕ в git, НЕ в чат)
 - state-200796423.json  — что уже постил
 - MANUAL.md             — шпаргалка для владельца
@@ -75,6 +84,22 @@ cd ~/vk-poster && python3 poster.py config.main.json --dry-run   # что буд
 Порядок: шапка сверху → тело поста → фото.
 Сборка: poster.py (head) + slavic_auto.build_info(day) +
 slavic_calendar.header(day) + chertogs.json (данные).
+
+## Превью-сайт (bukvica49.github.io/vk-poster)
+Отдельно от `~/site/bukvica49.github.io-main` — страница праздников.
+
+- URL:        https://bukvica49.github.io/vk-poster/
+- Генератор:  `make_preview.py` → `_site/index.html`
+- Автодеплой: `.github/workflows/pages.yml` (push в `main`)
+- Данные:     `content/holidays/*.json`
+
+Кнопки шапки: 📅 Праздники / 🕯 Чертоги / 🌀 Круголеты / ➕ Новый
+Кнопки карточек: ✏️ edit / 📋 copy
+
+⚠️ НЕ ломать:
+- gap между secondary = `.secondary{margin-left:6px}`
+- НЕ добавлять inline `margin-left:auto` — перебьёт gap (баг d30a506)
+- slug URL-encoded: `content%2Fholidays%2F{slug}.json`
 
 ## Сайт (~/site/bukvica49.github.io-main)
 Отдельный репо bukvica49/bukvica49.github.io (~/site/...), GitHub Pages.

@@ -1,16 +1,46 @@
 # Автопостер — шпаргалка
 
-## Добавить праздник
-PagesCMS → holidays.json → блок в массив:
+## Добавить праздник — через превью
+https://bukvica49.github.io/vk-poster/ → `➕ Новый` в шапке → форма PagesCMS.
 
-{"text":"Название","date":"11-06","image":"file.jpg","text_md":"**Текст**","info":["Пункт 1","Пункт 2"]}
+1. Заполнить поля
+2. Save → PagesCMS auto-commit в `content/holidays/{slug}.json`
+3. Через 1-2 мин — live (деплой: `.github/workflows/pages.yml`)
 
-- `text`+`date` — обязательно (`MM-DD`, не `DD-MM`)
-- `image` — имя файла в корне репо
-- `text_md` — Markdown
-- `info` — массив строк внизу поста
+## Прямо в PagesCMS
+https://app.pagescms.org/bukvica49/vk-poster/main/collection/holidays
+
+`content/holidays/*.json` — **1 файл = 1 праздник** (не массив).
+
+Поля:
+- `date`    — обязательно, `MM-DD` (не `DD-MM`)
+- `text`    — обязательно, заголовок поста
+- `slug`    — опционально (= имя файла; PagesCMS ставит автоматически)
+- `text_md` — опционально, Markdown-тело поста (если пусто — берётся `text`)
+- `info`    — опционально, массив строк внизу поста
+- `info_md` — опционально, Markdown-версия `info[]`
+- `image`   — опционально, имя файла в КОРНЕ репо (Upload через PagesCMS)
+- `slavic`  — опционально, `{month, day}` — точный слав. день, перебивает
+              пересчёт из `date` (для «плавающих» праздников). Читает только
+              `poster.py`; `make_preview.py` — не использует.
 
 Фото: Upload в корень репо через PagesCMS.
+
+## Работа через превью
+https://bukvica49.github.io/vk-poster/
+
+Кнопки шапки (слева→справа):
+- `📅 Праздники` — collection/holidays
+- `🕯 Чертоги`   — file/chertogs
+- `🌀 Круголеты` — file/krugolyety
+- `➕ Новый`     — collection/holidays/new
+
+Кнопки карточки (верхний правый угол):
+- `✏️` — edit deep-link: `/edit/content%2Fholidays%2F{slug}.json`
+- `📋` — текст поста → clipboard → `Ctrl+V` в VK
+
+Deep-link slug URL-encoded (content%2Fholidays%2F{slug}.json).
+Ctrl+Shift+R — hard refresh (если live не обновился после push).
 
 ## Несколько дней подряд / несколько в день
 - Многодневный: каждый день — своя запись, свой `image` → каждый день отдельный пост
@@ -76,13 +106,15 @@ vkhost.github.io/vk.html → "VK Admin" → права на группу → т�
 
 
 ## Файлы
-holidays.json               — праздники (PagesCMS)
+content/holidays/*.json       — праздники (PagesCMS collection, 1 файл = 1)
+make_preview.py               — генератор _site/ (превью-сайт с кнопками)
 config.main.json            — токены (НЕ в git; копия в секрете VK_CONFIG)
 state-200796423.json        — что уже постил
 log-runs.txt                — итоги локальных запусков
 MANUAL.md                   — эта шпаргалка
 HANDOFF.md                  — контекст для AI
-.github/workflows/post.yml  — автозапуск через Actions
+.github/workflows/post.yml  — автозапуск постинга
+.github/workflows/pages.yml — автодеплой превью на push в main
 
 ## Формат поста — как выглядит
 
