@@ -98,7 +98,7 @@ def build():
         if h.get('image'):
             p = HERE / h['image'].lstrip('/')
             if p.is_file(): img_name = p.name
-        fire_civil = occ - timedelta(days=1)   # Slavic day starts 18:00 prev civil day
+        fire_civil = occ  # fire в тот же день 18:00
         key = f"{occ.isoformat()}|{h['text']}"
         rows.append({'occ': occ, 'fire_civil': fire_civil,
                      'delta': (fire_civil - today_civil).days,

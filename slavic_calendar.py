@@ -79,16 +79,12 @@ def today_krat() -> date:
 
 
 def slavic_now(dt=None):
-    """Момент → славянский день с учётом 18:00 (по Красноярску)."""
+    """Момент → сегодняшняя дата по Красноярску. Какая дата в KRAT — та и есть."""
     if dt is None:
-        dt = datetime.now(KRAT)
+        return datetime.now(KRAT).date()
     if isinstance(dt, datetime) and dt.tzinfo is not None:
         dt = dt.astimezone(KRAT)
-    d = dt.date() if hasattr(dt, "date") else dt
-    hour = dt.hour if hasattr(dt, "hour") else 12
-    if hour >= DAY_START_HOUR:
-        d = d + timedelta(days=1)
-    return d
+    return dt.date() if hasattr(dt, "date") else dt
 
 
 def header(dt=None) -> str:
