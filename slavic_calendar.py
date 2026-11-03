@@ -113,7 +113,7 @@ def header_full(dt=None, add_smzh: bool = True) -> str:
     s = (f"{SLAVIC_DAYS[wi]} · {d} {mn} Сороковнiкъ "
          f"(Мѣсꙗцъ) {desc} · Лѣто {bkv}({leto})")
     if add_smzh:
-        s += ' Ѿ   С.М.З.Х.'
+        s += '  Ѿ  С.М.З.Х.'
     return s
 if __name__ == "__main__":
     for iso in ["2026-10-28","2026-10-30","2026-11-01","2026-12-08","2027-01-01"]:
