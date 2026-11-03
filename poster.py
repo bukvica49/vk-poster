@@ -219,7 +219,7 @@ def main(dry_run=False, test=False, force=False, republish=False, override_date=
 
     state = load_state()
     for text, image_path, info in items:
-        key = f"{today_iso}|{text[:40]}" if today_iso else None
+        key = f"{today_iso}|{text}" if today_iso else None  # fix P2: полный text (совпадает с make_preview)
         if key and key in state["posted"] and not republish:
             print(f"уже постили: {key}")
             continue

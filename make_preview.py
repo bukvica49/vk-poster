@@ -64,7 +64,9 @@ def build():
             if p.is_file(): shutil.copy2(p, img_out / p.name)
 
     data = {'holidays': load_holidays()}
-    today_civil = date.today()
+    # fix P1: KRAT, не UTC (GH Actions работает в UTC, а слав. дни живут в KRAT)
+    import slavic_calendar
+    today_civil = slavic_calendar.today_krat()
     state_path = HERE / 'state-200796423.json'
     posted = set()
     if state_path.is_file():
@@ -78,6 +80,12 @@ def build():
     for h in data['holidays']:
         m, dd = map(int, h['date'].split('-'))
         occ = next_occurrence(m, dd, today_civil)
+        # fix: если выпуск уже опубликован (в state) — показываем след. год
+        if f"{occ.isoformat()}|{h['text']}" in posted:
+            try:
+                occ = date(occ.year + 1, m, dd)
+            except ValueError:  # 29 фев
+                occ = date(occ.year + 1, m, dd - 1)
         try:
             _auto = build_info(occ)
         except Exception:
@@ -139,10 +147,8 @@ def build():
         when = r['fire_civil'].strftime('%d.%m.%Y') + ' 18:00'
         delta = ('сегодня' if r['delta'] == 0 else 'завтра' if r['delta'] == 1
                  else f"через {r['delta']} дн." if r['delta'] > 0 else 'прошло')
-        badge = (
-          '<span style="background:#16a34a;color:#fff;padding:2px 8px;border-radius:4px;font-size:12px">✅ отправлено</span>'
-          if r['posted'] else
-          '<span style="background:#e5e7eb;color:#666;padding:2px 8px;border-radius:4px;font-size:12px">⏳ ожидает</span>')
+        # fix: badge всегда ⏳ (пост опубликован → карточка уже внизу на след. год)
+        badge = '<span style="background:#e5e7eb;color:#666;padding:2px 8px;border-radius:4px;font-size:12px">⏳ ожидает</span>'
         img_html = (f'<img src="images/{r["img"]}" alt="">' if r['img']
                     else '<div class="no-img">нет фото</div>')
         info_html = '<ul>' + ''.join(f'<li>{ln}</li>' for ln in r['info']) + '</ul>'
