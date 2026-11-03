@@ -17,7 +17,9 @@ def load_holidays():
         items = []
         for f in HOLIDAYS_DIR.glob('*.json'):
             try:
-                items.append(json.loads(f.read_text(encoding='utf-8')))
+                _d = json.loads(f.read_text(encoding='utf-8'))
+                _d['_filename'] = f.stem
+                items.append(_d)
             except Exception as e:
                 print(f'warn: {f.name}: {e}')
         if items:
@@ -104,7 +106,8 @@ def build():
                      'delta': (fire_civil - today_civil).days,
                      'text': h['text'], 'info': info, 'info_md': h.get('info_md'), 'text_md': h.get('text_md'), 'img': img_name,
                      'slavic': slavic_calendar.header_full(occ, add_smzh=add_krug),
-                     'posted': key in posted, 'slug': h.get('slug') or ''})
+                     'posted': key in posted, 'slug': h.get('slug') or '',
+                     'filename': h.get('_filename', '')})
     rows.sort(key=lambda r: r['occ'])
     def card_edit_url(slug):
         """URL редактирования конкретного праздника в PagesCMS."""
@@ -159,7 +162,7 @@ def build():
     <div class="card">
       <div class="head"><div>{badge} <span class="when">{when}</span> <span class="in">{delta}</span></div>
         <div class="card-actions card-actions-inline">
-          <a class="btn-edit" href="{card_edit_url(r.get('slug', ''))}" target="_blank" rel="noopener" title="Редактировать">✏️</a>
+          <a class="btn-edit" href="{card_edit_url(r.get('filename', ''))}" target="_blank" rel="noopener" title="Редактировать">✏️</a>
           <button class="btn-copy" data-slug="{_key}" onclick="copyPost(this)" title="Скопировать текст для VK">📋</button>
         </div>
       </div>
