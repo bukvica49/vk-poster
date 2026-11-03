@@ -224,9 +224,10 @@ def main(dry_run=False, test=False):
         body = md_to_vk(_tm) if _tm else text
         head = []
         if today_d:
-            head.append(slavic_calendar.header(today_d))
-        if today_d and CONFIG.get("add_krug"):
-            head.append(f"Лето {summer_from_smzh(today_d)} от С.М.З.Х.")
+            _hl = slavic_calendar.header(today_d)
+            if CONFIG.get("add_krug"):
+                _hl += " от С.М.З.Х."
+            head.append(_hl)
         if info:
             head.append("\n".join(info))
         message = ("\n".join(head) + "\n\n" + body) if head else body
