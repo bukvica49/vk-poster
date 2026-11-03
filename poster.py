@@ -2,7 +2,7 @@
 # ~/vk-poster/poster.py — автопостер с картинками
 import json
 import sys
-from datetime import date
+from datetime import date, datetime, time
 from pathlib import Path
 import requests
 import slavic_calendar
@@ -199,10 +199,15 @@ def save_state(s):
 
 
 # ─── основной цикл ──────────────────────────────────────────────
-def main(dry_run=False, test=False):
+def main(dry_run=False, test=False, force=False, override_date=None):
     if test:
         today_iso, today_d = None, None
         items = [("🧪 Тест: автопостер на славянском календаре настроен и постит.", None, [])]
+    elif override_date:
+        today_d    = date.fromisoformat(override_date)
+        today_iso  = today_d.isoformat()
+        items      = holidays_today(today_d)
+        print(f"[override] date={today_iso}, найдено: {len(items)}")
     else:
         today_d    = slavic_calendar.slavic_now()
         today_iso  = today_d.isoformat()
@@ -230,6 +235,27 @@ def main(dry_run=False, test=False):
             if not _img_name and not hd_img:
                 h = hd
                 break
+        # --- post_time (МСК, локальное время хоста) + окно ---
+        post_hh, post_mm = 18, 0
+        if h:
+            _pt = (h.get("post_time") or "").strip()
+            if _pt and ":" in _pt:
+                try:
+                    _h, _m = _pt.split(":", 1)
+                    post_hh, post_mm = int(_h), int(_m)
+                except Exception:
+                    pass
+        _target_dt = datetime.combine(today_d, time(post_hh, post_mm)) if today_d else None
+        _now = datetime.now()
+        POST_WINDOW_HOURS = 6
+        if not force and _target_dt:
+            if _now < _target_dt:
+                print(f"  ⏳ рано ({_now:%H:%M} < {_target_dt:%H:%M} {_target_dt:%Y-%m-%d}), ждём")
+                continue
+            if _now > _target_dt + timedelta(hours=POST_WINDOW_HOURS):
+                print(f"  ⏭  окно {POST_WINDOW_HOURS}ч истекло (слот {_target_dt:%Y-%m-%d %H:%M}) → след. год")
+                continue
+
         _tm = h.get('text_md') if h else None
         body = md_to_vk(_tm) if _tm else text
         head = []
@@ -272,4 +298,14 @@ def main(dry_run=False, test=False):
 
 
 if __name__ == "__main__":
-    main(dry_run="--dry-run" in sys.argv, test="--test" in sys.argv)
+    import argparse
+    _ap = argparse.ArgumentParser()
+    _ap.add_argument("--dry-run", action="store_true")
+    _ap.add_argument("--test", action="store_true")
+    _ap.add_argument("--force", action="store_true",
+                     help="публиковать сейчас, игнорируя post_time и state")
+    _ap.add_argument("--date", dest="override_date", default=None,
+                     metavar="YYYY-MM-DD", help="эмулировать славянский день")
+    _args = _ap.parse_args()
+    main(dry_run=_args.dry_run, test=_args.test, force=_args.force,
+         override_date=_args.override_date)
