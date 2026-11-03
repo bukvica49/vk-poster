@@ -23,7 +23,17 @@ from datetime import timedelta
 
 
 def _load_holidays_dicts():
-    """Сырые dict'ы из holidays.json."""
+    """Сырые dict'ы из content/holidays/*.json (fallback: holidays.json)."""
+    hd = BASE / "content" / "holidays"
+    if hd.is_dir():
+        items = []
+        for f in sorted(hd.glob("*.json")):
+            try:
+                items.append(json.loads(f.read_text(encoding="utf-8")))
+            except Exception:
+                continue
+        if items:
+            return items
     data = json.loads(HOLIDAYS.read_text(encoding="utf-8"))
     return data["holidays"]
 

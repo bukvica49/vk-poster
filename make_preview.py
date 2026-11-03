@@ -8,6 +8,25 @@ from md_render import md_to_html
 
 HERE = Path(__file__).parent
 HOLIDAYS = HERE / 'holidays.json'
+
+HOLIDAYS_DIR = HERE / 'content' / 'holidays'
+
+def load_holidays():
+    """Праздники из content/holidays/*.json (fallback: holidays.json)."""
+    if HOLIDAYS_DIR.is_dir():
+        items = []
+        for f in HOLIDAYS_DIR.glob('*.json'):
+            try:
+                items.append(json.loads(f.read_text(encoding='utf-8')))
+            except Exception as e:
+                print(f'warn: {f.name}: {e}')
+        if items:
+            items.sort(key=lambda x: (x.get('date', 'ZZ'), x.get('text', '')))
+            return items
+    if HOLIDAYS.exists():
+        return json.loads(HOLIDAYS.read_text(encoding='utf-8'))['holidays']
+    return []
+
 IMAGES = HERE / 'images'
 OUT = HERE / '_site'
 
@@ -44,7 +63,7 @@ def build():
         for p in IMAGES.glob('*'):
             if p.is_file(): shutil.copy2(p, img_out / p.name)
 
-    data = json.loads(HOLIDAYS.read_text(encoding='utf-8'))
+    data = {'holidays': load_holidays()}
     today_civil = date.today()
     state_path = HERE / 'state-200796423.json'
     posted = set()
@@ -137,7 +156,7 @@ def build():
 .info-md hr {{ border: none; border-top: 1px solid #ddd; margin: 12px 0; }}
 </style></head><body><h1>📅 VK Poster</h1>
 <div class="toolbar"><span>{len(rows)} праздников · {today_civil.strftime('%d.%m.%Y')}</span>
-<div><a href="https://app.pagescms.org/bukvica49/vk-poster/main/file/holidays" target="_blank" rel="noopener">📅 Праздники</a><a class="secondary" href="https://app.pagescms.org/bukvica49/vk-poster/main/file/chertogs" target="_blank" rel="noopener">🕯 Чертоги</a><a class="secondary" href="https://app.pagescms.org/bukvica49/vk-poster/main/file/krugolyety" target="_blank" rel="noopener">🌀 Круголеты</a></div></div>
+<div><a href="https://app.pagescms.org/bukvica49/vk-poster/main/collection/holidays" target="_blank" rel="noopener">📅 Праздники</a><a class="secondary" href="https://app.pagescms.org/bukvica49/vk-poster/main/file/chertogs" target="_blank" rel="noopener">🕯 Чертоги</a><a class="secondary" href="https://app.pagescms.org/bukvica49/vk-poster/main/file/krugolyety" target="_blank" rel="noopener">🌀 Круголеты</a></div></div>
 {''.join(cards)}</body></html>'''
     (OUT / 'index.html').write_text(html, encoding='utf-8')
     print(f'✅ _site/index.html — {len(rows)} постов')

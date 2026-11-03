@@ -5,49 +5,54 @@ media:
 content:
   - name: holidays
     label: Праздники
-    type: file
-    path: holidays.json
+    type: collection
+    path: content/holidays
     format: json
+    filename: "{primary}.json"
+    view:
+      primary: slug
+      sort: date
+      default:
+        sort: date
     fields:
-      - name: holidays
-        label: Список праздников
+      - name: slug
+        label: Slug (URL-имя файла, латиница)
+        type: string
+        required: true
+        description: "Используется в URL: .../collection/holidays/<slug>. Например: den-bogini-makoshi"
+      - name: date
+        label: Дата (MM-DD) — fallback
+        type: string
+        required: true
+        pattern: '\d{2}-\d{2}'
+        description: "Грегорианская дата. Если задан slavic — пересчитывается Slavic→Gregorian каждый год."
+      - name: slavic
+        label: Slavic-дата (опционально, авто-пересчёт)
         type: object
-        list: true
+        required: false
         fields:
-          - name: date
-            label: Дата (MM-DD) — fallback
+          - name: month
+            label: Месяц (напр. Рамхатъ)
             type: string
-            required: true
-            pattern: '\d{2}-\d{2}'
-            description: "Грегорианская дата. Если ниже задан slavic — используется как fallback и для превью."
-          - name: slavic
-            label: Slavic-дата (опционально, авто-пересчёт)
-            type: object
-            required: false
-            description: "Если задан — дата автоматически пересчитывается Slavic→Gregorian каждый год. Пример: month=Рамхатъ, day=40."
-            fields:
-              - name: month
-                label: Месяц (напр. Рамхатъ)
-                type: string
-              - name: day
-                label: День (1–41)
-                type: number
-          - name: text
-            label: Текст поста
-            type: string
-            required: true
-          - name: image
-            label: Фото
-            type: image
-          - name: info
-            label: Ручной инфо-блок (пусто = авто)
-            type: string
-            list: true
-          - name: text_md
-            label: "📣 Текст поста для VK (если пусто — берётся 'text')"
-            type: rich-text
-            required: false
-            description: "Форматирование для поста в VK. VK понимает: жирный, курсив, зачёркнутый, подчёркнутый, ссылки, хэштеги, emoji. Заголовки/списки/цитаты конвертируются в poster.py."
+          - name: day
+            label: День (1–41)
+            type: number
+      - name: text
+        label: Текст поста (заголовок карточки)
+        type: string
+        required: true
+      - name: image
+        label: Фото
+        type: image
+      - name: info
+        label: Ручной инфо-блок (пусто = авто)
+        type: string
+        list: true
+      - name: text_md
+        label: "📣 Текст поста для VK (markdown)"
+        type: rich-text
+        required: false
+        description: "VK понимает: жирный, курсив, зачёркнутый, ссылки, хэштеги, emoji. Заголовки/списки конвертируются в poster.py."
 
   - name: chertogs
     label: Чертоги
