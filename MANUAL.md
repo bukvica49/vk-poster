@@ -151,3 +151,8 @@ cd ~/vk-poster && tail -30 log-runs.txt | grep -c "main=1"
 ## Для AI
 Прочитай ~/vk-poster/HANDOFF.md и ~/vk-poster/MANUAL.md — это контекст.
 Продолжаем оттуда. Проблема: <одна строка что случилось>.
+
+🚀 Следующая сессия — с чего начинать
+Если вернёшься к проекту — одна команда для контекста:
+
+cd ~/site/vk-poster && cat HANDOFF.md
