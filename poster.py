@@ -221,13 +221,15 @@ def main(dry_run=False, test=False):
                 h = hd
                 break
         _tm = h.get('text_md') if h else None
-        message = md_to_vk(_tm) if _tm else text
+        body = md_to_vk(_tm) if _tm else text
+        head = []
         if today_d:
-            message += f"\n{slavic_calendar.header(today_d)}"
+            head.append(slavic_calendar.header(today_d))
         if today_d and CONFIG.get("add_krug"):
-            message += f"\n\nЛето {summer_from_smzh(today_d)} от С.М.З.Х."
+            head.append(f"Лето {summer_from_smzh(today_d)} от С.М.З.Х.")
         if info:
-            message += "\n" + "\n".join(info)
+            head.append("\n".join(info))
+        message = ("\n".join(head) + "\n\n" + body) if head else body
 
         if dry_run:
             mark = f"  [фото: {image_path.name}]" if image_path else ""

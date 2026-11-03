@@ -52,8 +52,8 @@ def element_number(d: date) -> int:
 
 # Границы Чертогов Сварожьего Круга (1 Рамхатъ = день 1)
 # Сумма: 22+22+21+22+22+24+25+25+23+22+23+22+23+22+24+23 = 365
-CHERTOG_STARTS = [1, 23, 45, 66, 88, 110, 134, 159, 184,
-                  207, 229, 252, 274, 297, 319, 343]
+CHERTOG_STARTS = [1, 24, 46, 67, 89, 111, 135, 160, 185,
+                  208, 230, 253, 275, 298, 320, 344]
 
 def chertog_number(d: date) -> int:
     """Номер Чертога (1..16) по Сварожьему Кругу (день в лѣте)."""
@@ -71,28 +71,32 @@ def krugolyet_number(d: date) -> int:
 
 # ─── Сборка info ───────────────────────────────────────────
 def build_info(d: date) -> list[str]:
-    s   = skz(d)
-    sl  = skl(d)
-    dds = day_in_summer(d)
-    sd  = summer_start(d)
-
+    s  = skz(d)
+    sl = skl(d)
+    k_name = KRUGOLETY[krugolyet_number(d)]
     en = element_number(d)
     e_name, e_color = ELEMENTS[en]
-    k_name = KRUGOLETY[krugolyet_number(d)]
 
     chn = chertog_number(d)
-    ch = _load_chertogs().get(str(chn), {})
-    ch_name   = ch.get('name',   '?')
+    ch  = _load_chertogs().get(str(chn), {})
+    ch_name   = ch.get('name_gen', ch.get('name', '?'))
     ch_patron = ch.get('patron', '?')
     ch_tree   = ch.get('tree',   '?')
+    pol       = ch.get('pol', 'ж')
+
+    if ',' in ch_patron:
+        title = 'Боги-Покровители'
+    elif pol == 'м':
+        title = 'Богъ-Покровитель'
+    else:
+        title = 'Богиня-Покровительница'
 
     return [
-        f"Лѣто в Круге Жизни: {s}/144",
-        f"Лѣто в круге Лѣт: {sl}/16",
-        f"Круголѣт: {k_name}",
-        f"Чертог: {ch_name}",
-        f"Стихия: {e_name}",
-        f"Покровитель: {ch_patron}",
-        f"Цвет: {e_color}",
-        f"Дерево: {ch_tree}",
+        f"⚡ Чертог {ch_name} – {title} {ch_patron} ⚡",
+        f"🌳 Священное Древо: {ch_tree}.",
+        f"● {sl}-є Лѣтъ (из 16-ти) в Крɣгє лѣтъ;",
+        f"● {s}-є Лѣтъ (из 144-х) в Крɣгє Жизни;",
+        f"● Круголѣт: {k_name};",
+        f"● Стихия: {e_name};",
+        f"● Цвет: {e_color}.",
     ]
