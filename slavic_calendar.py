@@ -60,6 +60,11 @@ def krugолет(dt: date):
 DAY_START_HOUR = 18
 KRAT = ZoneInfo('Asia/Krasnoyarsk')
 
+def today_krat() -> date:
+    """«Сегодня» по Красноярску — единая точка правды для всего проекта."""
+    return datetime.now(KRAT).date()
+
+
 def slavic_now(dt=None):
     """Момент → славянский день с учётом 18:00 (по Красноярску)."""
     if dt is None:

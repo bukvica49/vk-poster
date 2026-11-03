@@ -92,7 +92,7 @@ def _resolve_manual_info(h):
 
 def load_holidays():
     """Backward-compat: (m, d, text, img, info) для текущего/следующего года."""
-    today = date.today()
+    today = slavic_calendar.today_krat()
     out = []
     for h in _load_holidays_dicts():
         d_this = _holiday_date(h, today.year)
