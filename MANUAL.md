@@ -13,9 +13,11 @@ https://app.pagescms.org/bukvica49/vk-poster/main/collection/holidays
 `content/holidays/*.json` — **1 файл = 1 праздник** (не массив).
 
 Поля:
-- `date`    — обязательно, `MM-DD` (не `DD-MM`). **Это дата поста**:
-              `11-10` → пост выйдет **10 ноября** в 18:00 KRAT (или в `post_time`).
-              ⚠️ **НЕ нужно отнимать 1 день** — `date` = ровно день поста.
+- `date`    — обязательно, `MM-DD` (не `DD-MM`). **Гражданский день, в 18:00 которого
+              выйдет пост.** ⚠️ Это **канун** праздника: слав. сутки с заката.
+              Пример: «День Мирослава» 1 ноября → JSON `date: "10-31"` →
+              пост 31.10 18:00 KRAT.
+              Проверка: python3 -c "import poster; from datetime import date; print([t for t,_,_ in poster.holidays_today(date(2026,10,31))])"
 - `text`    — обязательно, заголовок поста
 - `slug`    — опционально (= имя файла; PagesCMS ставит автоматически)
 - `text_md` — опционально, Markdown-тело поста (если пусто — берётся `text`)

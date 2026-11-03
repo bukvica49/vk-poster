@@ -1,23 +1,29 @@
 # HANDOFF — контекст для AI
 
-Обновлено: 2026-11-03
+Обновлено: 2026-11-04
 Владелец: pokep (pokep-All-Series)
-Репо: ~/vk-poster (git: bukvica49/vk-poster)
+Репо: ~/site/vk-poster (git: bukvica49/vk-poster)
 VK-группа: 200796423, «Родная Традиция»
 
 ## Что это
 Автопостер ВК на славянском календаре (9-дневная неделя, Коляды Дар).
 Автозапуск: GitHub Actions, cron `0 11 * * *` UTC = 18:00 KRAT.
-Каждый день: slavic_now() -> найти праздник на «завтрашний» слав. день ->
-пост в VK -> git push state через DEPLOY_KEY. ПК может быть выключен.
+Каждый день: slavic_now() = datetime.now(KRAT).date() -> найти праздник
+с `date = сегодня` в content/holidays/*.json -> пост в VK -> git push state
+через DEPLOY_KEY. ПК может быть выключен.
+
+⚠️ `date` в JSON = гражданский день поста в 18:00 KRAT (канун праздника;
+слав. сутки с заката). Пример: «День Мирослава» 1 ноября → `date="10-31"` →
+пост 31.10 18:00 KRAT.
 
 Секреты GitHub (Settings -> Secrets -> Actions):
 - `VK_CONFIG`  — содержимое config.main.json
 - `DEPLOY_KEY` — приватный SSH (fingerprint: SHA256:wIS9WCBCR9u2IzIPI4aiHTIXcwHLQiJgPUy/k0Kl278)
 
 ## Ключевые решения (НЕ переспрашивать)
-1. Пост 18:00 = слав. «завтра». Слав. день с заката.
-   Родомир (слав. 06.11) постится 05.11 вечером.
+1. Пост 18:00 = канун праздника (слав. сутки с заката).
+   Пример: Родомир 06.11 → JSON `date="11-05"` → пост 05.11 18:00 KRAT.
+   `date` в JSON = день поста, НЕ день праздника.
 2. Ключ state = `YYYY-MM-DD|text[:40]`. Год в ключе -> 2027 пересчитается сам.
 3. Многодневный праздник (Неделя Праотцев) = отдельная запись на каждый день,
    свой image. Разные image -> разные text_md (патч hd_img).
@@ -61,9 +67,9 @@ VK-группа: 200796423, «Родная Традиция»
 - run_poster.sh         — cron wrapper
 
 ## Диагностика (первое, что делать при «сломалось»)
-tail -5  ~/vk-poster/log-runs.txt      # main=0 ок, main=1 упало, sync!=0 pull упал
-tail -20 ~/vk-poster/log-main.txt      # конкретная причина
-cd ~/vk-poster && python3 poster.py config.main.json --dry-run   # что будет запощено
+tail -5  ~/site/vk-poster/log-runs.txt      # main=0 ок, main=1 упало, sync!=0 pull упал
+tail -20 ~/site/vk-poster/log-main.txt      # конкретная причина
+cd ~/site/vk-poster && python3 poster.py config.main.json --dry-run   # что будет запощено
 
 ## Известные причины отказа
 - getWallUploadServer 27 или 5 -> user_token просрочен (vkhost.github.io -> VK Admin)
@@ -107,7 +113,7 @@ cd ~/vk-poster && python3 poster.py config.main.json --dry-run   # что буд
 js/slavic-date.js — СГЕНЕРИРОВАННЫЙ, не править руками.
 Синхронизация после правки Чертогов:
 
-    cd ~/vk-poster && python3 tools/build_site_slavic_js.py
+    cd ~/site/vk-poster && python3 tools/build_site_slavic_js.py
 
 Генератор сам бампает ?v=N в index.html + nav/*.html.
 Подробности: ~/site/bukvica49.github.io-main/MANUAL.md
@@ -131,29 +137,34 @@ js/slavic-date.js — СГЕНЕРИРОВАННЫЙ, не править рук
 ## 🔒 ФИНАЛ 2026-11-03 — fire-логика подтверждена, 3 фикса
 
 ### Что работает (НЕ ТРОГАТЬ)
-- `slavic_calendar.slavic_now()` возвращает `today + 1` после 18:00 KRAT.
-  Это **источник fire-логики**. State-key = target day (actual). 
-- `poster.py holidays_today(today)` фильтрует `d == today` где today уже сдвинут на +1 после 18:00 → пост выходит накануне в 18:00. **Правильно.**
-- Ручной пост Мирослава 31.10 → state-key `2026-11-01` — это target day, не fire. **Не путать.**
+- `slavic_calendar.slavic_now()` = `datetime.now(KRAT).date()` — **без сдвигов**.
+- Eve-shift делает **сам JSON** через `date` — не код.
+  State-key = `date` из JSON = гражданский день, в 18:00 которого вышел пост (fire day). 
+- `poster.py holidays_today(today)` фильтрует `d == today`, где `today = slavic_now()` = **сегодняшняя гражданская дата по KRAT** (без сдвигов). Пост в 18:00 самого `date` из JSON = канун праздника. **Правильно.**
+- Ручной пост Мирослава 31.10.2026 → state-key `2026-11-01|…` — **исторический артефакт** старой логики (`date="11-01"` + `slavic_now=+1`). Под вариантом A с 2027 key = `date` = fire day (для Мирослава → `2027-10-31|…`). **Не путать.**
 
 ### Что починено
 - **P1 (make_preview.py):** `today_civil = slavic_calendar.today_krat()` (было `date.today()` = UTC на GH Actions → превью отставало на 1 день в 00:00–07:00 KRAT)
 - **P2 (poster.py):** state-key = полный `text` (было `text[:40]` — длинные праздники «висели» в превью после публикации)
-- **P3 (content/holidays/den-miroslava-tariyskogo.json):** удалён битый `slavic` ({month:Айлетъ, day:2} → парсился как 21.09). Источник = `date=11-01` → fire всегда **31.10 18:00**. Проверено 2026/2027/2028.
+- **P3 (den-miroslava-tariyskogo.json):** удалён битый `slavic` ({month:Айлетъ, day:2} → парсился как 21.09). Текущий файл: `date="10-31"` → пост 31.10 18:00 KRAT. (Ключ state сменился: было `2026-11-01|…` по старой логике, стало `2026-10-31|…`. 2026 уже отработал по старому, для 2027 пойдёт по-новому.)
 
 ### Что НЕ ДЕЛАТЬ (потеряно 4 часа на ложные гипотезы)
-- ❌ **P4:** не сдвигать `holidays_today(today + 1)` — `slavic_now()` уже +1 → посты выйдут на 2 дня раньше.
+- ❌ **P4 (историческая ловушка):** не добавлять `+1` в `holidays_today(today + 1)` — раньше это компенсировало `+1` в `slavic_now`. Сейчас `slavic_now` = `today` без сдвигов; `today+1` даст посты на 1 день позже. Eve-shift — только в `date` JSON.
 - ❌ **while-цикл для state** — не нужен, `slavic_now()` уже поднимает год.
 - ❌ **Удалять/пересоздавать 52 праздника** — данные чистые (51/52 OK, 1 битый = Мирослав, исправлен).
-- ❌ **Мигрировать state 2026** — корректен (target day, не fire day).
+- ❌ **Мигрировать state 2026** — ключи `2026-…`; в 2027 пойдут `2027-…`; коллизий нет, миграция не нужна.
 
-### Расписание на 2027 (проверка)
-| Праздник | fire (KRAT) | target day (state) |
-|---|---|---|
-| Дидовъ | 28.10.2027 18:00 | 2027-10-29 |
-| Мирослав | 31.10.2027 18:00 | 2027-11-01 |
-| Харий | 02.11.2027 18:00 | 2027-11-03 |
-| Лебедь | 03.11.2027 18:00 | 2027-11-04 |
+### Расписание на 2027 (вариант A: state-key = `date` = fire day)
+| Праздник | JSON date | fire (KRAT) | state-key |
+|---|---|---|---|
+| Дидовъ | `10-28` | 28.10.2027 18:00 | `2027-10-28\|…` |
+| Мирослав | `10-31` | 31.10.2027 18:00 | `2027-10-31\|…` |
+| Харий | `11-02` | 02.11.2027 18:00 | `2027-11-02\|…` |
+| Лебедь | `11-03` | 03.11.2027 18:00 | `2027-11-03\|…` |
+
+Проверка: `python3 -c "import poster; from datetime import date; \
+[print(d, [t[:40] for t,_,_ in poster.holidays_today(date(2027,*map(int,d.split('-'))))]) \
+for d in ['10-28','10-31','11-02','11-03']]"`
 
 ### Контроль после любых правок
 
