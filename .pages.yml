@@ -53,6 +53,12 @@ content:
         type: rich-text
         required: false
         description: "VK понимает: жирный, курсив, зачёркнутый, ссылки, хэштеги, emoji. Заголовки/списки конвертируются в poster.py."
+      - name: post_time
+        label: "⏰ Время поста (ЧЧ:ММ, локальное)"
+        type: string
+        required: false
+        pattern: '^\d{2}:\d{2}$'
+        description: "Время публикации в славянский день. Пусто = 18:00 (наступление суток). Примеры: 21:30, 09:00, 02:00"
 
   - name: chertogs
     label: Чертоги
