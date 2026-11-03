@@ -29,10 +29,20 @@ VK-группа: 200796423, «Родная Традиция»
 - fa4a1af: постинг без фото -> FAIL main=1 (раньше уходил без фото)
 - патч: text_md подбирается по (text, image), не только по text
   проверка: grep -c "hd_img" poster.py  -> должно быть >= 2
+- 2026-11-03: шапка поста перестроена:
+  * шапка → в НАЧАЛО (было в конец)
+  * Чертог в шапке с полом: «Бог-Покровитель» / «Богиня-Покровительница»
+  * «🌳 Священное Древо: <порода>» — в шапке
+  * «от С.М.З.Х.» приклеено к строке 1 (без строки-дубля)
+  * сдвиг Чертогов +1 (индекс CHERTOG_STARTS в chertogs.json)
+  проверка: python3 poster.py config.main.json --dry-run
 
 ## Файлы
-- poster.py             — код (main(), holidays_today(), load_state())
-- slavic_calendar.py    — календарь, summer_from_smzh(_, (9,20))
+- poster.py             — код (main(), holidays_today(), load_state(),
+                           сборка шапки поста в НАЧАЛЕ)
+- slavic_auto.py        — build_info(day): Чертог + пол + Древо + Круголет
+- slavic_calendar.py    — календарь, header(day)
+- chertogs.json         — массив Чертогов + CHERTOG_STARTS (индекс начала)
 - md_to_vk.py           — Markdown -> VK
 - holidays.json         — праздники
 - config.main.json      — токены (НЕ в git, НЕ в чат)
@@ -49,6 +59,21 @@ cd ~/vk-poster && python3 poster.py config.main.json --dry-run   # что буд
 - getWallUploadServer 27 или 5 -> user_token просрочен (vkhost.github.io -> VK Admin)
 - «Файл не найден» -> фото нет в репо (залить через PagesCMS в корень)
 - sync!=0 -> конфликт git pull (смотреть log-sync.txt)
+
+## Формат шапки поста (2026-11-03, финальный)
+
+СЕДМИЦА · 4 Айлѣтъ · Лѣто 7535 от С.М.З.Х.
+⚡ Чертог Щуки – Богиня-Покровительница Рожана ⚡
+🌳 Священное Древо: Слива.
+● 15-є Лѣтъ (из 16-ти) в Крɣгє лѣтъ;
+● 15-є Лѣтъ (из 144-х) в Крɣгє Жизни;
+● Круголѣт: Хоромы (дом);
+● Стихия: Луна;
+● Цвет: фиолѣт.
+
+Порядок: шапка сверху → тело поста → фото.
+Сборка: poster.py (head) + slavic_auto.build_info(day) +
+slavic_calendar.header(day) + chertogs.json (данные).
 
 ## Правила для AI в новом чате
 1. Сначала прочитай HANDOFF.md и MANUAL.md — весь контекст там.
