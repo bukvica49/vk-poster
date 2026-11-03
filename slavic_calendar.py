@@ -2,6 +2,7 @@
 Якорь: 28.10.2026 = 1 Рамхатъ 7535, ПОНЕДѢЛЬНИКЪ.
 """
 from datetime import date, datetime, timedelta
+from zoneinfo import ZoneInfo
 
 SLAVIC_DAYS = [
     "ПОНЕДѢЛЬНИКЪ", "ВТОРНИКЪ", "ТРИТЕЙНИКЪ", "ЧЕТВЕРИКЪ", "ПѦТНИЦА",
@@ -57,11 +58,14 @@ def krugолет(dt: date):
 
 # ─── 18:00 — начало славянского дня ───
 DAY_START_HOUR = 18
+KRAT = ZoneInfo('Asia/Krasnoyarsk')
 
 def slavic_now(dt=None):
-    """Момент → славянский день с учётом 18:00."""
+    """Момент → славянский день с учётом 18:00 (по Красноярску)."""
     if dt is None:
-        dt = datetime.now()
+        dt = datetime.now(KRAT)
+    if isinstance(dt, datetime) and dt.tzinfo is not None:
+        dt = dt.astimezone(KRAT)
     d = dt.date() if hasattr(dt, "date") else dt
     hour = dt.hour if hasattr(dt, "hour") else 12
     if hour >= DAY_START_HOUR:
@@ -72,7 +76,7 @@ def slavic_now(dt=None):
 def header(dt=None) -> str:
     """Полная славянская дата (учёт 18:00)."""
     if dt is None:
-        dt = datetime.now()
+        dt = datetime.now(KRAT)
     sl = slavic_now(dt) if isinstance(dt, datetime) else dt
     leto, mi, d, wi = krugолет(sl)
     return f"{SLAVIC_DAYS[wi]} · {d} {SLAVIC_MONTHS[mi]} · Лѣто {leto}"
