@@ -21,22 +21,11 @@ content:
         required: true
         description: "Используется в URL: .../collection/holidays/<slug>. Например: den-bogini-makoshi"
       - name: date
-        label: Дата (MM-DD) — fallback
+        label: Дата поста (MM-DD)
         type: string
         required: true
         pattern: '\d{2}-\d{2}'
-        description: "Грегорианская дата. Если задан slavic — пересчитывается Slavic→Gregorian каждый год."
-      - name: slavic
-        label: Slavic-дата (опционально, авто-пересчёт)
-        type: object
-        required: false
-        fields:
-          - name: month
-            label: Месяц (напр. Рамхатъ)
-            type: string
-          - name: day
-            label: День (1–41)
-            type: number
+        description: "Дата поста: MM-DD (напр. 11-10 = 10 ноября). Пост выйдет в этот день в 18:00 KRAT."
       - name: text
         label: Текст поста (заголовок карточки)
         type: string
