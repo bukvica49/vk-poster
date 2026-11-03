@@ -234,9 +234,7 @@ def main(dry_run=False, test=False):
         body = md_to_vk(_tm) if _tm else text
         head = []
         if today_d:
-            _hl = slavic_calendar.header(today_d)
-            if CONFIG.get("add_krug"):
-                _hl += " от С.М.З.Х."
+            _hl = slavic_calendar.header_full(today_d, add_smzh=CONFIG.get("add_krug"))
             head.append(_hl)
         if info:
             head.append("\n".join(info))

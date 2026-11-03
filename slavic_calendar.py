@@ -3,6 +3,7 @@
 """
 from datetime import date, datetime, timedelta
 from zoneinfo import ZoneInfo
+from bukvicy import to_bukvicy
 
 SLAVIC_DAYS = [
     "ПОНЕДѢЛЬНИКЪ", "ВТОРНИКЪ", "ТРИТЕЙНИКЪ", "ЧЕТВЕРИКЪ", "ПѦТНИЦА",
@@ -13,6 +14,18 @@ SLAVIC_MONTHS = [
     "Рамхатъ", "Айлѣтъ", "Бейлѣтъ", "Гэйлѣтъ", "Дайлѣтъ",
     "Элѣтъ", "Вэйлѣтъ", "Хэйлѣтъ", "Тайлѣтъ",
 ]
+MONTH_DESC = {
+    1: 'Божественного Начала',
+    2: 'Новых Даровъ',
+    3: 'Белаго Сiяния и Покоя Мира',
+    4: 'Вьюг и Стужи',
+    5: 'Пробужденiя Природы',
+    6: 'Посева и Нареченiя',
+    7: 'Ветровъ',
+    8: 'Полученiя Даровъ Природы',
+    9: 'Завершенiя',
+}
+
 MONTH_LENS_SIMPLE = [41, 40, 41, 40, 41, 40, 41, 40, 41]  # Σ = 365
 MONTH_LENS_SACRED = [41, 41, 41, 41, 41, 41, 41, 41, 41]  # Σ = 369
 
@@ -85,6 +98,23 @@ def header(dt=None) -> str:
     sl = slavic_now(dt) if isinstance(dt, datetime) else dt
     leto, mi, d, wi = krugолет(sl)
     return f"{SLAVIC_DAYS[wi]} · {d} {SLAVIC_MONTHS[mi]} · Лѣто {leto}"
+
+
+def header_full(dt=None, add_smzh: bool = True) -> str:
+    """Полная шапка поста с буквицами.
+    СЕДМИЦА · 13 Айлѣтъ Сороковнiкъ (Мѣсꙗцъ) Новых Даровъ · Лѣто ҂ЗФЛЕ(7535) Ѿ С.М.З.Х."""
+    if dt is None:
+        dt = datetime.now(KRAT)
+    sl = slavic_now(dt) if isinstance(dt, datetime) else dt
+    leto, mi, d, wi = krugолет(sl)
+    mn = SLAVIC_MONTHS[mi]
+    desc = MONTH_DESC[mi + 1]
+    bkv = to_bukvicy(leto)
+    s = (f"{SLAVIC_DAYS[wi]} · {d} {mn} Сороковнiкъ "
+         f"(Мѣсꙗцъ) {desc} · Лѣто {bkv}({leto})")
+    if add_smzh:
+        s += ' Ѿ   С.М.З.Х.'
+    return s
 if __name__ == "__main__":
     for iso in ["2026-10-28","2026-10-30","2026-11-01","2026-12-08","2027-01-01"]:
         dt = date.fromisoformat(iso)
