@@ -96,11 +96,46 @@ def build():
                      'delta': (fire_civil - today_civil).days,
                      'text': h['text'], 'info': info, 'info_md': h.get('info_md'), 'text_md': h.get('text_md'), 'img': img_name,
                      'slavic': slavic_calendar.header(occ) + (' от С.М.З.Х.' if add_krug else ''),
-                     'posted': key in posted})
+                     'posted': key in posted, 'slug': h.get('slug') or ''})
     rows.sort(key=lambda r: r['occ'])
+    def card_edit_url(slug):
+        """URL редактирования конкретного праздника в PagesCMS."""
+        if not slug:
+            return "https://app.pagescms.org/bukvica49/vk-poster/main/collection/holidays"
+        import urllib.parse as _up
+        p = "content/holidays/" + slug + ".json"
+        return ("https://app.pagescms.org/bukvica49/vk-poster/main/collection/holidays/edit/"
+                + _up.quote(p, safe=""))
+
+    def build_post_text(r):
+        """Текст, который poster.py отправит в VK (согласовано с main())."""
+        head = []
+        if r.get("slavic"):
+            head.append(r["slavic"])
+        if r.get("info"):
+            head.append(chr(10).join(r["info"]))
+        md = r.get("text_md") or ""
+        try:
+            from poster import md_to_vk as _md_to_vk
+            body = _md_to_vk(md) if md else r["text"]
+        except Exception:
+            body = md if md else r["text"]
+        return (chr(10).join(head) + chr(10) * 2 + body) if head else body
+
+    posts_map = {}
+    for _i, _r in enumerate(rows):
+        _k = _r.get("slug") or f"_idx{_i}"
+        posts_map[_k] = build_post_text(_r)
+    posts_json = json.dumps(posts_map, ensure_ascii=False).replace("</", "<\\/")
+
+    _warn = [x for x in rows if x.get("info_md") and not x.get("text_md")]
+    if _warn:
+        print(f"warn: {len(_warn)} prazdnikov s info_md no bez text_md (preview != poster)")
+
 
     cards = []
-    for r in rows:
+    for _idx, r in enumerate(rows):
+        _key = r.get('slug') or f'_idx{_idx}'
         when = r['fire_civil'].strftime('%d.%m.%Y') + ' 18:00'
         delta = ('сегодня' if r['delta'] == 0 else 'завтра' if r['delta'] == 1
                  else f"через {r['delta']} дн." if r['delta'] > 0 else 'прошло')
@@ -117,10 +152,61 @@ def build():
         cards.append(f'''
     <div class="card">
       <div class="head"><div>{badge} <span class="when">{when}</span> <span class="in">{delta}</span></div>
-      <a class="edit" href="{edit_url}" target="_blank" rel="noopener">✎ изменить</a></div>
+        <div class="card-actions card-actions-inline">
+          <a class="btn-edit" href="{card_edit_url(r.get('slug', ''))}" target="_blank" rel="noopener" title="Редактировать">✏️</a>
+          <button class="btn-copy" data-slug="{_key}" onclick="copyPost(this)" title="Скопировать текст для VK">📋</button>
+        </div>
+      </div>
       <div class="body"><div class="img">{img_html}</div>
       <div class="meta"><h2>{r['text']}</h2><div class="slavic">{r['slavic']}</div>{info_html}</div></div>
     </div>''')
+
+
+    css_extra = '''
+ .card { position: relative; }
+ .head { position: static; padding-right: 84px; }
+ .card-actions { position: absolute; top: 8px; right: 8px; display: inline-flex; gap: 6px; z-index: 3; margin: 0; padding: 0; }
+ .card-actions a, .card-actions button { width: 32px; height: 32px; padding: 0; font-size: 16px; line-height: 1; border-radius: 7px; cursor: pointer; display: inline-flex; align-items: center; justify-content: center; transition: all .15s; border: 1px solid #d4c4a8; background: #f8f2e6; font-family: inherit; text-decoration: none; }
+ .card-actions a:hover, .card-actions button:hover { transform: translateY(-1px); box-shadow: 0 2px 6px rgba(0,0,0,.15); }
+ .btn-edit { color: #4a2a6a; }
+ .btn-edit:hover { background: #e8dcc4; }
+ .btn-copy { color: #2a3a4a; }
+ .btn-copy:hover { background: #d8e4ee; }
+ .btn-copy.copied { background: #4a7a4a; border-color: #4a7a4a; }
+'''
+
+    js_extra = '''
+<script type="application/json" id="posts-data">__POSTS_JSON__</script>
+<script>
+function copyPost(btn) {
+  var slug = btn.getAttribute('data-slug');
+  var dataEl = document.getElementById('posts-data');
+  if (!dataEl) { alert('Net dannych posta'); return; }
+  var data;
+  try { data = JSON.parse(dataEl.textContent); }
+  catch (e) { alert('Oshibka chteniya: ' + e); return; }
+  var txt = data[slug];
+  if (!txt) { alert('Tekst dlya slug=' + slug + ' ne nayden'); return; }
+  function ok() {
+    var orig = btn.textContent;
+    btn.textContent = '\u2705';
+    btn.classList.add('copied');
+    setTimeout(function() { btn.textContent = orig; btn.classList.remove('copied'); }, 1800);
+  }
+  if (navigator.clipboard && navigator.clipboard.writeText) {
+    navigator.clipboard.writeText(txt).then(ok).catch(function(e) { alert('Oshibka: ' + e); });
+  } else {
+    var ta = document.createElement('textarea');
+    ta.value = txt; ta.style.position = 'fixed'; ta.style.left = '-9999px';
+    document.body.appendChild(ta); ta.select();
+    try { document.execCommand('copy'); ok(); }
+    catch (e) { alert('Kopirovanie ne podderzhivaetsya'); }
+    document.body.removeChild(ta);
+  }
+}
+</script>
+'''
+    js_extra = js_extra.replace('__POSTS_JSON__', posts_json)
 
     html = f'''<!doctype html><html lang="ru"><head><meta charset="utf-8">
 <title>VK Poster — превью</title>
@@ -154,10 +240,10 @@ def build():
 .info-md img {{ max-width: 100%; border-radius: 6px; margin: 8px 0; }}
 .info-md code {{ background: #f0eef3; padding: 1px 5px; border-radius: 3px; font-size: 0.92em; color: #a30; }}
 .info-md hr {{ border: none; border-top: 1px solid #ddd; margin: 12px 0; }}
-</style></head><body><h1>📅 VK Poster</h1>
+{css_extra}</style></head><body><h1>📅 VK Poster</h1>
 <div class="toolbar"><span>{len(rows)} праздников · {today_civil.strftime('%d.%m.%Y')}</span>
 <div><a href="https://app.pagescms.org/bukvica49/vk-poster/main/collection/holidays" target="_blank" rel="noopener">📅 Праздники</a><a class="secondary" href="https://app.pagescms.org/bukvica49/vk-poster/main/file/chertogs" target="_blank" rel="noopener">🕯 Чертоги</a><a class="secondary" href="https://app.pagescms.org/bukvica49/vk-poster/main/file/krugolyety" target="_blank" rel="noopener">🌀 Круголеты</a></div></div>
-{''.join(cards)}</body></html>'''
+{''.join(cards)}{js_extra}</body></html>'''
     (OUT / 'index.html').write_text(html, encoding='utf-8')
     print(f'✅ _site/index.html — {len(rows)} постов')
 
