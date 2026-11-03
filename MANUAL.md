@@ -13,16 +13,16 @@ https://app.pagescms.org/bukvica49/vk-poster/main/collection/holidays
 `content/holidays/*.json` — **1 файл = 1 праздник** (не массив).
 
 Поля:
-- `date`    — обязательно, `MM-DD` (не `DD-MM`)
+- `date`    — обязательно, `MM-DD` (не `DD-MM`). **Это дата поста**:
+              `11-10` → пост выйдет **10 ноября** в 18:00 KRAT (или в `post_time`).
+              ⚠️ **НЕ нужно отнимать 1 день** — `date` = ровно день поста.
 - `text`    — обязательно, заголовок поста
 - `slug`    — опционально (= имя файла; PagesCMS ставит автоматически)
 - `text_md` — опционально, Markdown-тело поста (если пусто — берётся `text`)
+- `post_time` — опционально, время поста `ЧЧ:ММ` (локально по KRAT, пусто = 18:00). Примеры: `09:00`, `21:30`
 - `info`    — опционально, массив строк внизу поста
-- `info_md` — опционально, Markdown-версия `info[]`
+- `info_md` — legacy, в схеме PagesCMS больше не отображается (используй `info[]`)
 - `image`   — опционально, имя файла в КОРНЕ репо (Upload через PagesCMS)
-- `slavic`  — опционально, `{month, day}` — точный слав. день, перебивает
-              пересчёт из `date` (для «плавающих» праздников). Читает только
-              `poster.py`; `make_preview.py` — не использует.
 
 Фото: Upload в корень репо через PagesCMS.
 
@@ -60,10 +60,10 @@ Ctrl+Shift+R — hard refresh (если live не обновился после 
 ВНИМАНИЕ: локальный cron НЕ нужен. Если включишь — двойные посты.
 
 ## Проверить ДО публикации
-cd ~/vk-poster && python3 poster.py config.main.json --dry-run
+cd ~/site/vk-poster && python3 poster.py config.main.json --dry-run
 
 ## Ручной запуск локально (если ПК включён)
-cd ~/vk-poster && python3 poster.py config.main.json; echo "exit=$?"
+cd ~/site/vk-poster && python3 poster.py config.main.json; echo "exit=$?"
 # ВНИМАНИЕ: запускает РЕАЛЬНЫЙ пост в VK.
 
 ## Если пост не вышел
@@ -74,10 +74,10 @@ cd ~/vk-poster && python3 poster.py config.main.json; echo "exit=$?"
 3. зелёная галочка = успех, красный крестик = упало → клик на шаг `Run poster` → причина
 
 ### Шаг 2 — локально
-tail -5  ~/vk-poster/log-runs.txt
+tail -5  ~/site/vk-poster/log-runs.txt
 #  main=0 = ок/дубль,  main=1 = не вышел,  sync!=0 = git pull упал
 
-tail -20 ~/vk-poster/log-main.txt
+tail -20 ~/site/vk-poster/log-main.txt
 #  getWallUploadServer 27 → токен просрочен
 #  Файл не найден → фото нет в репо
 
@@ -87,7 +87,7 @@ vkhost.github.io/vk.html → "VK Admin" → права на группу → т�
 ## Сайт — синхронизация с автопостером
 После правки chertogs.json / CHERTOG_STARTS / формата шапки:
 
-    cd ~/vk-poster && python3 tools/build_site_slavic_js.py
+    cd ~/site/vk-poster && python3 tools/build_site_slavic_js.py
     cd ~/site/bukvica49.github.io-main
     git add js/ index.html nav/
     git commit -m "sync: славянская дата из chertogs.json"
@@ -144,12 +144,12 @@ HANDOFF.md                  — контекст для AI
 - chertogs.json / CHERTOG_STARTS — индекс начала массива Чертогов
 
 ## Профилактика — раз в месяц
-cd ~/vk-poster && tail -30 log-runs.txt | grep -c "main=1"
+cd ~/site/vk-poster && tail -30 log-runs.txt | grep -c "main=1"
 0 → спи дальше
 >0 → grep "main=1" -B2 -A2 log-runs.txt → если повторится — в чат
 
 ## Для AI
-Прочитай ~/vk-poster/HANDOFF.md и ~/vk-poster/MANUAL.md — это контекст.
+Прочитай ~/site/vk-poster/HANDOFF.md и ~/site/vk-poster/MANUAL.md — это контекст.
 Продолжаем оттуда. Проблема: <одна строка что случилось>.
 
 🚀 Следующая сессия — с чего начинать
