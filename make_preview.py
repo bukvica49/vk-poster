@@ -28,6 +28,11 @@ def next_occurrence(m, d, today):
     return cand if cand >= today else date(today.year + 1, m, d)
 
 def build():
+    try:
+        _cfg = json.loads((HERE / 'config.main.json').read_text(encoding='utf-8'))
+    except Exception:
+        _cfg = {}
+    add_krug = _cfg.get('add_krug', True)
     OUT.mkdir(exist_ok=True)
     img_out = OUT / 'images'
     if img_out.exists(): shutil.rmtree(img_out)
@@ -54,7 +59,14 @@ def build():
     for h in data['holidays']:
         m, dd = map(int, h['date'].split('-'))
         occ = next_occurrence(m, dd, today_civil)
-        info = h.get('info') or build_info(occ)
+        try:
+            _auto = build_info(occ)
+        except Exception:
+            _auto = []
+        _manual = h.get('info') or []
+        if isinstance(_manual, str):
+            _manual = [_manual]
+        info = _auto + [s.strip() for s in _manual if s.strip()]
         img_name = None
         if h.get('image'):
             p = HERE / h['image'].lstrip('/')
@@ -64,7 +76,7 @@ def build():
         rows.append({'occ': occ, 'fire_civil': fire_civil,
                      'delta': (fire_civil - today_civil).days,
                      'text': h['text'], 'info': info, 'info_md': h.get('info_md'), 'text_md': h.get('text_md'), 'img': img_name,
-                     'slavic': slavic_calendar.header(occ),
+                     'slavic': slavic_calendar.header(occ) + (' от С.М.З.Х.' if add_krug else ''),
                      'posted': key in posted})
     rows.sort(key=lambda r: r['occ'])
 
@@ -79,11 +91,10 @@ def build():
           '<span style="background:#e5e7eb;color:#666;padding:2px 8px;border-radius:4px;font-size:12px">⏳ ожидает</span>')
         img_html = (f'<img src="images/{r["img"]}" alt="">' if r['img']
                     else '<div class="no-img">нет фото</div>')
+        info_html = '<ul>' + ''.join(f'<li>{ln}</li>' for ln in r['info']) + '</ul>'
         desc_md = r.get('info_md') or r.get('text_md')
         if desc_md:
-            info_html = f'<div class="info-md">{md_to_html(desc_md)}</div>'
-        else:
-            info_html = '<ul>' + ''.join(f'<li>{ln}</li>' for ln in r['info']) + '</ul>'
+            info_html += f'<div class="info-md">{md_to_html(desc_md)}</div>'
         cards.append(f'''
     <div class="card">
       <div class="head"><div>{badge} <span class="when">{when}</span> <span class="in">{delta}</span></div>
