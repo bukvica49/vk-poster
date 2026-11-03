@@ -51,7 +51,28 @@ def render_js(chertogs: dict, starts: list[int]) -> str:
 (function () {{
   'use strict';
 
-  const SHOW_SMZH = true;  /* «от С.М.З.Х.» в шапке — как в VK-посте */
+  const SHOW_SMZH = true;  /* «Ѿ С.М.З.Х.» в шапке — как в VK-посте */
+  const LONG_MONTHS = [
+    'Божественного Начала', 'Новых Даровъ', 'Белаго Сiяния и Покоя Мира',
+    'Вьюг и Стужи', 'Пробужденiя Природы', 'Посева и Нареченiя',
+    'Ветровъ', 'Полученiя Даровъ Природы', 'Завершенiя',
+  ];
+  const CYR_ONES = {{1:'А', 2:'В', 3:'Г', 4:'Д', 5:'Е', 6:'Ѕ', 7:'З', 8:'И', 9:'Ѳ'}};
+  const CYR_TENS = {{1:'І', 2:'К', 3:'Л', 4:'М', 5:'Н', 6:'Ѯ', 7:'О', 8:'П', 9:'Ч'}};
+  const CYR_HUNDREDS = {{1:'Р', 2:'С', 3:'Т', 4:'У', 5:'Ф', 6:'Х', 7:'Ѱ', 8:'Ѡ', 9:'Ц'}};
+  const TYSYACHA = '҂';
+  function cyrYear(n) {{
+    if (!Number.isInteger(n) || n <= 0) return String(n);
+    const th = Math.floor(n / 1000); const r1 = n % 1000;
+    const hu = Math.floor(r1 / 100); const r2 = r1 % 100;
+    const te = Math.floor(r2 / 10);  const on = r2 % 10;
+    let s = '';
+    if (th) s += TYSYACHA + CYR_ONES[th];
+    if (hu) s += CYR_HUNDREDS[hu];
+    if (te) s += CYR_TENS[te];
+    if (on) s += CYR_ONES[on];
+    return s;
+  }}
 
   const SLAVIC_DAYS = ['ПОНЕДѢЛЬНИКЪ','ВТОРНИКЪ','ТРИТЕЙНИКЪ','ЧЕТВЕРИКЪ','ПѦТНИЦА',
                        'ШЕСТИЦА','СЕДМИЦА','ОСЬМИЦА','НЕДѢЛѦ'];
@@ -135,8 +156,10 @@ def render_js(chertogs: dict, starts: list[int]) -> str:
 
   function header(dt) {{
     const {{ leto, mi, d, wi }} = calcSlavic(dt);
-    const tail = SHOW_SMZH ? ' от С.М.З.Х.' : '';
-    return SLAVIC_DAYS[wi] + ' · ' + d + ' ' + SLAVIC_MONTHS[mi] + ' · Лѣто ' + leto + tail;
+    const tail = SHOW_SMZH ? '  Ѿ  С.М.З.Х.' : '';
+    return SLAVIC_DAYS[wi] + ' · ' + d + ' ' + SLAVIC_MONTHS[mi] +
+           ' Сороковнiкъ (Мѣсꙗцъ) ' + LONG_MONTHS[mi] +
+           ' · Лѣто ' + cyrYear(leto) + '(' + leto + ')' + tail;
   }}
 
   function chertogLine(dt) {{
