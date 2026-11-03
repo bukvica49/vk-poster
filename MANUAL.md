@@ -65,6 +65,15 @@ vkhost.github.io/vk.html → "VK Admin" → права на группу → т�
 
 Генератор сам поднимет ?v=N→N+1 в index.html и nav/*.html (cache-bust).
 Подробности: ~/site/bukvica49.github.io-main/MANUAL.md
+### Часовые пояса — VK и сайт могут расходиться
+
+- **VK-пост** = канонический Slavic день по **Красноярску** (`slavic_calendar.slavic_now()` → `datetime.now(KRAT)`).
+- **Сайт** (`js/slavic-date.js`) = Slavic день по **локальному TZ читателя** (рубеж 18:00 — по его часам).
+- ⚠️ У **не-красноярцев** VK-пост и сайт **могут показывать разные дни** в один момент — **осознанное решение, не баг**.
+- У **красноярцев** — совпадают всегда.
+
+Связано с фиксом `a10512d` (`slavic_calendar.py`: `datetime.now()` → `datetime.now(KRAT)`).
+
 
 ## Файлы
 holidays.json               — праздники (PagesCMS)
