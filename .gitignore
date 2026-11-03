@@ -36,3 +36,4 @@ state-179225207.json
 *.bak.*
 make_preview.py.*
 patch_buttons.py
+*.bak*
