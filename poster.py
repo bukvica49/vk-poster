@@ -199,7 +199,7 @@ def save_state(s):
 
 
 # ─── основной цикл ──────────────────────────────────────────────
-def main(dry_run=False, test=False, force=False, override_date=None):
+def main(dry_run=False, test=False, force=False, republish=False, override_date=None):
     if test:
         today_iso, today_d = None, None
         items = [("🧪 Тест: автопостер на славянском календаре настроен и постит.", None, [])]
@@ -220,7 +220,7 @@ def main(dry_run=False, test=False, force=False, override_date=None):
     state = load_state()
     for text, image_path, info in items:
         key = f"{today_iso}|{text[:40]}" if today_iso else None
-        if key and key in state["posted"]:
+        if key and key in state["posted"] and not republish:
             print(f"уже постили: {key}")
             continue
         _img_name = image_path.name if image_path else None
@@ -245,15 +245,26 @@ def main(dry_run=False, test=False, force=False, override_date=None):
                     post_hh, post_mm = int(_h), int(_m)
                 except Exception:
                     pass
-        _target_dt = datetime.combine(today_d, time(post_hh, post_mm)) if today_d else None
+        _target_dt = None
         _now = datetime.now()
-        POST_WINDOW_HOURS = 6
-        if not force and _target_dt:
+        if today_d:
+            # «Славянские сутки» начинаются в 18:00 ПРЕДЫДУЩЕГО григорианского дня
+            if _now.hour >= 18:
+                _start = datetime.combine(_now.date(), time(18, 0))
+            else:
+                _start = datetime.combine(_now.date() - timedelta(days=1), time(18, 0))
+            _offset_min = (post_hh * 60 + post_mm) - (18 * 60)
+            if _offset_min < 0:
+                _offset_min += 24 * 60
+            _target_dt = _start + timedelta(minutes=_offset_min)
+        # Окно проверяем ТОЛЬКО при реальной cron-публикации (без --force/--date/--dry-run)
+        if (not dry_run) and (not force) and (not override_date) and _target_dt:
+            POST_WINDOW_HOURS = 6
             if _now < _target_dt:
-                print(f"  ⏳ рано ({_now:%H:%M} < {_target_dt:%H:%M} {_target_dt:%Y-%m-%d}), ждём")
+                print(f"  ⏳ рано (сейчас {_now:%Y-%m-%d %H:%M}, слот {_target_dt:%Y-%m-%d %H:%M}), ждём")
                 continue
             if _now > _target_dt + timedelta(hours=POST_WINDOW_HOURS):
-                print(f"  ⏭  окно {POST_WINDOW_HOURS}ч истекло (слот {_target_dt:%Y-%m-%d %H:%M}) → след. год")
+                print(f"  ⏭  окно {POST_WINDOW_HOURS}ч истекло (слот {_target_dt:%Y-%m-%d %H:%M}) → следующий год")
                 continue
 
         _tm = h.get('text_md') if h else None
@@ -303,9 +314,11 @@ if __name__ == "__main__":
     _ap.add_argument("--dry-run", action="store_true")
     _ap.add_argument("--test", action="store_true")
     _ap.add_argument("--force", action="store_true",
-                     help="публиковать сейчас, игнорируя post_time и state")
+                     help="публиковать сейчас, игнорируя post_time (state соблюдается)")
+    _ap.add_argument("--republish", action="store_true",
+                     help="разрешить повторную публикацию (игнорирует state)")
     _ap.add_argument("--date", dest="override_date", default=None,
                      metavar="YYYY-MM-DD", help="эмулировать славянский день")
     _args = _ap.parse_args()
     main(dry_run=_args.dry_run, test=_args.test, force=_args.force,
-         override_date=_args.override_date)
+         republish=_args.republish, override_date=_args.override_date)
