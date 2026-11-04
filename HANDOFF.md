@@ -69,16 +69,20 @@ VK-группа: 200796423, «Родная Традиция»
 ## Диагностика (первое, что делать при «сломалось»)
 tail -5  ~/site/vk-poster/log-runs.txt      # main=0 ок, main=1 упало, sync!=0 pull упал
 tail -20 ~/site/vk-poster/log-main.txt      # конкретная причина
-cd ~/site/vk-poster && python3 poster.py config.main.json --dry-run   # что будет запощено
+cd ~/site/vk-poster && python3 poster.py --dry-run   # что будет запощено (--date YYYY-MM-DD — конкретная дата)
 
 ## Известные причины отказа
 - getWallUploadServer 27 или 5 -> user_token просрочен (vkhost.github.io -> VK Admin)
 - «Файл не найден» -> фото нет в репо (залить через PagesCMS в корень)
 - sync!=0 -> конфликт git pull (смотреть log-sync.txt)
 
-## Формат шапки поста (2026-11-04, финальный)
+## Формат шапки поста (2026-11-04: 5 строк, по два пробела вокруг ѿ)
 
-СЕДМИЦА · 4 Айлѣтъ Сороковнiкъ (Мѣсꙗцъ) Новых Даровъ · Лѣто ҂ЗФЛЕ(7535)  Ѿ  С.М.З.Х.
+Сєго днꙗ: въ Лѣтъ ҂ЗФЛЕ (7535)  ѿ  С.М.З.Х.,
+1-го Айлѣтъ - Сороковнiка (Мѣсꙗцъ)
+Новых Даровъ, ЧЕТВЕРИКЪ,
+(с 18.00, 31-го октября, 2026 г.,
+до 18.00, 1-го ноября, 2026 г. местн.вр.)
 ⚡ Чертог Щуки – Богиня-Покровительница Рожана ⚡
 🌳 Священное Древо: Слива.
 ● 15-є Лѣтъ (из 16-ти) в Крɣгє лѣтъ;
@@ -89,8 +93,10 @@ cd ~/site/vk-poster && python3 poster.py config.main.json --dry-run   # что �
 
 Порядок: шапка сверху → тело поста → фото.
 Сборка: header_full() в slavic_calendar.py;
-        вызывается из poster.py (line 237) и make_preview.py (line 98);
+        вызывается из poster.py и make_preview.py;
         тело поста = slavic_auto.build_info(day) + chertogs.json.
+Двойные пробелы вокруг «ѿ» — намеренно (VK сохраняет; локальное превью — CSS .slavic{white-space:pre-wrap}).
+Старая header() — legacy однострочная, для постов НЕ использовать.
 
 ## Превью-сайт (bukvica49.github.io/vk-poster)
 Отдельно от `~/site/bukvica49.github.io-main` — страница праздников.

@@ -87,6 +87,7 @@ def slavic_now(dt=None):
     return dt.date() if hasattr(dt, "date") else dt
 
 
+# NB: legacy однострочная шапка; для постов НЕ использовать, см. header_full()
 def header(dt=None) -> str:
     """Полная славянская дата (учёт 18:00)."""
     if dt is None:
