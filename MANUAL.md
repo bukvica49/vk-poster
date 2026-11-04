@@ -120,6 +120,30 @@ vkhost.github.io/vk.html → "VK Admin" → права на группу → т�
 
 Код — один файл web/app.js (примерно 200 строк, без зависимостей). Собирается в _site/app.js через make_preview.py и подключается в шаблоне как script src="app.js" defer.
 
+## Поиск по репозиторию — шпаргалка
+
+`./ed.py find` ищет по всем полям (`slug`, `text`, `text_md`, `info`, `image`), без учёта регистра, кириллица/латиница — как есть. Остальное — `grep`/`rg`/`find`.
+
+| Что нужно | Команда |
+|---|---|
+| Пост по slug | `./ed.py show chertog-devy` |
+| Пост по слову (заголовок/тело/инфо) | `./ed.py find щук` |
+| Все посты месяца | `./ed.py list \| grep '^01-'` |
+| Посты с `date_to` (многодневные) | `grep -l '"date_to"' content/holidays/*.json` |
+| Кто ссылается на картинку | `grep -l 'Дева.jpg' content/holidays/*.json` |
+| Посты без картинки | `./ed.py validate \| grep '^⚠'` |
+| Посты с жёсткой ошибкой | `./ed.py validate \| grep '^✗'` |
+| Что менял последним | `./ed.py status`, `git log --oneline -10` |
+| Рекурсивно по всем файлам | `rg -n 'паттерн'` (или `grep -rn 'паттерн' . --exclude-dir=.git`) |
+| Только `.json`, мимо `.git` | `find . -name '*.json' -not -path './.git/*'` |
+| Найти файл по имени (без учёта регистра) | `find . -iname '*дев*' -not -path './.git/*'` |
+
+Три мелочи, которые экономят время:
+
+- `grep '^⚠'` — `^` обязателен. Строка итогов `Итого: 58 ✓, 12 ⚠, 0 ✗` тоже содержит `⚠`, и без `^` в grep-пайп попадёт `58` вместо slug. Проверено на практике — цикл упал на `content/holidays/58.json`.
+- `./ed.py list --json` → `python3 -m json.tool` — если хочется отступить JSON для чтения.
+- `git grep 'паттерн'` — если `rg` нет, а нужно быстро и с учётом индекса.
+
 ## Файлы
 content/holidays/*.json       — праздники (PagesCMS collection, 1 файл = 1)
 make_preview.py               — генератор _site/ (превью-сайт с кнопками)
