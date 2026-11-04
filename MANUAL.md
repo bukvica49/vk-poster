@@ -227,3 +227,8 @@ cd ~/site/vk-poster && tail -30 log-runs.txt | grep -c "main=1"
 Если вернёшься к проекту — одна команда для контекста:
 
 cd ~/site/vk-poster && cat HANDOFF.md
+
+- **`ed.py`** — 12 команд (`list/show/find/validate/edit/new/image/rm/preview/publish/status/export`). `validate` различает `✗` (жёсткая, exit 1) и `⚠` (нет картинки, exit 0). `--strict` — для хука в `publish`. `Итого:` печатается всегда.
+- **Картинки**: `image` копирует файл в `images/` и прописывает `/images/<file>` в JSON. `сhertog-devy` и ещё 11 — без картинок (файлов никогда не было), `image` удалён из JSON. У `chertog-busla`, `chertog-lebedy` и других — есть.
+- **Git**: `publish` без slug — `git add -A`, со slug — точечно. Хук вызывает `validate --strict` перед коммитом.
+- **Дата**: `MM-DD` = канун праздника (слав. сутки с заката), пост 18:00 KRAT (или `post_time`).
