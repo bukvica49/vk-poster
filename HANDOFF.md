@@ -130,6 +130,28 @@ State-key по-прежнему на fire-дате.
 - НЕ добавлять inline `margin-left:auto` — перебьёт gap (баг d30a506)
 - slug URL-encoded: `content%2Fholidays%2F{slug}.json`
 
+## Клиентская панель (web/app.js)
+
+Добавлено ноябрь 2026, коммит b00682e. Отдельный клиентский скрипт web/app.js (~204 строки, IIFE, без зависимостей), подключается к _site/index.html через script src="app.js" defer. Добавляет: поиск по карточкам, панель настроек вида (ночной режим, фон), хранение в localStorage под ключом vp-prefs. Не требует сервера или логина.
+
+Две точки касания с make_preview.py: около строки 63 копируется web/app.js → _site/app.js, около строки 264 в шаблон html вставляется script src="app.js" defer перед закрывающим body. Если web/app.js отсутствует — копирование молчит, сборка не падает.
+
+Инициализация: localStorage['vp-prefs'] читается в prefs, отсутствующие поля = дефолты. Стили добавляются через style в head из app.js (не в шаблоне). applyTheme и applyBackground выполняются до buildUI, чтобы не было мигания светлой темы при загрузке. buildUI вызывается по DOMContentLoaded.
+
+Поиск: cardIndex собирает строку-индекс из h2, .meta, data-slug, span.when (с развёрнутой формой) и textContent, сохраняет в card.dataset.vpIdx, чтобы не пересчитывать на каждый ввод. expandDate("05.11.2026 18:00") даёт варианты: 05.11, 05.11.2026, 11.05, 2026-11-05, 2026, ноябрь, ноя, 5 ноя. doFilter делает простой includes со счётчиком.
+
+Панель настроек: вставляется через h1.insertAdjacentElement('afterend', bar) — цепляется за h1 "VK Poster". Если h1 убрать или переименовать — панель не вставится (но ничего не сломает). Сама панель vp-settings-panel скрыта по умолчанию, показывается по клику.
+
+Фон: applyBackground создаёт div#vp-bg-overlay.vp-bg-overlay в body (position:fixed, z-index:-1), opacity .22 в светлой теме, .14 в тёмной. collectBackgrounds собирает img src из всех карточек плюс ключи prefs.userBackgrounds. Загрузка через FileReader.readAsDataURL сохраняется в prefs.userBackgrounds[dataURI]. Лимит 4 МБ в change — не грузим больше (localStorage обычно 5-10 МБ на origin).
+
+Формат vp-prefs: объект с полями theme ("dark" или отсутствует), background (URL из images/ или data-URI), userBackgrounds (map {dataURI: {name, added}}).
+
+Правка: $EDITOR web/app.js, запустить python3 make_preview.py для локальной сборки, проверить через python3 -m http.server 8765 в _site (не file://, иначе app.js не подгрузится), затем git add web/app.js && git commit && git push.
+
+Не реализовано: загрузка фона в репозиторий для всех посетителей (нужен GitHub PAT в браузере), общие настройки для всех (писать в HTML при сборке через web/prefs.json), отдельная папка backgrounds/, ссылка вида ?bg=images/x.jpg&theme=dark, кнопка «сегодня» / «на этой неделе», сортировка или группировка по месяцам, экспорт/импорт настроек.
+
+Ограничения: h1 должен остаться (панель цепляется за него). localStorage лимит около 5 МБ — примерно 3-4 фоновых JPEG после base64 (+33% размера). 4 МБ на фон — жёсткий лимит в change. После пуша нужен Ctrl+Shift+R, GitHub Pages отдаёт HTML с Cache-Control max-age=600. Фон в инкогнито не сохранится — localStorage изолирован.
+
 ## Сайт (~/site/bukvica49.github.io-main)
 Отдельный репо bukvica49/bukvica49.github.io (~/site/...), GitHub Pages.
 js/slavic-date.js — СГЕНЕРИРОВАННЫЙ, не править руками.
