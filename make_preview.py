@@ -232,7 +232,7 @@ function copyPost(btn) {
  .img img{{width:160px;height:160px;object-fit:cover;border-radius:8px}}
  .no-img{{width:160px;height:160px;background:#eee;border-radius:8px;display:flex;align-items:center;justify-content:center;color:#999;font-size:12px}}
  h2{{margin:0 0 8px;font-size:16px}} ul{{margin:0;padding-left:16px;font-size:13px;line-height:1.7}}
- .slavic{{margin:6px 0 10px;font-size:13px;color:#4a5568;font-style:italic;padding:4px 10px;background:#edf2f7;border-radius:4px;display:inline-block}}
+ .slavic{{margin:6px 0 10px;font-size:13px;color:#4a5568;font-style:italic;padding:4px 10px;background:#edf2f7;border-radius:4px;display:inline-block;white-space:pre-wrap}}
  @media(max-width:600px){{.body{{grid-template-columns:1fr}}.img img,.no-img{{width:100%;height:auto;max-height:280px}}}}
 
 .info-md {{ font-size: 0.94em; line-height: 1.55; }}

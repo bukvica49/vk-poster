@@ -97,20 +97,28 @@ def header(dt=None) -> str:
 
 
 def header_full(dt=None, add_smzh: bool = True) -> str:
-    """Полная шапка поста с буквицами.
-    СЕДМИЦА · 13 Айлѣтъ Сороковнiкъ (Мѣсꙗцъ) Новых Даровъ · Лѣто ҂ЗФЛЕ(7535) Ѿ С.М.З.Х."""
+    """Полная шапка поста — 5 строк (форм. 2026-11-05)."""
+    CIVIL_MONTHS_GEN = ["", "января", "февраля", "марта", "апреля", "мая", "июня",
+                        "июля", "августа", "сентября", "октября", "ноября", "декабря"]
     if dt is None:
         dt = datetime.now(KRAT)
+    dt_date = dt.date() if isinstance(dt, datetime) else dt
     sl = slavic_now(dt) if isinstance(dt, datetime) else dt
     leto, mi, d, wi = krugолет(sl)
     mn = SLAVIC_MONTHS[mi]
     desc = MONTH_DESC[mi + 1]
     bkv = to_bukvicy(leto)
-    s = (f"{SLAVIC_DAYS[wi]} · {d} {mn} Сороковнiкъ "
-         f"(Мѣсꙗцъ) {desc} · Лѣто {bkv}({leto})")
-    if add_smzh:
-        s += '  Ѿ  С.М.З.Х.'
-    return s
+    nd = dt_date + timedelta(days=1)
+    tail = "  ѿ  С.М.З.Х." if add_smzh else ""
+    line1 = f"Сєго днꙗ: въ Лѣтъ {bkv} ({leto}){tail},"
+    line2 = f"{d}-го {mn} - Сороковнiка (Мѣсꙗцъ)"
+    line3 = f"{desc}, {SLAVIC_DAYS[wi]},"
+    line4 = (f"(с 18.00, {dt_date.day}-го "
+             f"{CIVIL_MONTHS_GEN[dt_date.month]}, {dt_date.year} г.,")
+    line5 = (f"до 18.00, {nd.day}-го "
+             f"{CIVIL_MONTHS_GEN[nd.month]}, {nd.year} г. местн.вр.)")
+    return "\n".join([line1, line2, line3, line4, line5])
+
 if __name__ == "__main__":
     for iso in ["2026-10-28","2026-10-30","2026-11-01","2026-12-08","2027-01-01"]:
         dt = date.fromisoformat(iso)
