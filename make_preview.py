@@ -89,7 +89,7 @@ def build():
             except ValueError:  # 29 фев
                 occ = date(occ.year + 1, m, dd - 1)
         try:
-            _auto = build_info(occ)
+            _auto = build_info(occ + timedelta(days=1))
         except Exception:
             _auto = []
         _manual = h.get('info') or []

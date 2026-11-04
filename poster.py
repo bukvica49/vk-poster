@@ -112,7 +112,7 @@ def load_holidays():
             continue
         out.append((d_this.month, d_this.day, h["text"],
                     _resolve_image(h),
-                    _build_info_safe(d_this) + _resolve_manual_info(h)))
+                    _build_info_safe(d_this + timedelta(days=1)) + _resolve_manual_info(h)))
     return out
 
 
@@ -131,7 +131,7 @@ def holidays_for_year(year: int):
             continue
         rows.append((d, h["text"],
                      _resolve_image(h),
-                     _build_info_safe(d) + _resolve_manual_info(h)))
+                     _build_info_safe(d + timedelta(days=1)) + _resolve_manual_info(h)))
     return sorted(rows)
 
 

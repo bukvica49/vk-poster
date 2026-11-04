@@ -104,8 +104,10 @@ def header_full(dt=None, add_smzh: bool = True) -> str:
     if dt is None:
         dt = datetime.now(KRAT)
     dt_date = dt.date() if isinstance(dt, datetime) else dt
-    sl = slavic_now(dt) if isinstance(dt, datetime) else dt
-    leto, mi, d, wi = krugолет(sl)
+    # Шапка описывает день ПРАЗДНИКА (тот, о котором пост), а не fire-дату.
+    # Fire в 18:00 кануна = начало слав. суток → слав. дата = dt_date + 1.
+    holiday_date = dt_date + timedelta(days=1)
+    leto, mi, d, wi = krugолет(holiday_date)
     mn = SLAVIC_MONTHS[mi]
     desc = MONTH_DESC[mi + 1]
     bkv = to_bukvicy(leto)
