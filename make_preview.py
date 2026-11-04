@@ -61,6 +61,10 @@ def build():
     # favicon
     fav = HERE / 'favicon.svg'
     if fav.is_file(): shutil.copy2(fav, OUT / 'favicon.svg')
+    _app = HERE / 'web' / 'app.js'
+    if _app.is_file():
+        shutil.copy2(_app, OUT / 'app.js')
+        print('✅ _site/app.js скопирован')
     if IMAGES.exists():
         for p in IMAGES.glob('*'):
             if p.is_file(): shutil.copy2(p, img_out / p.name)
@@ -261,7 +265,7 @@ function copyPost(btn) {
 {css_extra}</style></head><body><h1>📅 VK Poster</h1>
 <div class="toolbar"><span>{len(rows)} праздников · {today_civil.strftime('%d.%m.%Y')}</span>
 <div><a href="https://app.pagescms.org/bukvica49/vk-poster/main/collection/holidays" target="_blank" rel="noopener">📅 Праздники</a><a class="secondary" href="https://app.pagescms.org/bukvica49/vk-poster/main/file/chertogs" target="_blank" rel="noopener">🕯 Чертоги</a><a class="secondary" href="https://app.pagescms.org/bukvica49/vk-poster/main/file/krugolyety" target="_blank" rel="noopener">🌀 Круголеты</a><a class="secondary" href="https://app.pagescms.org/bukvica49/vk-poster/main/collection/holidays/new" target="_blank" rel="noopener" title="Добавить новый праздник">➕ Новый</a></div></div>
-{''.join(cards)}{js_extra}</body></html>'''
+{''.join(cards)}{js_extra}<script src="app.js" defer></script></body></html>'''
     (OUT / 'index.html').write_text(html, encoding='utf-8')
     print(f'✅ _site/index.html — {len(rows)} постов')
 
