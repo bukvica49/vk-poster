@@ -2,7 +2,7 @@
 
 Обновлено: 2026-11-04
 Владелец: pokep (pokep-All-Series)
-Репо: ~/site/vk-poster (git: bukvica49/vk-poster)
+Репо: ~/site/vk-poster-ARCHIVE-20261104 (git: bukvica49/vk-poster)
 VK-группа: 200796423, «Родная Традиция»
 
 ## Что это
@@ -70,9 +70,9 @@ VK-группа: 200796423, «Родная Традиция»
 - run_poster.sh         — cron wrapper
 
 ## Диагностика (первое, что делать при «сломалось»)
-tail -5  ~/site/vk-poster/log-runs.txt      # main=0 ок, main=1 упало, sync!=0 pull упал
-tail -20 ~/site/vk-poster/log-main.txt      # конкретная причина
-cd ~/site/vk-poster && python3 poster.py --dry-run   # что будет запощено (--date YYYY-MM-DD — конкретная дата)
+tail -5  ~/site/vk-poster-ARCHIVE-20261104/log-runs.txt      # main=0 ок, main=1 упало, sync!=0 pull упал
+tail -20 ~/site/vk-poster-ARCHIVE-20261104/log-main.txt      # конкретная причина
+cd ~/site/vk-poster-ARCHIVE-20261104 && python3 poster.py --dry-run   # что будет запощено (--date YYYY-MM-DD — конкретная дата)
 
 ## Известные причины отказа
 - getWallUploadServer 27 или 5 -> user_token просрочен (vkhost.github.io -> VK Admin)
@@ -160,7 +160,7 @@ State-key по-прежнему на fire-дате.
 js/slavic-date.js — СГЕНЕРИРОВАННЫЙ, не править руками.
 Синхронизация после правки Чертогов:
 
-    cd ~/site/vk-poster && python3 tools/build_site_slavic_js.py
+    cd ~/site/vk-poster-ARCHIVE-20261104 && python3 tools/build_site_slavic_js.py
 
 Генератор сам бампает ?v=N в index.html + nav/*.html.
 Подробности: ~/site/bukvica49.github.io-main/MANUAL.md
