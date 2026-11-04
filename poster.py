@@ -11,7 +11,36 @@ from md_to_vk import md_to_vk    # Круголет Числобога
 BASE      = Path(__file__).resolve().parent
 _cfg_name = next((a for a in sys.argv[1:]
                   if a.endswith(".json") and a not in ("holidays.json",)), "config.main.json")
-CONFIG    = json.loads((BASE / _cfg_name).read_text(encoding="utf-8"))
+_cfg_path = BASE / _cfg_name
+_DRY_RUN  = "--dry-run" in sys.argv
+
+
+def _load_config(path: Path, required: bool):
+    if not path.exists():
+        if not required:
+            print(f"[dry-run] нет {path.name} — config не нужен для dry-run",
+                  file=sys.stderr)
+            return None
+        print(f"\nОШИБКА: нет {path.name} — нужен для реального постинга в VK.\n"
+              f"\n"
+              f"Откуда взять:\n"
+              f"  1) с прошлой машины / из хранилища секретов,\n"
+              f"  2) GitHub → Settings → Secrets and variables → Actions → VK_CONFIG\n"
+              f"     (workflow раскладывает его в файл перед запуском),\n"
+              f"  3) вручную: см. {BASE / 'config.example.json'}.\n"
+              f"\n"
+              f"Для проверки без постинга: --dry-run (config не нужен).",
+              file=sys.stderr)
+        sys.exit(2)
+    try:
+        return json.loads(path.read_text(encoding="utf-8"))
+    except json.JSONDecodeError as e:
+        print(f"ОШИБКА: {path.name} — невалидный JSON ({e})", file=sys.stderr)
+        sys.exit(2)
+
+
+_cfg      = _load_config(_cfg_path, required=not _DRY_RUN)
+CONFIG    = _cfg if _cfg is not None else {"group_id": "dry-run", "token": ""}
 STATE_FILE = BASE / f"state-{CONFIG['group_id']}.json"
 HOLIDAYS   = BASE / "holidays.json"
 API        = "https://api.vk.com/method/"

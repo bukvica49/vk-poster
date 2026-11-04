@@ -1,5 +1,6 @@
 {
-  "token": "PASTE_VK_TOKEN_HERE",
-  "group_id": 0,
+  "group_id": "200796423",
+  "token": "vk1.a.ВСТАВЬ_СВОЙ_ТОКЕН",
+  "user_token": "vk1.a.ОПЦИОНАЛЬНО_ДЛЯ_ЗАГРУЗКИ_ФОТО",
   "add_krug": true
 }
