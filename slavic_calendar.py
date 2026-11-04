@@ -97,29 +97,66 @@ def header(dt=None) -> str:
     return f"{SLAVIC_DAYS[wi]} · {d} {SLAVIC_MONTHS[mi]} · Лѣто {leto}"
 
 
-def header_full(dt=None, add_smzh: bool = True) -> str:
-    """Полная шапка поста — 3 строки (форм. 2026-11-04)."""
+def header_full(dt=None, add_smzh: bool = True, range_to=None, chertog_block=None) -> str:
+    """Полная шапка поста.
+
+    dt            — fire-дата (канун слав.дня)
+    range_to      — fire-дата окончания Чертога (None = одиночный день)
+    chertog_block — dict {'title_line','patron','pol','tree','totem'} для Чертожьих постов
+    """
     CIVIL_MONTHS_GEN = ["", "января", "февраля", "марта", "апреля", "мая", "июня",
                         "июля", "августа", "сентября", "октября", "ноября", "декабря"]
     if dt is None:
         dt = datetime.now(KRAT)
     dt_date = dt.date() if isinstance(dt, datetime) else dt
-    # Шапка описывает день ПРАЗДНИКА (тот, о котором пост), а не fire-дату.
-    # Fire в 18:00 кануна = начало слав. суток → слав. дата = dt_date + 1.
     holiday_date = dt_date + timedelta(days=1)
     leto, mi, d, wi = krugолет(holiday_date)
     mn = SLAVIC_MONTHS[mi]
     desc = MONTH_DESC[mi + 1]
     bkv = to_bukvicy(leto)
-    nd = dt_date + timedelta(days=1)
     tail = "  ѿ  С.М.З.Х." if add_smzh else ""
     line1 = f"Сєго днꙗ: въ Лѣтъ {bkv} ({leto}){tail},"
-    line2 = f"{d}-го {mn} - Сороковнiка (Мѣсꙗцъ) {desc}, {SLAVIC_DAYS[wi]},"
-    line3 = (f"(с 18.00, {dt_date.day}-го "
-             f"{CIVIL_MONTHS_GEN[dt_date.month]}, {dt_date.year} г., "
-             f"до 18.00, {nd.day}-го "
-             f"{CIVIL_MONTHS_GEN[nd.month]}, {nd.year} г. местн.вр.)")
-    return "\n".join([line1, line2, line3])
+
+    if range_to is None:
+        nd = dt_date + timedelta(days=1)
+        line2 = f"{d}-го {mn} - Сороковнiка (Мѣсꙗцъ) {desc}, {SLAVIC_DAYS[wi]},"
+        line3 = (f"(с 18.00, {dt_date.day}-го "
+                 f"{CIVIL_MONTHS_GEN[dt_date.month]}, {dt_date.year} г., "
+                 f"до 18.00, {nd.day}-го "
+                 f"{CIVIL_MONTHS_GEN[nd.month]}, {nd.year} г. местн.вр.)")
+        lines = [line1, line2, line3]
+    else:
+        slav_end = range_to + timedelta(days=1)
+        _, mi2, d2, _ = krugолет(slav_end)
+        mn2 = SLAVIC_MONTHS[mi2]
+        desc2 = MONTH_DESC[mi2 + 1]
+        if mi == mi2:
+            line2 = (f"с {d}-го по {d2}-е {mn} - Сороковнiка (Мѣсꙗцъ) {desc}, "
+                     f"{SLAVIC_DAYS[wi]},")
+        else:
+            line2 = (f"с {d}-го {mn} - Сороковнiка (Мѣсꙗцъ) {desc}, {SLAVIC_DAYS[wi]},\n"
+                     f"по {d2}-е {mn2} - Сороковнiка (Мѣсꙗцъ) {desc2},")
+        line3 = (f"(с 18.00, {dt_date.day}-го "
+                 f"{CIVIL_MONTHS_GEN[dt_date.month]}, {dt_date.year} г., "
+                 f"до 18.00, {slav_end.day}-го "
+                 f"{CIVIL_MONTHS_GEN[slav_end.month]}, {slav_end.year} г. местн.вр.)")
+        lines = [line1, line2, line3]
+
+    if chertog_block:
+        patron = chertog_block.get('patron') or '?'
+        pol    = chertog_block.get('pol') or 'ж'
+        if ',' in patron:
+            title = 'Боги-Покровители'
+        elif pol == 'м':
+            title = 'Богъ-Покровитель'
+        else:
+            title = 'Богиня-Покровительница'
+        lines.append(chertog_block.get('title_line') or '⚡ Входъ въ Чертогъ ⚡')
+        lines.append(f"👤 {title}: {patron}")
+        lines.append(f"🌳 Священное Древо: {chertog_block.get('tree') or '?'}")
+        lines.append(f"🐾 Тотемъ: {chertog_block.get('totem') or '?'}")
+
+    return "\n".join(lines)
 
 if __name__ == "__main__":
     for iso in ["2026-10-28","2026-10-30","2026-11-01","2026-12-08","2027-01-01"]:

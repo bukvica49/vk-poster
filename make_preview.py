@@ -88,8 +88,16 @@ def build():
                 occ = date(occ.year + 1, m, dd)
             except ValueError:  # 29 фев
                 occ = date(occ.year + 1, m, dd - 1)
+        _is_ch = bool(h.get('chertog'))
+        _block, _range_to = (None, None)
+        if _is_ch:
+            try:
+                from slavic_auto import chertog_block_for
+                _block, _range_to = chertog_block_for(h, occ)
+            except Exception:
+                _block, _range_to = None, None
         try:
-            _auto = build_info(occ + timedelta(days=1))
+            _auto = build_info(occ + timedelta(days=1), chertog=_is_ch)
         except Exception:
             _auto = []
         _manual = h.get('info') or []
@@ -105,7 +113,8 @@ def build():
         rows.append({'occ': occ, 'fire_civil': fire_civil,
                      'delta': (fire_civil - today_civil).days,
                      'text': h['text'], 'info': info, 'info_md': h.get('info_md'), 'text_md': h.get('text_md'), 'img': img_name,
-                     'slavic': slavic_calendar.header_full(occ, add_smzh=add_krug),
+                     'slavic': slavic_calendar.header_full(occ, add_smzh=add_krug,
+                                                          range_to=_range_to, chertog_block=_block),
                      'posted': key in posted, 'slug': h.get('slug') or '',
                      'filename': h.get('_filename', '')})
     rows.sort(key=lambda r: r['occ'])

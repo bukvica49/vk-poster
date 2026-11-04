@@ -1,7 +1,9 @@
 {
   "slug": "chertog-lebedy",
   "date": "11-03",
-  "text": "Чертог Лебедя",
+  "date_to": "11-23",
+  "text": "⚡ Входъ въ Чертогъ Лебедя ⚡",
   "image": "/images/Лебедь.jpg",
+  "chertog": "Лебедь",
   "post_time": "18:00"
 }

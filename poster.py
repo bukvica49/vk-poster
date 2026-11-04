@@ -80,10 +80,10 @@ def _holiday_date(h, year):
         return None
 
 
-def _build_info_safe(d):
+def _build_info_safe(d, chertog=False):
     try:
         from slavic_auto import build_info
-        return build_info(d)
+        return build_info(d, chertog=chertog)
     except Exception:
         return []
 
@@ -199,6 +199,16 @@ def save_state(s):
 
 
 # ─── основной цикл ──────────────────────────────────────────────
+def _post_sort_key(item):
+    """Приоритет: «День …» → «Чертог …» → прочие (по алфавиту)."""
+    t = (item[0] or '')
+    if t.startswith('День ') or t.startswith('День\u00a0'):
+        return (0, t)
+    if 'Чертог' in t:
+        return (1, t)
+    return (2, t)
+
+
 def main(dry_run=False, test=False, force=False, republish=False, override_date=None):
     if test:
         today_iso, today_d = None, None
@@ -218,24 +228,46 @@ def main(dry_run=False, test=False, force=False, republish=False, override_date=
         return
 
     state = load_state()
+    items = sorted(items, key=_post_sort_key)
+
+    from time import sleep as _sleep
+
+    _slot_pos = {}
+    _failures = []
+
     for text, image_path, info in items:
-        key = f"{today_iso}|{text}" if today_iso else None  # fix P2: полный text (совпадает с make_preview)
+        key = f"{today_iso}|{text}" if today_iso else None
         if key and key in state["posted"] and not republish:
             print(f"уже постили: {key}")
             continue
+
         _img_name = image_path.name if image_path else None
         h = None
         for hd in _load_holidays_dicts():
             if hd.get('text') != text:
                 continue
-            hd_img = hd.get('image')
-            if _img_name and hd_img == _img_name:
+            hd_img_rel = (hd.get('image') or '').strip()
+            hd_img_name = hd_img_rel.rsplit('/', 1)[-1] if hd_img_rel else None
+            if _img_name and hd_img_name == _img_name:
                 h = hd
                 break
-            if not _img_name and not hd_img:
+            if not _img_name and not hd_img_name:
                 h = hd
                 break
-        # --- post_time (МСК, локальное время хоста) + окно ---
+        if h is None:
+            print(f"  ⚠  h не найден для «{text[:40]}» — post_time/чертог дефолтные")
+
+        # ── пересчёт info с учётом chertog ──
+        if h:
+            try:
+                from slavic_auto import build_info as _build_info
+                _flag = bool(h.get('chertog'))
+                _auto = _build_info(today_d + timedelta(days=1), chertog=_flag)
+                info = _auto + _resolve_manual_info(h)
+            except Exception:
+                pass
+
+        # ── post_time + slot ──
         post_hh, post_mm = 18, 0
         if h:
             _pt = (h.get("post_time") or "").strip()
@@ -245,10 +277,14 @@ def main(dry_run=False, test=False, force=False, republish=False, override_date=
                     post_hh, post_mm = int(_h), int(_m)
                 except Exception:
                     pass
-        _target_dt = None
+
+        _slot_key = f"{post_hh:02d}:{post_mm:02d}"
+        _pos = _slot_pos.get(_slot_key, 0)
+        _slot_pos[_slot_key] = _pos + 1
+
         _now = datetime.now()
+        _target_dt = None
         if today_d:
-            # «Славянские сутки» начинаются в 18:00 ПРЕДЫДУЩЕГО григорианского дня
             if _now.hour >= 18:
                 _start = datetime.combine(_now.date(), time(18, 0))
             else:
@@ -257,46 +293,70 @@ def main(dry_run=False, test=False, force=False, republish=False, override_date=
             if _offset_min < 0:
                 _offset_min += 24 * 60
             _target_dt = _start + timedelta(minutes=_offset_min)
-        # Окно проверяем ТОЛЬКО при реальной cron-публикации (без --force/--date/--dry-run)
-        if (not dry_run) and (not force) and (not override_date) and _target_dt:
+
+        _slot_dt = _target_dt + timedelta(minutes=_pos * 10) if _target_dt else None
+
+        if (not dry_run) and (not force) and (not override_date) and _slot_dt:
             POST_WINDOW_HOURS = 6
-            if _now < _target_dt:
-                print(f"  ⏳ рано (сейчас {_now:%Y-%m-%d %H:%M}, слот {_target_dt:%Y-%m-%d %H:%M}), ждём")
-                continue
-            if _now > _target_dt + timedelta(hours=POST_WINDOW_HOURS):
-                print(f"  ⏭  окно {POST_WINDOW_HOURS}ч истекло (слот {_target_dt:%Y-%m-%d %H:%M}) → следующий год")
+            if _now < _slot_dt:
+                wait_s = (_slot_dt - _now).total_seconds()
+                if wait_s > POST_WINDOW_HOURS * 3600:
+                    print(f"  ⏳ рано (сейчас {_now:%H:%M}, слот {_slot_dt:%H:%M}, {wait_s/3600:.1f}ч) → следующий год")
+                    _slot_pos[_slot_key] = _pos
+                    continue
+                if wait_s > 0:
+                    print(f"  ⏱ ждём {wait_s:.0f}s до слота {_slot_dt:%H:%M} («{text[:40]}»)")
+                    _sleep(wait_s)
+                    _now = datetime.now()
+            if _now > _slot_dt + timedelta(hours=POST_WINDOW_HOURS):
+                print(f"  ⏭ окно {POST_WINDOW_HOURS}ч истекло (слот {_slot_dt:%H:%M}) → следующий год")
+                _slot_pos[_slot_key] = _pos
                 continue
 
+        # ── шапка ──
         _tm = h.get('text_md') if h else None
         body = md_to_vk(_tm) if _tm else text
         head = []
         if today_d:
-            _hl = slavic_calendar.header_full(today_d, add_smzh=CONFIG.get("add_krug"))
+            _block, _range_to = (None, None)
+            if h:
+                try:
+                    from slavic_auto import chertog_block_for
+                    _block, _range_to = chertog_block_for(h, today_d)
+                except Exception:
+                    _block, _range_to = None, None
+            _hl = slavic_calendar.header_full(
+                today_d, add_smzh=CONFIG.get("add_krug"),
+                range_to=_range_to, chertog_block=_block,
+            )
             head.append(_hl)
         if info:
             head.append("\n".join(info))
         message = ("\n".join(head) + "\n\n" + body) if head else body
 
         if dry_run:
-            mark = f"  [фото: {image_path.name}]" if image_path else ""
+            if image_path:
+                status = "✓" if image_path.exists() else "✗ НЕТ ФАЙЛА"
+                mark = f"  [фото: {image_path.name} {status}]"
+            else:
+                mark = ""
             print(f"[DRY]\n{message}{mark}\n{'-' * 40}")
             continue
 
         try:
-            try:
-                upload_token = CONFIG.get("user_token") or CONFIG["token"]
-                attach = upload_photo(upload_token, CONFIG["group_id"], image_path) if image_path else None
-            except Exception as e:
-                if image_path:
-                    raise RuntimeError(
-                        f"Photo planned ({image_path.name}) but upload failed: {e}"
-                    ) from e
-                attach = None
-
-            if image_path and not attach:
-                raise RuntimeError(
-                    f"upload_photo returned {attach!r} for {image_path.name} - refusing to post without photo"
-                )
+            attach = None
+            if image_path:
+                if not image_path.exists():
+                    print(f"  ⚠  файл не найден: {image_path.name} → пост без фото", file=sys.stderr)
+                else:
+                    try:
+                        upload_token = CONFIG.get("user_token") or CONFIG["token"]
+                        attach = upload_photo(upload_token, CONFIG["group_id"], image_path)
+                        if not attach:
+                            print(f"  ⚠  upload_photo вернул None для {image_path.name} → пост без фото", file=sys.stderr)
+                    except Exception as e:
+                        print(f"  ⚠  фото не загрузилось ({e}) → пост без фото", file=sys.stderr)
+                        attach = None
 
             pid = post(CONFIG["token"], CONFIG["group_id"], message, attach)
             print(f"OK post_id={pid}: «{text[:60]}» attach={attach or 'none'}")
@@ -304,8 +364,15 @@ def main(dry_run=False, test=False, force=False, republish=False, override_date=
                 state["posted"].append(key)
                 save_state(state)
         except Exception as e:
-            print(f"FAIL: {e}", file=sys.stderr)
-            raise
+            print(f"FAIL: «{text[:60]}» — {e}", file=sys.stderr)
+            _failures.append((text, str(e)))
+            continue
+
+    if _failures:
+        print(f"\n{len(_failures)} пост(ов) упало:", file=sys.stderr)
+        for t, e in _failures:
+            print(f"  ✗ {t[:60]} — {e}", file=sys.stderr)
+        sys.exit(1)
 
 
 if __name__ == "__main__":

@@ -27,7 +27,20 @@ KRUGOLETY = [None,
 
 def _load_chertogs():
     p = _HERE / 'chertogs.json'
-    return json.loads(p.read_text(encoding='utf-8')) if p.exists() else {}
+    if not p.exists():
+        return {}
+    data = json.loads(p.read_text(encoding='utf-8'))
+    if isinstance(data, list):
+        return {str(i + 1): c for i, c in enumerate(data) if isinstance(c, dict)}
+    if not isinstance(data, dict):
+        return {}
+    for key in ('chertogs', 'items', 'data'):
+        inner = data.get(key)
+        if isinstance(inner, dict) and inner:
+            return {k: v for k, v in inner.items() if isinstance(v, dict)}
+        if isinstance(inner, list) and inner:
+            return {str(i + 1): c for i, c in enumerate(inner) if isinstance(c, dict)}
+    return {k: v for k, v in data.items() if isinstance(v, dict)}
 
 # ─── Дата → базовые номера ─────────────────────────────────
 def summer_start(d: date) -> date:
@@ -70,7 +83,7 @@ def krugolyet_number(d: date) -> int:
     return skl(d)
 
 # ─── Сборка info ───────────────────────────────────────────
-def build_info(d: date) -> list[str]:
+def build_info(d: date, chertog: bool = False) -> list[str]:
     s  = skz(d)
     sl = skl(d)
     k_name = KRUGOLETY[krugolyet_number(d)]
@@ -91,12 +104,68 @@ def build_info(d: date) -> list[str]:
     else:
         title = 'Богиня-Покровительница'
 
-    return [
-        f"⚡ Чертог {ch_name} – {title} {ch_patron} ⚡",
-        f"🌳 Священное Древо: {ch_tree}.",
+    out = []
+    if not chertog:
+        out.append(f"⚡ Чертог {ch_name} – {title} {ch_patron} ⚡")
+        out.append(f"🌳 Священное Древо: {ch_tree}.")
+    out += [
         f"● {sl}-є Лѣтъ (из 16-ти) в Крɣгє лѣтъ;",
         f"● {s}-є Лѣтъ (из 144-х) в Крɣгє Жизни;",
         f"● Круголѣт: {k_name};",
         f"● Стихия: {e_name};",
         f"● Цвет: {e_color}.",
     ]
+    return out
+
+
+def _find_chertog(needle):
+    """Ищет чертог по name / name_gen / slug / номеру."""
+    d = _load_chertogs()
+    if not d or not needle:
+        return None
+    s = str(needle).strip()
+    if s.isdigit():
+        return d.get(s) or d.get(str(int(s)))
+    if s.startswith('chertog-'):
+        for v in d.values():
+            if isinstance(v, dict) and v.get('slug') == s:
+                return v
+    for v in d.values():
+        if not isinstance(v, dict):
+            continue
+        if s == (v.get('name') or '') or s == (v.get('name_gen') or ''):
+            return v
+    s_low = s.lower()
+    for v in d.values():
+        if not isinstance(v, dict):
+            continue
+        if s_low and s_low in (v.get('name') or '').lower():
+            return v
+    return None
+
+
+def chertog_block_for(h: dict, fire_date):
+    """Если у праздника есть 'chertog' → (chertog_block, range_to).
+    range_to — fire-дата окончания Чертога (по полю date_to).
+    """
+    needle = (h.get('chertog') or '').strip()
+    if not needle:
+        return None, None
+    ch = _find_chertog(needle)
+    if not ch:
+        return None, None
+    block = {
+        'title_line': h.get('text', '⚡ Входъ въ Чертогъ ⚡'),
+        'patron': ch.get('patron', '?'),
+        'pol':    ch.get('pol', 'ж'),
+        'tree':   ch.get('tree', '?'),
+        'totem':  ch.get('name', '?'),
+    }
+    dt_str = h.get('date_to')
+    range_to = None
+    if dt_str:
+        mm, dd = map(int, dt_str.split('-'))
+        range_to = date(fire_date.year, mm, dd)
+        if (mm, dd) < (fire_date.month, fire_date.day):
+            range_to = date(fire_date.year + 1, mm, dd)
+    return block, range_to
