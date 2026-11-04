@@ -37,3 +37,4 @@ state-179225207.json
 make_preview.py.*
 patch_buttons.py
 *.bak*
+/assets/poster-icon-source.png
