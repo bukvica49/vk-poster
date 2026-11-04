@@ -38,3 +38,4 @@ make_preview.py.*
 patch_buttons.py
 *.bak*
 /assets/poster-icon-source.png
+poster.py.bak

@@ -426,6 +426,7 @@ def main(dry_run=False, test=False, force=False, republish=False, override_date=
 if __name__ == "__main__":
     import argparse
     _ap = argparse.ArgumentParser()
+    _ap.add_argument("config", nargs="?", default=None, help="Путь к config (по умолчанию config.main.json)")
     _ap.add_argument("--dry-run", action="store_true")
     _ap.add_argument("--test", action="store_true")
     _ap.add_argument("--force", action="store_true",
