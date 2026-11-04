@@ -115,27 +115,37 @@ def cmd_validate(args):
         if not it:
             print(red(f'не найден: {args.slug}')); return 1
         targets = [it]
-    errs = 0
+    mm_dd = r'(0[1-9]|1[0-2])-(0[1-9]|[12]\d|3[01])'
+    n_hard = n_soft = 0
     for it in targets:
-        bad = []
+        hard, soft = [], []
         for k in REQUIRED:
-            if not it.get(k): bad.append(f'нет поля {k}')
+            if not it.get(k): hard.append(f'нет поля {k}')
         d = str(it.get('date', ''))
-        if d and not re.fullmatch(r'\d{2}-\d{2}', d):
-            bad.append(f'date не MM-DD: {d!r}')
+        if d and not re.fullmatch(mm_dd, d):
+            hard.append(f'date не MM-DD: {d!r}')
         dt = it.get('date_to')
-        if dt and not re.fullmatch(r'\d{2}-\d{2}', str(dt)):
-            bad.append(f'date_to не MM-DD: {dt!r}')
+        if dt and not re.fullmatch(mm_dd, str(dt)):
+            hard.append(f'date_to не MM-DD: {dt!r}')
         im = it.get('image')
         if im and not (HERE / str(im).lstrip('/')).exists():
-            bad.append(f'нет картинки: {im}')
-        if bad:
-            errs += 1
+            soft.append(f'нет картинки: {im}')
+        if hard:
+            n_hard += 1
             print(red(f'✗ {it["_stem"]}'))
-            for b in bad: print(f'   - {b}')
+            for b in hard: print(f'   - {b}')
+        elif soft:
+            n_soft += 1
+            print(yellow(f'⚠ {it["_stem"]}'))
+            for b in soft: print(f'   - {b}')
         else:
             print(green(f'✓ {it["_stem"]}'))
-    return 0 if errs == 0 else 1
+    if n_hard or n_soft:
+        n_ok = len(targets) - n_hard - n_soft
+        print(dim(f'\nИтого: {n_ok} ✓, {n_soft} ⚠, {n_hard} ✗'))
+    if getattr(args, 'strict', False):
+        return 0 if n_hard == 0 and n_soft == 0 else 1
+    return 0 if n_hard == 0 else 1
 
 def cmd_edit(args):
     it = find_item(args.slug)
@@ -167,12 +177,15 @@ def cmd_new(args):
     print(bold('новый пост (* — обязательно)'))
     def ask(label, required=False):
         while True:
-            v = input(f'{label}{"*" if required else ""}: ').strip()
+            try:
+                v = input(f'{label}{"*" if required else ""}: ').strip()
+            except (EOFError, KeyboardInterrupt):
+                print(yellow('\nотменено')); raise SystemExit(0)
             if v or not required: return v
             print(red('  обязательно'))
     title = ask('text (заголовок)', required=True)
     date_ = ask('date MM-DD', required=True)
-    if not re.fullmatch(r'\d{2}-\d{2}', date_):
+    if not re.fullmatch(r'(0[1-9]|1[0-2])-(0[1-9]|[12]\d|3[01])', date_):
         print(red('date должно быть MM-DD, например 11-05')); return 1
     dt = ask('date_to MM-DD (пусто = нет)')
     ct = ask('chertog (пусто = нет)')
@@ -295,7 +308,7 @@ def main(argv=None):
     p = sp.add_parser('list', help='список постов'); p.add_argument('--json', action='store_true'); p.set_defaults(fn=cmd_list)
     p = sp.add_parser('show', help='показать пост'); p.add_argument('slug'); p.add_argument('--json', action='store_true'); p.set_defaults(fn=cmd_show)
     p = sp.add_parser('find', help='поиск по всем полям'); p.add_argument('query'); p.add_argument('--json', action='store_true'); p.set_defaults(fn=cmd_find)
-    p = sp.add_parser('validate', help='проверить посты'); p.add_argument('slug', nargs='?'); p.set_defaults(fn=cmd_validate)
+    p = sp.add_parser('validate', help='проверить посты'); p.add_argument('slug', nargs='?'); p.add_argument('--strict', action='store_true', help='⚠ тоже считать ошибкой'); p.set_defaults(fn=cmd_validate)
     p = sp.add_parser('edit', help='правка JSON в $EDITOR'); p.add_argument('slug'); p.set_defaults(fn=cmd_edit)
     p = sp.add_parser('new', help='новый пост (интерактивно)'); p.set_defaults(fn=cmd_new)
     p = sp.add_parser('image', help='прикрепить картинку'); p.add_argument('slug'); p.add_argument('path'); p.set_defaults(fn=cmd_image)
