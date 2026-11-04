@@ -147,12 +147,19 @@ class App(tk.Tk):
     def save_current(self):
         if not self.current_slug:
             messagebox.showwarning("Внимание", "Выбери пост слева"); return
-        f = self.posts[self.current_slug][0]; new = {}
+        f, d_old = self.posts[self.current_slug]
+        new = dict(d_old)                       # сохраняем поля, которых нет в FIELDS
         for k, (w, ml) in self.fields.items():
             v = w.get("1.0", tk.END).rstrip("\n") if ml else w.get().strip()
-            if not v: continue
-            if k == "info": v = [l for l in v.split("\n") if l.strip()]
-            new[k] = v
+            if k == "info":
+                v = [l for l in v.split("\n") if l.strip()]
+                if v: new[k] = v
+                else: new.pop(k, None)
+            elif k in ("slug", "date"):
+                if v: new[k] = v                # обязательные — пустые не трогаем
+            else:
+                if v: new[k] = v
+                else: new.pop(k, None)          # пусто = удалить из JSON
         try:
             f.write_text(json.dumps(new, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
             self.log_msg(f"✓ {f.name}"); self.refresh()
