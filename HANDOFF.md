@@ -34,6 +34,9 @@ VK-группа: 200796423, «Родная Традиция»
    1 файл = 1). Старый `holidays.json` (массив) удалён в c3e1b60.
 
 ## Что починено
+- 8e00336: poster.py::main() — `_ap.add_argument("config", nargs="?")`.
+  До: schedule 2026-11-03 → exit 2 (argparse rejected positional config.main.json).
+  После: CI ✓ workflow_dispatch 14s; schedule — ждём 18:00 KRSK.
 - fa4a1af: постинг без фото -> FAIL main=1 (раньше уходил без фото)
 - патч: text_md подбирается по (text, image), не только по text
   проверка: grep -c "hd_img" poster.py  -> должно быть >= 2
