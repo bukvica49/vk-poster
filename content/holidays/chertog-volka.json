@@ -1,8 +1,8 @@
 {
   "slug": "chertog-volka",
   "date": "02-25",
-  "date_to": "03-21",
   "post_time": "18:00",
   "text": "⚡ Входъ въ Чертогъ Волка ⚡",
-  "image": "/images/Волк.jpg"
+  "image": "/images/Волк.jpg",
+  "date_to": "03-21"
 }
