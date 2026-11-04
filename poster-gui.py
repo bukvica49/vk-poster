@@ -1,34 +1,35 @@
 #!/usr/bin/env python3
 """Автопостер — настольный интерфейс (Tkinter). Запуск: python3 poster-gui.py"""
-import json, subprocess, sys
+import json, subprocess, sys, shutil
 from pathlib import Path
 
 try:
     import tkinter as tk
-    from tkinter import ttk, messagebox, simpledialog
+    from tkinter import ttk, messagebox, simpledialog, filedialog
 except ImportError:
     print("Установи tkinter:\n  Debian/Ubuntu: sudo apt install python3-tk\n  Arch: sudo pacman -S tk")
     sys.exit(1)
 
-ROOT = Path(__file__).resolve().parent
+ROOT   = Path(__file__).resolve().parent
 CONTENT = ROOT / "content" / "holidays"
+IMAGES  = ROOT / "images"
 
 FIELDS = [
-    ("slug", "Slug", False),
-    ("date", "Дата MM-DD", False),
-    ("date_to", "Дата окончания", False),
-    ("post_time", "Время HH:MM", False),
-    ("text", "Заголовок", False),
-    ("text_md", "Тело (Markdown)", True),
-    ("info", "Info (по строкам)", True),
-    ("image", "Картинка", False),
+    ("slug",      "Slug",             False),
+    ("date",      "Дата MM-DD",       False),
+    ("date_to",   "Дата окончания",   False),
+    ("post_time", "Время HH:MM",      False),
+    ("text",      "Заголовок",        False),
+    ("text_md",   "Тело (Markdown)",  True),
+    ("info",      "Info (по строкам)",True),
+    ("image",     "Картинка",         False),
 ]
 
 class App(tk.Tk):
     def __init__(self):
         super().__init__()
         self.title("Автопостер — интерфейс")
-        self.geometry("1100x720")
+        self.geometry("1150x750")
         self.current_slug = None
         self.posts = {}
         self.fields = {}
@@ -39,20 +40,18 @@ class App(tk.Tk):
     def _menu(self):
         mb = tk.Menu(self)
         m = tk.Menu(mb, tearoff=0)
-        m.add_command(label="Новый пост", command=self.new_post)
-        m.add_command(label="Обновить список", command=self.refresh)
+        m.add_command(label="Новый пост",              command=self.new_post)
+        m.add_command(label="Обновить список",         command=self.refresh)
         m.add_separator()
-        m.add_command(label="Выход", command=self.quit)
+        m.add_command(label="Выход",                   command=self.quit)
         mb.add_cascade(label="Файл", menu=m)
 
         m = tk.Menu(mb, tearoff=0)
-        m.add_command(label="Проверить базу (validate)", command=self.validate)
+        m.add_command(label="Проверить базу (validate)",       command=self.validate)
         m.add_command(label="Опубликовать контент (git push)", command=self.publish)
         m.add_separator()
         m.add_command(label="Проверить, что выйдет сегодня (dry-run)", command=self.dry_run)
-        m.add_command(label="Проверить на дату… (dry-run)", command=self.dry_run_date)
-        m.add_separator()
-        m.add_command(label="Опубликовать в VK СЕЙЧАС (реальный пост)", command=self.real_publish)
+        m.add_command(label="Проверить на дату… (dry-run)",            command=self.dry_run_date)
         mb.add_cascade(label="Действия", menu=m)
         self.config(menu=mb)
 
@@ -60,6 +59,7 @@ class App(tk.Tk):
         paned = ttk.PanedWindow(self, orient=tk.HORIZONTAL)
         paned.pack(fill=tk.BOTH, expand=True)
 
+        # ── левая панель ─────────────────────────────────────
         left = ttk.Frame(paned, padding=4)
         paned.add(left, weight=1)
         ttk.Label(left, text="Посты", font=("", 10, "bold")).pack(anchor=tk.W)
@@ -72,36 +72,47 @@ class App(tk.Tk):
         for c, txt, w in [("d","Дата",90),("s","Slug",160),("t","Заголовок",250)]:
             self.tree.heading(c, text=txt); self.tree.column(c, width=w)
         self.tree.pack(fill=tk.BOTH, expand=True)
-        self.tree.bind("<<TreeviewSelect>>", lambda e: self.load_post(self.tree.selection()[0]) if self.tree.selection() else None)
+        self.tree.bind("<<TreeviewSelect>>",
+                       lambda e: self.load_post(self.tree.selection()[0])
+                       if self.tree.selection() else None)
 
+        # ── правая панель: форма ─────────────────────────────
         right = ttk.Frame(paned, padding=4)
         paned.add(right, weight=2)
         form = ttk.Frame(right); form.pack(fill=tk.BOTH, expand=True)
         for key, label, multiline in FIELDS:
             row = ttk.Frame(form); row.pack(fill=tk.X, pady=2)
             ttk.Label(row, text=label, width=15, anchor=tk.W).pack(side=tk.LEFT)
-            if multiline:
-                w = tk.Text(row, height=4, wrap=tk.WORD)
-            else:
-                w = ttk.Entry(row)
+            w = tk.Text(row, height=4, wrap=tk.WORD) if multiline else ttk.Entry(row)
             w.pack(side=tk.LEFT, fill=tk.X, expand=True)
             self.fields[key] = (w, multiline)
+
         btn = ttk.Frame(right); btn.pack(fill=tk.X, pady=6)
-        for txt, cmd in [("💾 Сохранить", self.save_current), ("🗑 Удалить", self.delete_current),
-                         ("✅ Проверить", self.validate), ("🚀 Опубликовать", self.publish)]:
+        for txt, cmd in [
+            ("💾 Сохранить",   self.save_current),
+            ("🗑 Удалить",     self.delete_current),
+            ("📷 Картинку",    self.upload_image),
+            ("👁 Превью VK",   self.preview_vk),
+            ("✅ Проверить",   self.validate),
+            ("🚀 Опубликовать",self.publish),
+        ]:
             ttk.Button(btn, text=txt, command=cmd).pack(side=tk.LEFT, padx=2)
 
+        # ── лог ─────────────────────────────────────────────
         lf = ttk.Frame(self, padding=(4,0,4,4)); lf.pack(fill=tk.X)
         ttk.Label(lf, text="Лог:", font=("", 9, "bold")).pack(anchor=tk.W)
         self.log = tk.Text(lf, height=8, wrap=tk.WORD, font=("monospace", 9), state=tk.DISABLED)
         self.log.pack(fill=tk.BOTH, expand=True)
 
         self.status = tk.StringVar(value="Готов")
-        ttk.Label(self, textvariable=self.status, relief=tk.SUNKEN, anchor=tk.W).pack(fill=tk.X, side=tk.BOTTOM)
+        ttk.Label(self, textvariable=self.status, relief=tk.SUNKEN,
+                  anchor=tk.W).pack(fill=tk.X, side=tk.BOTTOM)
 
     def log_msg(self, s):
-        self.log.config(state=tk.NORMAL); self.log.insert(tk.END, s + "\n")
-        self.log.see(tk.END); self.log.config(state=tk.DISABLED)
+        self.log.config(state=tk.NORMAL)
+        self.log.insert(tk.END, s + "\n")
+        self.log.see(tk.END)
+        self.log.config(state=tk.DISABLED)
 
     def refresh(self):
         self.posts = {}
@@ -130,7 +141,7 @@ class App(tk.Tk):
             v = d.get(k, "")
             if k == "info" and isinstance(v, list): v = "\n".join(v)
             if ml: w.delete("1.0", tk.END); w.insert("1.0", str(v))
-            else: w.delete(0, tk.END); w.insert(0, str(v))
+            else:  w.delete(0, tk.END);     w.insert(0, str(v))
         self.status.set(f"Выбран: {slug}")
 
     def save_current(self):
@@ -154,15 +165,120 @@ class App(tk.Tk):
         if not slug: return
         slug = slug.strip(); f = CONTENT / f"{slug}.json"
         if f.exists(): messagebox.showerror("Ошибка", f"Уже есть: {f.name}"); return
-        f.write_text(json.dumps({"slug": slug, "date": "", "text": ""}, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
+        f.write_text(json.dumps({"slug": slug, "date": "", "text": ""},
+                                ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
         self.refresh()
         if slug in self.posts: self.tree.selection_set(slug)
 
     def delete_current(self):
         if not self.current_slug: return
         if not messagebox.askyesno("Удалить?", f"Удалить {self.current_slug}.json?", parent=self): return
-        self.posts[self.current_slug][0].unlink(); self.current_slug = None; self.refresh()
+        self.posts[self.current_slug][0].unlink()
+        self.current_slug = None; self.refresh()
 
+    # ── 📷 загрузка картинки ────────────────────────────────
+    def upload_image(self):
+        if not self.current_slug:
+            messagebox.showwarning("Внимание", "Сначала выбери пост слева"); return
+        path = filedialog.askopenfilename(
+            title="Выбери картинку",
+            filetypes=[("Изображения", "*.jpg *.jpeg *.png *.webp *.gif"), ("Все файлы", "*.*")],
+        )
+        if not path: return
+        src = Path(path)
+        if not src.exists():
+            messagebox.showerror("Ошибка", f"Файл не найден: {path}"); return
+        IMAGES.mkdir(exist_ok=True)
+        dest = IMAGES / src.name
+        if dest.exists():
+            if not messagebox.askyesno("Перезаписать?", f"{dest.name} уже есть. Заменить?", parent=self):
+                return
+        try:
+            shutil.copy2(src, dest)
+        except Exception as e:
+            messagebox.showerror("Ошибка копирования", str(e)); return
+        w, _ = self.fields['image']
+        w.delete(0, tk.END)
+        w.insert(0, f"/images/{src.name}")
+        self.save_current()
+        self.log_msg(f"✓ скопировано → images/{src.name}, image = /images/{src.name}")
+        self.status.set(f"Картинка: {src.name}")
+
+    # ── 👁 превью VK-поста ─────────────────────────────────
+    def preview_vk(self):
+        if not self.current_slug:
+            messagebox.showwarning("Внимание", "Сначала выбери пост слева"); return
+        d = self.posts[self.current_slug][1]
+        win = tk.Toplevel(self)
+        win.title(f"Предпросмотр VK — {self.current_slug}")
+        win.geometry("620x780")
+        win.minsize(500, 500)
+
+        top = ttk.Frame(win, padding=(10, 8)); top.pack(fill=tk.X)
+        ttk.Label(top, text="Так пост будет выглядеть в ВК:",
+                  font=("", 10, "bold")).pack(anchor=tk.W)
+        ttk.Label(top, text=f"slug: {self.current_slug}  ·  date: {d.get('date','—')}"
+                            f"  ·  post_time: {d.get('post_time','18:00 (по умолчанию)')}",
+                  foreground="#666", font=("", 8)).pack(anchor=tk.W)
+
+        # картинка
+        img_field = d.get("image", "").strip()
+        if img_field:
+            img_path = ROOT / img_field.lstrip("/")
+            if img_path.exists():
+                loaded = False
+                try:
+                    from PIL import Image, ImageTk
+                    im = Image.open(img_path); im.thumbnail((560, 420))
+                    photo = ImageTk.PhotoImage(im)
+                    lbl = tk.Label(win, image=photo, bg="#f0f0f0")
+                    lbl.image = photo
+                    lbl.pack(padx=10, pady=6, fill=tk.X)
+                    loaded = True
+                except ImportError:
+                    pass
+                except Exception as e:
+                    self.log_msg(f"preview img: {e}")
+                if not loaded:
+                    ttk.Label(win, text=f"[картинка: {img_field}]  (jpg-превью требует: pip install Pillow)",
+                              foreground="#888", font=("", 9, "italic"), padding=10).pack(fill=tk.X)
+            else:
+                ttk.Label(win, text=f"[картинка не найдена: {img_field}]",
+                          foreground="#c33", font=("", 9, "italic"), padding=10).pack(fill=tk.X)
+
+        # тело поста
+        body = tk.Frame(win, bg="white", bd=1, relief=tk.SOLID)
+        body.pack(fill=tk.BOTH, expand=True, padx=10, pady=6)
+        inner = tk.Frame(body, bg="white"); inner.pack(fill=tk.BOTH, expand=True, padx=12, pady=10)
+
+        title = d.get("text", "").strip()
+        if title:
+            tk.Label(inner, text=title, bg="white", fg="#0a0a0a",
+                     font=("", 12, "bold"), wraplength=560, justify=tk.LEFT,
+                     anchor=tk.W).pack(fill=tk.X, pady=(0, 8))
+
+        md = d.get("text_md", "").strip()
+        if md:
+            tb = tk.Text(inner, wrap=tk.WORD, font=("", 10), bg="white", bd=0,
+                         height=min(20, max(4, md.count("\n") + 1)))
+            tb.insert("1.0", md); tb.config(state=tk.DISABLED)
+            tb.pack(fill=tk.BOTH, expand=True, pady=(0, 6))
+
+        info = d.get("info", [])
+        if info:
+            info_text = "\n".join(info) if isinstance(info, list) else str(info)
+            tk.Frame(inner, bg="#ddd", height=1).pack(fill=tk.X, pady=(6, 6))
+            tk.Label(inner, text=info_text, bg="white", fg="#333",
+                     font=("", 9), wraplength=560, justify=tk.LEFT,
+                     anchor=tk.W).pack(fill=tk.X)
+
+        if not (title or md or info):
+            tk.Label(inner, text="(пусто — заполни поля и сохрани)",
+                     bg="white", fg="#999", font=("", 10, "italic")).pack(pady=20)
+
+        ttk.Button(win, text="Закрыть", command=win.destroy).pack(pady=8)
+
+    # ── запуск внешних команд ──────────────────────────────
     def run(self, cmd, label):
         self.log_msg(f"$ {label}")
         try:
@@ -175,17 +291,26 @@ class App(tk.Tk):
         except Exception as e:
             self.log_msg(f"✗ {e}")
 
-    def validate(self): self.run(["./ed.py", "validate"], "ed.py validate")
+    def validate(self):
+        self.run(["./ed.py", "validate"], "ed.py validate")
+
     def publish(self):
-        if not messagebox.askyesno("Git publish", "validate --strict + git push content/. Сайт обновится за 1-2 мин. Продолжить?"): return
+        if not messagebox.askyesno(
+            "Git publish",
+            "validate --strict + git push content/.\n"
+            "Сайт обновится за 1-2 мин.\n\n"
+            "В ВК НЕ отправится — это делает автопостер (GitHub Actions) по расписанию.\n\n"
+            "Продолжить?", parent=self):
+            return
         self.run(["./ed.py", "publish"], "ed.py publish")
-    def dry_run(self): self.run(["python3", "poster.py", "--dry-run"], "poster.py --dry-run")
+
+    def dry_run(self):
+        self.run(["python3", "poster.py", "--dry-run"], "poster.py --dry-run")
+
     def dry_run_date(self):
         d = simpledialog.askstring("Дата", "YYYY-MM-DD:", parent=self)
-        if d: self.run(["python3", "poster.py", "--dry-run", "--date", d], f"poster --dry-run --date {d}")
-    def real_publish(self):
-        if not messagebox.askyesno("⚠️ РЕАЛЬНЫЙ ПОСТ В VK", "Это отправит пост в VK прямо сейчас. Продолжить?", parent=self): return
-        self.run(["python3", "poster.py"], "poster.py")
+        if d: self.run(["python3", "poster.py", "--dry-run", "--date", d],
+                       f"poster --dry-run --date {d}")
 
 def main():
     if not (ROOT/"ed.py").exists():
