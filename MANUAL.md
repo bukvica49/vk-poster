@@ -144,6 +144,27 @@ vkhost.github.io/vk.html → "VK Admin" → права на группу → т�
 - `./ed.py list --json` → `python3 -m json.tool` — если хочется отступить JSON для чтения.
 - `git grep 'паттерн'` — если `rg` нет, а нужно быстро и с учётом индекса.
 
+## ed.py — редактор постов
+
+Один файл в корне репо, без зависимостей. Запуск `./ed.py` (если `Permission denied` — `chmod +x ed.py`; или `python3 ed.py`).
+
+| Задача | Команда |
+|---|---|
+| Что сейчас в базе | `./ed.py list` |
+| Посмотреть пост | `./ed.py show chertog-devy` |
+| Найти по слову | `./ed.py find щук` |
+| Поправить руками | `./ed.py edit chertog-devy` |
+| Создать новый | `./ed.py new` |
+| Прописать картинку | `./ed.py image chertog-devy images/Дева.jpg` |
+| Удалить пост | `./ed.py rm chertog-devy` |
+| Проверить базу | `./ed.py validate` |
+| Собрать превью | `./ed.py preview` |
+| Опубликовать | `./ed.py publish` — всё, `./ed.py publish chertog-devy -m "..."` — один пост |
+
+`validate` различает два типа ошибок: `✗` — пост битый (нет `slug`/`date`/`text` или кривая `MM-DD`), exit 1; `⚠` — нет файла картинки, exit 0 (пост опубликуется без картинки). Флаг `--strict` считает `⚠` тоже ошибкой — его вызывает `publish` перед коммитом, чтобы битый пост не ушёл на Pages.
+
+Справка по любой команде: `./ed.py <команда> -h`.
+
 ## Файлы
 content/holidays/*.json       — праздники (PagesCMS collection, 1 файл = 1)
 make_preview.py               — генератор _site/ (превью-сайт с кнопками)
