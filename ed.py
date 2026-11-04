@@ -140,9 +140,8 @@ def cmd_validate(args):
             for b in soft: print(f'   - {b}')
         else:
             print(green(f'✓ {it["_stem"]}'))
-    if n_hard or n_soft:
-        n_ok = len(targets) - n_hard - n_soft
-        print(dim(f'\nИтого: {n_ok} ✓, {n_soft} ⚠, {n_hard} ✗'))
+    n_ok = len(targets) - n_hard - n_soft
+    print(dim(f'\nИтого: {n_ok} ✓, {n_soft} ⚠, {n_hard} ✗'))
     if getattr(args, 'strict', False):
         return 0 if n_hard == 0 and n_soft == 0 else 1
     return 0 if n_hard == 0 else 1
