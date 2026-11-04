@@ -380,6 +380,13 @@ def main(dry_run=False, test=False, force=False, republish=False, override_date=
                 else:
                     try:
                         upload_token = CONFIG.get("user_token") or CONFIG["token"]
+                        if "ВСТАВЬ" in str(upload_token) or "ОПЦИОНАЛЬНО" in str(upload_token):
+                            print("\nОШИБКА: в config.main.json плейсхолдер вместо user_token/token — загрузка картинки отменена.\n"
+                                  "Пост с картинкой не уйдёт. Пути:\n"
+                                  "  1) вписать реальный user_token (для загрузки фото в сообщество),\n"
+                                  "  2) убрать поле image у поста (текст уйдёт груп-токеном).",
+                                  file=sys.stderr)
+                            sys.exit(2)
                         attach = upload_photo(upload_token, CONFIG["group_id"], image_path)
                         if not attach:
                             print(f"  ⚠  upload_photo вернул None для {image_path.name} → пост без фото", file=sys.stderr)
@@ -387,6 +394,18 @@ def main(dry_run=False, test=False, force=False, republish=False, override_date=
                         print(f"  ⚠  фото не загрузилось ({e}) → пост без фото", file=sys.stderr)
                         attach = None
 
+            if "ВСТАВЬ" in str(CONFIG.get("token", "")):
+                print("\nОШИБКА: в config.main.json плейсхолдер вместо токена — пост в VK отменён.\n"
+                      "Похоже, файл скопирован из config.example.json, но не заполнен.\n"
+                      "\n"
+                      "Подставь реальный токен:\n"
+                      "  1) с прошлой машины / из хранилища секретов,\n"
+                      "  2) GitHub → Settings → Secrets and variables → Actions → VK_CONFIG,\n"
+                      "  3) VK API: https://dev.vk.com/method/groups.getToken.\n"
+                      "\n"
+                      "Для проверки без постинга: poster.py --dry-run (плейсхолдер не мешает).",
+                      file=sys.stderr)
+                sys.exit(2)
             pid = post(CONFIG["token"], CONFIG["group_id"], message, attach)
             print(f"OK post_id={pid}: «{text[:60]}» attach={attach or 'none'}")
             if key:
