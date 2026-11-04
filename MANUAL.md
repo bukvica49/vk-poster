@@ -197,7 +197,22 @@ vkhost.github.io/vk.html → "VK Admin" → права на группу → т�
 
 Превью VK (`👁 Превью VK`) показывает пост как есть; если картинка — JPG и Pillow не установлен, вместо картинки будет текстовая пометка. Поставить Pillow (для красивого превью JPG): `pip install Pillow` — необязательно, всё остальное работает без него.
 
-Локально для `poster.py --dry-run` нужен `config.main.json` (токены VK). Он **не в git** — на GitHub живёт как секрет `VK_CONFIG`.
+`config.main.json` (токены VK) нужен **только** реальному постингу. Он **не в git** — на GitHub живёт как секрет `VK_CONFIG`, workflow раскладывает его в файл перед запуском.
+
+- `poster.py --dry-run` работает **без** config. В stderr печатается `[dry-run] нет config.main.json — config не нужен для dry-run` — это норма, а не ошибка.
+- `poster.py` без `--dry-run` без config печатает инструкцию и `exit=2`, без трейсбека.
+- Шаблон структуры: `config.example.json` (без токенов, в git есть). Скопируй в `config.main.json` и подставь свои значения.
+
+### Проверка плейсхолдеров
+
+Если `config.main.json` скопирован из `config.example.json`, но плейсхолдеры (`ВСТАВЬ_СВОЙ_ТОКЕН`, `ОПЦИОНАЛЬНО_...`) не заменены:
+
+- `poster.py` **без** `--dry-run` — останавливается **до** обращения к VK с понятной ошибкой и `exit=2`. Никакого `invalid token` от VK, никакого трейсбека.
+- `poster.py --dry-run` — работает; плейсхолдер не мешает предпросмотру.
+- `poster.py --date YYYY-MM-DD` — тот же стоп `exit=2`.
+- Плейсхолдер в `user_token` (для загрузки картинки) — тот же стоп, с отдельной подсказкой.
+
+Проверено: `cp config.example.json config.main.json && python3 poster.py --date 2026-01-10` → `exit=2`.
 
 ## Файлы
 content/holidays/*.json       — праздники (PagesCMS collection, 1 файл = 1)
