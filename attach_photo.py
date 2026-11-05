@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """Прикрепить фото к уже опубликованному посту (wall.edit, уведомлений нет)."""
-import json, sys
+import json, sys, mimetypes
 from pathlib import Path
 import requests
 
@@ -29,13 +29,39 @@ if IMG is None:
 if not IMG.exists():
     sys.exit(f"❌ нет файла {IMG}")
 
-print(f"→ post {POST}, image {IMG}")
+print(f"→ post {POST}, image {IMG} ({IMG.stat().st_size} bytes)")
+
+# Предварительная диагностика токена
+try:
+    me = call("users.get")
+    print(f"✓ token as user: {me[0].get('first_name')} {me[0].get('last_name')} (id {me[0].get('id')})")
+except Exception as e:
+    print(f"⚠ users.get failed: {e}")
+try:
+    perms = call("account.getAppPermissions")
+    print(f"✓ token scopes bitmask: {perms}")
+except Exception as e:
+    print(f"⚠ account.getAppPermissions failed: {e}")
+
+# Upload
 srv = call("photos.getWallUploadServer", group_id=GID)
+mime = mimetypes.guess_type(IMG.name)[0] or "image/jpeg"
 with open(IMG, "rb") as f:
-    up = requests.post(srv["upload_url"], files={"photo": f}).json()
+    up = requests.post(srv["upload_url"],
+        files={"photo": (IMG.name, f, mime)}, timeout=120).json()
+print(f"→ upload response: {up}")
+
+if not up.get("photo"):
+    print("❌ VK вернул пустое photo. Возможные причины:")
+    print("   • user_token без scope 'photos'")
+    print("   • токен = group-token (нужен user-token для загрузки)")
+    print("   • VK временная ошибка")
+    sys.exit(2)
+
 saved = call("photos.saveWallPhoto", group_id=GID,
              server=up["server"], photo=up["photo"], hash=up["hash"])[0]
 attach = f"photo{saved['owner_id']}_{saved['id']}"
 print(f"✅ uploaded: {attach}")
+
 call("wall.edit", owner_id=-GID, post_id=POST, attachments=attach)
-print(f"✅ post {POST} updated")
+print(f"✅ post {POST} updated: https://vk.com/wall-{GID}_{POST}")
