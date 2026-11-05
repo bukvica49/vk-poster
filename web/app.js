@@ -657,7 +657,6 @@
   <button class="btn slav-b" data-act="slav-b">🏛 Древній</button>
   <button class="btn slav-c" data-act="slav-c">✨ AI старослав</button>
   <button class="btn" data-act="emoji">😊 Эмодзи</button>
-    <button class="btn" data-act="strip-emoji" title="Убрать все эмодзи из поля">🚫 Убрать эмодзи</button>
   <button class="btn" data-act="symbols">✳ Символы</button>
 </div>
 <div id="picker" style="display:none"><div class="picker-tabs" id="tabs"></div><div class="picker" id="grid"></div></div>
@@ -1104,4 +1103,57 @@ document.querySelectorAll('[data-act]').forEach(b => {
 
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', makeButton);
   else makeButton();
+})();
+
+
+/* ═══════════ FLOAT-КНОПКА «УБРАТЬ ЭМОДЗИ» ПОВЕРХ #src ═══════════ */
+(function(){
+  function install(){
+    var src = document.getElementById('src');
+    if (!src) return;
+    var wrap = src.parentNode;
+    if (!wrap || !wrap.classList.contains('src-float-wrap')) {
+      wrap = document.createElement('div');
+      wrap.className = 'src-float-wrap';
+      wrap.style.position = 'relative';
+      wrap.style.display = 'block';
+      src.parentNode.insertBefore(wrap, src);
+      wrap.appendChild(src);
+    }
+    if (wrap.querySelector('.src-strip-btn')) return;
+    var btn = document.createElement('button');
+    btn.type = 'button';
+    btn.className = 'src-strip-btn';
+    btn.title = 'Убрать все эмодзи из текста';
+    btn.setAttribute('aria-label', 'Убрать эмодзи');
+    btn.textContent = '🚫';
+    btn.style.cssText = 'position:absolute;bottom:10px;right:10px;width:36px;height:36px;border-radius:9px;background:#ef4444;color:#fff;border:none;cursor:pointer;font-size:17px;display:flex;align-items:center;justify-content:center;box-shadow:0 3px 12px rgba(0,0,0,.35);z-index:100;transition:transform .12s,background .12s,box-shadow .12s;padding:0;line-height:1;';
+    btn.addEventListener('mouseenter', function(){ btn.style.transform='scale(1.08)'; btn.style.background='#dc2626'; });
+    btn.addEventListener('mouseleave', function(){ btn.style.transform='scale(1)'; btn.style.background='#ef4444'; });
+    btn.addEventListener('mousedown', function(e){ e.preventDefault(); });
+    btn.addEventListener('click', function(e){
+      e.preventDefault();
+      if (!src.value || !src.value.trim()) {
+        if (typeof toast === 'function') toast('Введи текст','err');
+        return;
+      }
+      var H = window.H;
+      var r = (H && typeof H.stripEmoji === 'function') ? H.stripEmoji(src.value) : null;
+      if (!r) {
+        var RE = /[\u{1F000}-\u{1FAFF}\u{2600}-\u{27BF}\u{FE00}-\u{FE0F}\u{200D}\u{20E3}]/gu;
+        var cnt = (src.value.match(RE)||[]).length;
+        src.value = src.value.replace(RE,'').replace(/[ \t]{2,}/g,' ').replace(/\n{3,}/g,'\n\n');
+        if (typeof toast === 'function') toast('Убрано эмодзи: ' + cnt, 'ok');
+      } else {
+        if (r.count === 0) { if (typeof toast === 'function') toast('Эмодзи не найдены',''); return; }
+        src.value = r.text;
+        if (typeof toast === 'function') toast('Убрано эмодзи: ' + r.count, 'ok');
+      }
+      src.dispatchEvent(new Event('input', {bubbles:true}));
+    });
+    wrap.appendChild(btn);
+  }
+  function whenReady(){ install(); setTimeout(install, 500); setTimeout(install, 1500); }
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', whenReady);
+  else whenReady();
 })();
