@@ -9,6 +9,11 @@ on:
         description: 'Force publish now (ignore post_time)'
         type: boolean
         default: true
+      date:
+        description: 'Emulate Slavic date (YYYY-MM-DD, empty = today)'
+        type: string
+        required: false
+        default: ''
 
 permissions:
   contents: write
@@ -52,7 +57,7 @@ jobs:
           set -euo pipefail
           if [ "${{ github.event_name }}" = "workflow_dispatch" ] && [ "${{ inputs.force }}" = "true" ]; then
             echo "── Mode: FORCE (ignore post_time) ──"
-            python3 poster.py config.main.json --force 2>&1 | tee /tmp/poster.log
+            python3 poster.py config.main.json --force ${{ inputs.date != '' && format('--date {0}', inputs.date) || '' }} 2>&1 | tee /tmp/poster.log
           else
             echo "── Mode: NORMAL (respect post_time) ──"
             python3 poster.py config.main.json 2>&1 | tee /tmp/poster.log
