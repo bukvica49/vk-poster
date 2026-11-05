@@ -1,0 +1,49 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<title>✍ Редактор</title>
+<link rel="icon" href="favicon.svg" type="image/svg+xml">
+<style>
+  html,body{margin:0;padding:0;min-height:100vh;font-family:system-ui,-apple-system,"Segoe UI",sans-serif;background:#f5f5f7;color:#333}
+  .vp-boot-msg{margin:120px auto;max-width:520px;padding:24px 28px;background:#fff;border:1px solid #d4d4d8;border-radius:12px;text-align:center;font-size:15px;line-height:1.5;box-shadow:0 4px 16px rgba(0,0,0,.06)}
+  .vp-boot-msg b{color:#2563eb}
+  .vp-boot-msg code{background:#f0f0f3;padding:2px 6px;border-radius:4px;font-size:13px}
+</style>
+</head>
+<body>
+<div class="vp-boot-msg" id="vp-boot">⏳ Загрузка редактора…</div>
+<script>
+(function(){
+  var slot = document.getElementById('vp-boot');
+  var html = '';
+  try { html = localStorage.getItem('vp_editor_html') || ''; } catch(e) { console.error('[vp-boot] LS:', e); }
+  console.log('[vp-boot] html.length=', html.length);
+  if (!html || html.length < 200) {
+    slot.innerHTML = '⚠ <b>Редактор ещё не открыт.</b><br>Закройте это окно и нажмите <b>✍</b> на главной.';
+    return;
+  }
+  // Defer — document.open() mid-parse в Firefox/Chrome не сбрасывает док.
+  setTimeout(function(){
+    try {
+      console.log('[vp-boot] document.open + write + close...');
+      document.open();
+      document.write(html);
+      document.close();
+      console.log('[vp-boot] OK');
+    } catch(e) {
+      console.error('[vp-boot] write failed:', e);
+      try {
+        var b = new Blob([html], { type: 'text/html;charset=utf-8' });
+        location.replace(URL.createObjectURL(b));
+        console.log('[vp-boot] fallback → blob URL');
+      } catch(e2) {
+        console.error('[vp-boot] blob fallback failed:', e2);
+        try { document.documentElement.innerHTML = '<pre style="padding:24px;color:#c00;font:13px monospace">Boot failed: ' + ((e && e.message) || e) + '</pre>'; } catch(_){}
+      }
+    }
+  }, 0);
+})();
+</script>
+</body>
+</html>

@@ -317,7 +317,23 @@
 
   // ═══════════ POPUP ═══════════
   function openEditorWindow() {
-    if (window._vpEditorWin && !window._vpEditorWin.closed) { window._vpEditorWin.focus(); return; }
+    if (window._vpEditorWin && !window._vpEditorWin.closed) {
+      let _broken = false, _reason = '';
+      try {
+        const _doc = window._vpEditorWin.document;
+        const _href = window._vpEditorWin.location.href;
+        if (!_doc || !_doc.documentElement || !_href || _href.startsWith('about:')) { _broken = true; _reason = 'about:blank'; }
+        else if (_doc.getElementById('vp-boot')) { _broken = true; _reason = 'stuck at #vp-boot'; }
+        else if (_href.indexOf('blob:') === 0 && !_doc.documentElement.hasAttribute('data-vp-editor-ready')) { _broken = true; _reason = 'blob dead'; }
+        else if (!_doc.documentElement.hasAttribute('data-vp-editor-ready')) { _broken = true; _reason = 'no ready marker'; }
+      } catch(e) { _broken = true; _reason = 'exception: ' + (e && e.message || e); }
+      if (!_broken) {
+        try { window._vpEditorWin.focus(); return; } catch(e) { _broken = true; _reason = 'focus fail'; }
+      }
+      console.warn('[vp] попап сломан (' + _reason + ') — переоткрываю');
+      try { window._vpEditorWin.close(); } catch(e){}
+      window._vpEditorWin = null;
+    }
     let saved = { w: 1000, h: 900 };
     try { saved = Object.assign(saved, JSON.parse(localStorage.getItem('vp-ed-size') || '{}')); } catch(e) {}
     const ww = Math.max(600, Math.min(Number(saved.w) || 1000, 2400));
@@ -414,6 +430,7 @@
   .picker-tabs{display:flex;flex-wrap:wrap;gap:4px;margin:6px 0}
   .picker-tabs button{padding:4px 10px;font-size:12px;border-radius:20px;border:1px solid var(--border);background:var(--bg-panel);cursor:pointer;font-family:inherit;color:var(--fg-main)}
   .picker-tabs button.active{background:var(--accent);color:#fff;border-color:var(--accent)}
+  .picker-empty{grid-column:1/-1;text-align:center;font-size:12px;color:var(--fg-muted);padding:16px 8px;line-height:1.4}
   .toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%) translateY(20px);padding:10px 20px;background:#333;color:#fff;border-radius:8px;font-size:14px;opacity:0;pointer-events:none;transition:all .25s;z-index:9999}
   .toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
   .toast.ok{background:#2a7a3a}.toast.err{background:#c33}
@@ -421,12 +438,141 @@
   .tpl-box{background:var(--bg-panel);border:1px dashed var(--accent);border-radius:10px;padding:12px;margin-top:16px}
   .tpl-status{font-size:12px;color:var(--fg-muted);margin-bottom:6px}
   .tpl-pattern{display:inline-block;padding:2px 8px;background:var(--accent);color:#fff;border-radius:4px;font-family:ui-monospace,monospace;font-size:11px;margin-left:6px}
+
+  .field-wrap{position:relative;margin-bottom:8px}
+  .field-wrap .field{margin-bottom:0;padding-right:70px}
+  .field-actions{position:absolute;top:6px;right:6px;display:flex;gap:4px;z-index:2;opacity:.55;transition:opacity .15s}
+  .field-wrap:hover .field-actions,.field-wrap:focus-within .field-actions{opacity:1}
+  .icon-btn-sm{padding:3px 8px;font-size:14px;line-height:1;border:1px solid var(--border);border-radius:5px;background:var(--bg-panel);color:var(--fg-main);cursor:pointer;font-family:inherit;transition:background .12s}
+  .icon-btn-sm:hover{background:var(--accent);color:#fff;border-color:var(--accent)}
+
+  /* ── Fit-to-window layout (попап) ── */
+  html, body { height: 100dvh; overflow: hidden; }
+  body {
+    display: flex;
+    flex-direction: column;
+    padding: 10px 14px;
+    margin: 0;
+    min-height: 0;
+    max-width: none;
+  }
+  body::before, body::after { z-index: -1; }
+  .hdr, .hint, .btns, .footer, .tpl-box, .label, .bg-panel, #picker {
+    flex-shrink: 0;
+  }
+  .hdr            { margin-bottom: 6px; }
+  .hint           { margin-bottom: 6px; font-size: 11px; }
+  .label          { margin: 6px 0 4px; font-size: 12px; }
+  .btns           { margin: 6px 0; }
+  .btns .btn      { padding: 6px 10px; font-size: 12px; }
+  .footer         { margin-top: 6px; font-size: 11px; }
+  .tpl-box        { margin-top: 8px; padding: 8px 10px; }
+  .tpl-box h3     { font-size: 13px; margin: 0 0 4px; }
+  .tpl-box .hint  { font-size: 11px; }
+
+  .field-wrap {
+    flex: 1 1 0;
+    min-height: 90px;
+    display: flex;
+    flex-direction: column;
+    margin-bottom: 6px;
+  }
+  .field-wrap .field {
+    flex: 1 1 0;
+    min-height: 0;
+    width: 100%;
+    resize: none;
+  }
+
+  #picker  { max-height: 30vh; overflow-y: auto; }
+  .picker  { max-height: calc(30vh - 42px); margin: 0; }
+  .bg-panel{ max-height: 32vh; overflow-y: auto; }
+
+  @media (max-height: 560px) {
+    .hint, .footer, .tpl-box .hint { display: none; }
+    .btns .btn      { padding: 4px 8px; font-size: 11px; }
+    .field-wrap     { min-height: 60px; }
+    .tpl-box        { padding: 6px 8px; }
+    .hdr h1         { font-size: 15px; }
+    .icon-btn       { width: 30px; height: 30px; font-size: 14px; }
+  }
+
+  /* ── Compact controls v2 ── */
+  .hdr              { margin: 0 0 3px; }
+  .hdr h1           { font-size: 14px; line-height: 1.2; }
+  .hdr-btns         { gap: 3px; }
+  .hdr-btns .icon-btn { width: 26px; height: 26px; font-size: 12px; border-radius: 6px; }
+
+  .hint             { font-size: 10px; margin: 0 0 2px; line-height: 1.25; }
+
+  .label            { margin: 1px 0 1px; font-size: 11px; }
+
+  .btns             { margin: 2px 0; gap: 3px; }
+  .btns .btn        { padding: 2px 7px; font-size: 11px; line-height: 1.25; border-radius: 5px; }
+  .btns .btn:hover  { transform: none; }
+
+  .field-wrap       { min-height: 55px; margin-bottom: 3px; }
+  .field-wrap .field { padding: 6px 10px; font-size: 13px; line-height: 1.45; }
+
+  .footer           { margin-top: 2px; font-size: 10px; }
+
+  .tpl-box          { margin-top: 3px; padding: 3px 8px 4px; }
+  .tpl-box h3       { font-size: 11px; margin: 0 0 2px; }
+  .tpl-box .hint    { font-size: 10px; line-height: 1.25; }
+  .tpl-status       { font-size: 10px; margin-bottom: 2px; }
+
+  @media (max-height: 680px) {
+    .hint, .tpl-box .hint { display: none; }
+  }
+
+  /* ── Compact v3: toggle-шаблон + адаптивные кнопки ── */
+  .btns               { gap: 3px; margin: 2px 0; align-items: stretch; }
+  .btns > *           { flex: 0 1 auto; min-height: 22px; }
+  .btns .btn          { padding: 2px 7px; font-size: 11px; line-height: 1.2;
+                        border-radius: 5px; white-space: nowrap;
+                        overflow: hidden; text-overflow: ellipsis;
+                        display: inline-flex; align-items: center; justify-content: center; }
+  .btns label         { padding: 2px 6px; font-size: 11px; }
+
+  .tpl-box            { display: none; }
+  .tpl-box.open       { display: block; padding: 4px 8px 5px; margin-top: 4px; }
+  .tpl-box.open h3    { font-size: 11px; margin: 0 0 2px; }
+  .tpl-box.open .hint { font-size: 10px; margin-top: 2px; }
+
+  /* ── Compact v4: узкое окно → кнопки в одну строку ── */
+  @media (max-width: 640px) {
+    .btns            { gap: 2px; }
+    .btns .btn       { padding: 2px 5px; font-size: 10px; }
+    .btns .icon-btn,
+    .btns .btn:hover { transform: none; }
+  }
+  @media (max-width: 520px) {
+    .btns .btn       { padding: 2px 4px; font-size: 9.5px; letter-spacing: -.1px; }
+  }
+
+  /* ── Compact v5: пикер — плотнее сетка и шрифт ── */
+  .picker {
+    grid-template-columns: repeat(auto-fill, minmax(24px, 1fr));
+    gap: 2px;
+    padding: 4px;
+  }
+  .picker button {
+    font-size: 13px;
+    border-radius: 4px;
+    border-width: 1px;
+  }
+  .picker-tabs button { padding: 2px 8px; font-size: 11px; }
+  @media (max-width: 520px) {
+    .picker { grid-template-columns: repeat(auto-fill, minmax(22px, 1fr)); }
+    .picker button { font-size: 12px; }
+  }
 </style></head><body>
 <div class="hdr">
   <h1>✍ Редактор текста для ВК</h1>
   <div class="hdr-btns">
     <button class="icon-btn" id="btn-theme" title="Переключить тему">🌙</button>
     <button class="icon-btn" id="btn-bg" title="Фон редактора">🖼</button>
+    <button class="icon-btn" id="btn-tpl" title="Шаблон оформления">📿</button>
   </div>
 </div>
 <div class="bg-panel" id="bg-panel" style="display:none">
@@ -440,22 +586,34 @@
 </div>
 <div class="hint">Вставь текст → нажми кнопку → результат ниже → «Скопировать».</div>
 <label class="label">Введи или вставь текст:</label>
-<textarea id="src" class="field" rows="7" placeholder="Вставь сюда текст поста..."></textarea>
+<div class="field-wrap">
+  <textarea id="src" class="field" rows="7" placeholder="Вставь сюда текст поста..."></textarea>
+  <div class="field-actions">
+    <button type="button" class="icon-btn-sm" data-act="copy-src" title="Копировать">📋</button>
+    <button type="button" class="icon-btn-sm" data-act="clear-src" title="Очистить">🗑</button>
+  </div>
+</div>
 <div class="btns">
   <button class="btn" data-act="format">🎨 Оформить для ВК</button>
-  <button class="btn slav-a" data-act="slav-a">🕯 А: Дореформенный</button>
-  <button class="btn slav-b" data-act="slav-b">🏛 Б: Древній</button>
-  <button class="btn slav-c" data-act="slav-c">✨ В: AI старослав</button>
+  <button class="btn slav-a" data-act="slav-a">🕯 Дореформенный</button>
+  <button class="btn slav-b" data-act="slav-b">🏛 Древній</button>
+  <button class="btn slav-c" data-act="slav-c">✨ AI старослав</button>
   <button class="btn" data-act="emoji">😊 Эмодзи</button>
   <button class="btn" data-act="symbols">✳ Символы</button>
 </div>
 <div id="picker" style="display:none"><div class="picker-tabs" id="tabs"></div><div class="picker" id="grid"></div></div>
 <label class="label">Готовый текст:</label>
-<textarea id="dst" class="field" rows="10" placeholder="Здесь появится результат..."></textarea>
+<div class="field-wrap">
+  <textarea id="dst" class="field" rows="10" placeholder="Здесь появится результат..."></textarea>
+  <div class="field-actions">
+    <button type="button" class="icon-btn-sm" data-act="copy-dst" title="Копировать">📋</button>
+    <button type="button" class="icon-btn-sm" data-act="clear-dst" title="Очистить">🗑</button>
+  </div>
+</div>
 <div class="btns">
-  <button class="btn primary" data-act="copy">📋 Скопировать</button>
+  
   <button class="btn" data-act="to-src">↺ Из результата → во ввод</button>
-  <button class="btn" data-act="clear">🗑 Очистить</button>
+  
 </div>
 <div class="footer"><span>Пост сохраняй в PagesCMS отдельно.</span><span id="counter">0 симв.</span></div>
 <div class="tpl-box">
@@ -465,6 +623,9 @@
     <button class="btn" data-act="tpl-save">🔒 Запомнить из верхнего поля</button>
     <button class="btn" data-act="tpl-apply">📿 По шаблону</button>
     <button class="btn" data-act="tpl-clear">✖ Забыть шаблон</button>
+    <label style="display:inline-flex;align-items:center;gap:6px;padding:6px 10px;font-size:12px;opacity:.85;user-select:none;cursor:pointer">
+      <input type="checkbox" id="confirm-clear" style="margin:0;cursor:pointer">Подтверждать очистку
+    </label>
   </div>
   <div class="hint" style="margin:0"><b>Как:</b> вставь <b>уже оформленный</b> пост в верхнее поле → «🔒 Запомнить». Поле очистится. Потом вставь <b>сырой</b> текст → «📿 По шаблону» → результат внизу.</div>
 </div>
@@ -530,7 +691,12 @@
   refreshTpl();
 
   // ============ ОСНОВНЫЕ КНОПКИ ============
-  document.querySelectorAll('.btns button').forEach(b => {
+  const _cc = document.getElementById('confirm-clear');
+if (_cc) {
+  _cc.checked = localStorage.getItem('vk_confirm_clear') !== '0';
+  _cc.addEventListener('change', () => localStorage.setItem('vk_confirm_clear', _cc.checked ? '1' : '0'));
+}
+document.querySelectorAll('[data-act]').forEach(b => {
     b.addEventListener('click', async () => {
       const act = b.dataset.act;
       try {
@@ -548,10 +714,54 @@
           catch(e) { toast('AI error: '+e.message,'err'); }
           finally { b.disabled=false; b.textContent=old; }
         }
-        else if (act === 'emoji' || act === 'symbols') { const c = act==='emoji'?H.EMOJI:H.SYMBOLS; picker.style.display=''; renderPickerTabs(c); }
-        else if (act === 'copy') { const t=dst.value.trim(); if (!t){toast('Сначала оформи','err');return;} const ok=await H.copyText(t); toast(ok?'✓ Скопировано':'Не удалось',ok?'ok':'err'); }
+        else if (act === 'emoji' || act === 'symbols') { window._vpPickerMode = act; const c = act==='emoji'?H.EMOJI:H.SYMBOLS; picker.style.display=''; renderPickerTabs(c); }
+        else if (act === 'copy-src' || act === 'copy-dst') {
+          const ta = act === 'copy-src' ? src : dst;
+          if (!ta.value) { toast('Пусто','err'); return; }
+          let ok = false, _cerr = '';
+          // 1) execCommand ПЕРВЫМ — надёжнее в about:blank-попапе
+          try {
+            const _t = document.createElement('textarea');
+            _t.value = ta.value;
+            _t.style.position = 'fixed'; _t.style.opacity = '0'; _t.style.left = '-9999px';
+            document.body.appendChild(_t); _t.focus(); _t.select();
+            ok = document.execCommand('copy');
+            document.body.removeChild(_t);
+            if (!ok) _cerr += 'execCommand=false';
+          } catch(e) { _cerr += 'execCommand:' + (e && e.message || e); }
+          // 2) нативный API
+          if (!ok) {
+            try {
+              if (navigator.clipboard && navigator.clipboard.writeText) {
+                await navigator.clipboard.writeText(ta.value); ok = true;
+              } else { _cerr += ' | no clipboard'; }
+            } catch(e) { _cerr += ' | clipboard:' + (e && e.message || e); }
+          }
+          // 3) через opener (последний шанс)
+          if (!ok && typeof H !== 'undefined' && H && typeof H.copyText === 'function') {
+            try { ok = await H.copyText(ta.value); } catch(e) { _cerr += ' | opener:' + (e && e.message || e); }
+          }
+          if (window.console) console.log('[copy]', act, 'ok=', ok, 'err=', _cerr);
+          toast(ok ? '✓ Скопировано' : ('❌ ' + (_cerr || 'H false').slice(-120)), ok ? 'ok' : 'err');
+        }
+        else if (act === 'clear-src' || act === 'clear-dst') {
+          const _w = b && b.closest ? b.closest('.field-wrap') : null;
+          const _dt = _w && _w.querySelector('textarea');
+          const target = _dt || document.getElementById(act === 'clear-src' ? 'src' : 'dst') ||
+                         (act === 'clear-src' ? src : dst);
+          if (!target) { toast('Поле не найдено','err'); return; }
+          if (!target.value) { toast('Пусто','err'); return; }
+          const _chk = document.getElementById('confirm-clear');
+          if (!_chk || _chk.checked) {
+            const _label = act === 'clear-src' ? 'ВЕРХНЕЕ' : 'НИЖНЕЕ';
+            if (!confirm('Очистить ' + _label + ' поле?')) return;
+          }
+          target.value = '';
+          try { if (act === 'clear-src') { picker.style.display = 'none'; target.focus(); } else { updateCounter(); } } catch(e){}
+          toast(act === 'clear-src' ? 'Верхнее очищено' : 'Нижнее очищено', 'ok');
+        }
         else if (act === 'to-src') { if (!dst.value.trim()){toast('Сначала оформи','err');return;} src.value=dst.value; dst.value=''; updateCounter(); }
-        else if (act === 'clear') { if (!confirm('Очистить оба поля?')) return; src.value=''; dst.value=''; updateCounter(); picker.style.display='none'; }
+        
         else if (act === 'tpl-save') {
           if (!src.value.trim()){toast('Вставь оформленный пример','err');return;}
           const pattern = H.captureTemplate(src.value);
@@ -569,42 +779,100 @@
     });
   });
 
+  function _vpRecentKey(){ return 'vp-ed-recent-' + (window._vpPickerMode === 'symbols' ? 'symbols' : 'emoji'); }
+  function getRecent(){ try { return JSON.parse(localStorage.getItem(_vpRecentKey()) || '[]'); } catch(e){ return []; } }
+  function trackRecent(ch){
+    try {
+      const cur = getRecent();
+      const next = [ch, ...cur.filter(x => x !== ch)].slice(0, 24);
+      localStorage.setItem(_vpRecentKey(), JSON.stringify(next));
+    } catch(e){ console.warn('[vp] recent:', e); }
+  }
   function renderPickerTabs(catalog){ tabs.innerHTML=''; grid.innerHTML='';
-    Object.keys(catalog).forEach((cat,i)=>{
+    // ★ Часто — всегда первая и активная
+    const rb = document.createElement('button'); rb.type='button'; rb.textContent='★ Часто';
+    rb.addEventListener('click', ()=>{ tabs.querySelectorAll('button').forEach(x=>x.classList.remove('active')); rb.classList.add('active'); renderPickerGrid(getRecent()); });
+    tabs.appendChild(rb); rb.classList.add('active'); renderPickerGrid(getRecent());
+    // Остальные категории — без auto-active
+    Object.keys(catalog).forEach((cat)=>{
       const b=document.createElement('button'); b.type='button'; b.textContent=cat;
-      b.addEventListener('click',()=>{ tabs.querySelectorAll('button').forEach(x=>x.classList.remove('active')); b.classList.add('active'); renderPickerGrid(catalog[cat]); });
-      tabs.appendChild(b); if (i===0){ b.classList.add('active'); renderPickerGrid(catalog[cat]); }
+      b.addEventListener('click', ()=>{ tabs.querySelectorAll('button').forEach(x=>x.classList.remove('active')); b.classList.add('active'); renderPickerGrid(catalog[cat]); });
+      tabs.appendChild(b);
     });
   }
   function renderPickerGrid(chars){ grid.innerHTML='';
-    chars.forEach(ch=>{ const b=document.createElement('button'); b.type='button'; b.textContent=ch; b.addEventListener('click',()=>{ insertAtCursor(src,ch); toast('Вставлено: '+ch); }); grid.appendChild(b); });
+    if (!chars || !chars.length) {
+      const d = document.createElement('div'); d.className = 'picker-empty';
+      d.textContent = 'Кликайте на эмодзи/символы — они появятся здесь';
+      grid.appendChild(d); return;
+    }
+    chars.forEach(ch=>{ const b=document.createElement('button'); b.type='button'; b.textContent=ch; b.addEventListener('click', ()=>{ insertAtCursor(src,ch); trackRecent(ch); toast('Вставлено: '+ch); }); grid.appendChild(b); });
   }
 
   applyTheme(); applyBg();
+
+  // Toggle-close пикера по повторному клику 😊 / ✳
+  try {
+    const _pk = document.getElementById('picker');
+    if (_pk) {
+      document.addEventListener('click', function (e) {
+        const _t = e.target;
+        if (!_t || !_t.closest) return;
+        const _btn = _t.closest('[data-act="emoji"], [data-act="symbols"]');
+        if (!_btn) return;
+        const _want = _btn.dataset.act;
+        const _open = getComputedStyle(_pk).display !== 'none';
+        if (_open && window._vpPickerMode === _want) {
+          _pk.style.display = 'none';
+          window._vpPickerMode = null;
+          e.stopImmediatePropagation();
+          e.preventDefault();
+          console.log('[vp] picker closed via toggle');
+        } else {
+          window._vpPickerMode = _want;
+        }
+      }, true);
+    }
+  } catch (e) { console.warn('[vp] picker toggle:', e); }
+
+  // Toggle блока шаблона
+  try {
+    const _bt = document.getElementById('btn-tpl');
+    const _tb = document.querySelector('.tpl-box');
+    if (_bt && _tb) {
+      if (localStorage.getItem('vp_tpl_open') === '1') _tb.classList.add('open');
+      _bt.addEventListener('click', function () {
+        _tb.classList.toggle('open');
+        localStorage.setItem('vp_tpl_open', _tb.classList.contains('open') ? '1' : '0');
+      });
+    }
+  } catch (e) { console.warn('[vp] tpl-toggle:', e); }
+
   src.focus();
+  try { document.documentElement.setAttribute('data-vp-editor-ready','1'); } catch(e){}
 })();
 <\/script></body></html>`;
 
-    // надёжная запись (обход race condition в Firefox/Chrome)
-    setTimeout(() => {
-      try {
-        w.document.open();
-        w.document.write(html);
-        w.document.close();
-        // проверка что записалось
-        setTimeout(() => {
-          try {
-            if (!w.document.body || !w.document.body.innerHTML.trim()) {
-              console.warn('[vp] пустой попап, пробую fallback');
-              w.document.documentElement.innerHTML = html;
-            }
-          } catch(e) { console.error('[vp] check failed:', e); }
-        }, 100);
-      } catch (e) {
-        console.error('[vp] document.write упал:', e);
-        try { w.document.documentElement.innerHTML = html; } catch (e2) { console.error(e2); }
+    // Bulletproof: HTML в LS + статический editor.html (переживает ⟳ после reload главной)
+    (function _launch() {
+      try { localStorage.setItem('vp_editor_html', html); }
+      catch(e) { console.warn('[vp] LS save failed:', e); }
+      if (window._vpEditorBlobPrev) {
+        try { URL.revokeObjectURL(window._vpEditorBlobPrev); } catch(e){}
+        delete window._vpEditorBlobPrev;
       }
-    }, 0);
+      const _editorUrl = new URL('editor.html', window.location.href).href;
+      setTimeout(() => {
+        try {
+          if (!w || w.closed || !w.location) return;
+          w.location.replace(_editorUrl);
+        } catch (e) {
+          console.error('[vp] editor nav failed, fallback to document.write:', e);
+          try { w.document.open(); w.document.write(html); w.document.close(); }
+          catch (e2) { console.error('[vp] fallback failed:', e2); }
+        }
+      }, 0);
+    })();
   }
 
   // ---------- главное окно ----------
