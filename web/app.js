@@ -1002,13 +1002,47 @@ document.querySelectorAll('[data-act]').forEach(b => {
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', () => { buildUI(); doFilter(''); });
   else { buildUI(); doFilter(''); }
 })();
-/* ═══════════ ПЛАВАЮЩАЯ КНОПКА «НАВЕРХ» ═══════════ */
-/* Появляется при прокрутке > 300px, правый-нижний угол. */
+/* ═══════════ ПЛАВАЮЩАЯ КНОПКА «НАВЕРХ» (квадрат, тема) ═══════════ */
+/* Появляется при прокрутке > 300px. Квадрат, цвет подстраивается под тему. */
 (function _vpInitBackToTop(){
   if (typeof window === 'undefined') return undefined;
   if (window._vpBackToTopLoaded) return undefined;
   window._vpBackToTopLoaded = true;
-  function makeButton() {
+
+  function isDark(){
+    try {
+      var dt = document.documentElement.dataset.theme ||
+               (document.body && document.body.dataset.theme);
+      if (dt === 'dark') return true;
+      if (dt === 'light') return false;
+    } catch(e){}
+    try {
+      var bg = getComputedStyle(document.body).backgroundColor;
+      var m = bg.match(/[\d.]+/g);
+      if (m && m.length >= 3 && !(m.length >= 4 && parseFloat(m[3]) === 0)) {
+        var lum = 0.2126*(+m[0]) + 0.7152*(+m[1]) + 0.0722*(+m[2]);
+        return lum < 128;
+      }
+    } catch(e){}
+    return !!(window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches);
+  }
+
+  function paint(btn){
+    var dark = isDark();
+    if (dark) {
+      btn.style.background = '#374151';
+      btn.style.color = '#f9fafb';
+      btn.style.border = '1px solid rgba(255,255,255,.18)';
+      btn.style.boxShadow = '0 4px 14px rgba(0,0,0,.55)';
+    } else {
+      btn.style.background = '#2563eb';
+      btn.style.color = '#ffffff';
+      btn.style.border = '1px solid rgba(0,0,0,.06)';
+      btn.style.boxShadow = '0 4px 14px rgba(37,99,235,.40)';
+    }
+  }
+
+  function makeButton(){
     if (!document.body) return;
     if (document.getElementById('vp-back-to-top')) return;
     var btn = document.createElement('button');
@@ -1017,11 +1051,14 @@ document.querySelectorAll('[data-act]').forEach(b => {
     btn.title = 'Наверх';
     btn.setAttribute('aria-label', 'К началу страницы');
     btn.textContent = '↑';
-    btn.style.cssText = 'position:fixed;bottom:24px;right:24px;width:48px;height:48px;border-radius:50%;border:none;background:#2563eb;color:#fff;font-size:24px;line-height:1;padding:0;cursor:pointer;box-shadow:0 4px 14px rgba(37,99,235,.45);opacity:0;visibility:hidden;transition:opacity .2s,visibility .2s,background .15s,transform .15s;z-index:9999;font-family:system-ui,-apple-system,sans-serif;display:flex;align-items:center;justify-content:center;';
-    btn.addEventListener('mouseenter', function(){ btn.style.background = '#1d4ed8'; btn.style.transform = 'scale(1.06)'; });
-    btn.addEventListener('mouseleave', function(){ btn.style.background = '#2563eb'; btn.style.transform = 'scale(1)'; });
+    btn.style.cssText = 'position:fixed;bottom:24px;right:24px;width:48px;height:48px;border-radius:10px;font-size:22px;line-height:1;padding:0;cursor:pointer;opacity:0;visibility:hidden;transition:opacity .2s,visibility .2s,background .15s,transform .15s,box-shadow .15s;z-index:9999;font-family:system-ui,-apple-system,sans-serif;display:flex;align-items:center;justify-content:center;font-weight:700;';
+    paint(btn);
+
+    btn.addEventListener('mouseenter', function(){ btn.style.transform = 'scale(1.06)'; });
+    btn.addEventListener('mouseleave', function(){ btn.style.transform = 'scale(1)'; });
     btn.addEventListener('click', function(){ window.scrollTo({ top: 0, behavior: 'smooth' }); });
     document.body.appendChild(btn);
+
     function updateVisibility(){
       var show = (window.scrollY || window.pageYOffset || 0) > 300;
       btn.style.opacity = show ? '1' : '0';
@@ -1029,7 +1066,18 @@ document.querySelectorAll('[data-act]').forEach(b => {
     }
     window.addEventListener('scroll', updateVisibility, {passive:true});
     updateVisibility();
+
+    try {
+      var mo = new MutationObserver(function(){ paint(btn); });
+      mo.observe(document.documentElement, { attributes: true, attributeFilter: ['data-theme', 'class'] });
+      if (document.body) mo.observe(document.body, { attributes: true, attributeFilter: ['data-theme', 'class'] });
+    } catch(e){}
+    try {
+      var mq = window.matchMedia('(prefers-color-scheme: dark)');
+      if (mq.addEventListener) mq.addEventListener('change', function(){ paint(btn); });
+    } catch(e){}
   }
+
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', makeButton);
   else makeButton();
 })();
