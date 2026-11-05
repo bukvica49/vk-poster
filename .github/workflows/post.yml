@@ -3,7 +3,12 @@ name: VK Poster
 on:
   schedule:
     - cron: '0 11 * * *'      # 11:00 UTC = 18:00 Красноярск (UTC+7)
-  workflow_dispatch:           # кнопка ручного запуска
+  workflow_dispatch:
+    inputs:
+      force:
+        description: 'Force publish now (ignore post_time)'
+        type: boolean
+        default: true
 
 permissions:
   contents: write
@@ -43,7 +48,14 @@ jobs:
         env:
           TZ: Asia/Krasnoyarsk           # ⚠️ КРИТИЧНО — без этого slavic_now не сдвинется
           GIT_SSH_COMMAND: 'ssh -i ~/.ssh/deploy_key -o IdentitiesOnly=yes'
-        run: python3 poster.py config.main.json
+        run: |
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ] && [ "${{ inputs.force }}" = "true" ]; then
+            echo "── Mode: FORCE (ignore post_time) ──"
+            python3 poster.py config.main.json --force
+          else
+            echo "── Mode: NORMAL (respect post_time) ──"
+            python3 poster.py config.main.json
+          fi
 
       - name: Commit & push state → triggers Pages
         run: |
