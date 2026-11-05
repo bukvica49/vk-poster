@@ -249,7 +249,7 @@ function copyPost(btn) {
 
     html = f'''<!doctype html><html lang="ru"><head><meta charset="utf-8">
 <title>VK Poster — превью</title>
-<link rel="icon" type="image/svg+xml" href="favicon.svg"><meta name="viewport" content="width=device-width,initial-scale=1">
+<link rel="icon" href="favicon.svg" type="image/svg+xml"><meta name="viewport" content="width=device-width,initial-scale=1">
 <style>
  body{{font-family:system-ui,sans-serif;max-width:1000px;margin:0 auto;padding:20px;background:#f5f5f7;color:#111}}
  .toolbar{{background:#fff;border-radius:10px;padding:14px 16px;margin-bottom:16px;display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap}}
@@ -288,3 +288,18 @@ function copyPost(btn) {
 
 if __name__ == '__main__':
     build()
+
+# ── editor.html bootstrap (пуленепробиваемый попап) ──
+try:
+    from pathlib import Path as _VPP
+    import shutil as _VPs
+    _vpsrc = _VPP('web/editor.html')
+    _vpdst = _VPP('_site/editor.html')
+    if _vpsrc.exists():
+        _vpdst.parent.mkdir(parents=True, exist_ok=True)
+        _VPs.copy(str(_vpsrc), str(_vpdst))
+        print('✅ _site/editor.html скопирован')
+    else:
+        print('⚠ web/editor.html отсутствует')
+except Exception as _vpe:
+    print('⚠ editor.html:', _vpe)
