@@ -649,6 +649,7 @@
   <div class="field-actions">
     <button type="button" class="icon-btn-sm" data-act="copy-src" title="Копировать">📋</button>
     <button type="button" class="icon-btn-sm" data-act="clear-src" title="Очистить">🗑</button>
+                  <button type="button" class="icon-btn-sm" data-act="vp-strip-toggle" title="Убрать/вернуть эмодзи" style="font-size:13px;">🚫</button>
   </div>
 </div>
 <div class="btns">
@@ -1106,3 +1107,94 @@ document.querySelectorAll('[data-act]').forEach(b => {
   else makeButton();
 })();
 
+
+// ═══ vp-strip-toggle (убрать ↔ вернуть эмодзи) ═══
+(function(){
+  'use strict';
+  var saved = { orig: null, stripped: null };
+  var _btn = '[data-act="vp-strip-toggle"]';
+
+  function getBtn(){ return document.querySelector(_btn); }
+
+  function updateBtn(){
+    var b = getBtn(); if (!b) return;
+    var s = document.getElementById('src');
+    if (saved.stripped !== null && (!s || s.value !== saved.stripped)) {
+      saved.orig = null; saved.stripped = null;
+    }
+    if (saved.stripped !== null) {
+      if (b.textContent !== '\u21A9') b.textContent = '\u21A9';
+      b.title = 'Вернуть эмодзи';
+      b.style.background = '#10b981';
+      b.style.color = '#fff';
+      b.style.borderColor = '#10b981';
+    } else {
+      if (b.textContent !== '\uD83D\uDEAB') b.textContent = '\uD83D\uDEAB';
+      b.title = 'Убрать все эмодзи';
+      b.style.background = '';
+      b.style.color = '';
+      b.style.borderColor = '';
+    }
+  }
+
+  function stripText(t){
+    var RE = /[\u{1F000}-\u{1FAFF}\u{2600}-\u{27BF}\u{FE00}-\u{FE0F}\u{200D}\u{20E3}]/gu;
+    var m = t.match(RE);
+    return {
+      count: m ? m.length : 0,
+      text: t.replace(RE,'')
+        .replace(/[ \t]{2,}/g,' ')
+        .replace(/[ \t]+$/gm,'')
+        .replace(/^[ \t]+/gm,'')
+        .replace(/\n{3,}/g,'\n\n')
+        .replace(/^\n+|\n+$/g,'')
+    };
+  }
+
+  document.addEventListener('click', function(e){
+    var b = e.target && e.target.closest && e.target.closest(_btn);
+    if (!b) return;
+    e.preventDefault(); e.stopPropagation();
+    var s = document.getElementById('src');
+    if (!s) return;
+
+    // возврат
+    if (saved.orig !== null && s.value === saved.stripped) {
+      s.value = saved.orig;
+      saved.orig = null; saved.stripped = null;
+      updateBtn();
+      s.dispatchEvent(new Event('input',{bubbles:true}));
+      if (typeof toast==='function') toast('Эмодзи возвращены','ok');
+      return;
+    }
+    // сброс неактуального state
+    saved.orig = null; saved.stripped = null;
+    updateBtn();
+
+    if (!s.value || !s.value.trim()) {
+      if (typeof toast==='function') toast('Введи текст','err');
+      return;
+    }
+    var r = stripText(s.value);
+    if (!r.count) {
+      if (typeof toast==='function') toast('Эмодзи не найдены','');
+      return;
+    }
+    saved.orig = s.value;
+    s.value = r.text;
+    saved.stripped = s.value;
+    updateBtn();
+    s.dispatchEvent(new Event('input',{bubbles:true}));
+    if (typeof toast==='function') toast('Убрано: ' + r.count + ' (клик ещё раз — вернуть)','ok');
+  }, false);
+
+  document.addEventListener('input', function(e){
+    if (e.target && e.target.id === 'src') updateBtn();
+  }, false);
+
+  // при каждом перерендере кнопки — синхронизировать визуал
+  try {
+    new MutationObserver(updateBtn).observe(document.body, {childList:true, subtree:true});
+  } catch(_e) {}
+  setInterval(updateBtn, 800);
+})();
