@@ -2,7 +2,7 @@
 
 Обновлено: 2026-11-04
 Владелец: pokep (pokep-All-Series)
-Репо: ~/site/vk-poster-ARCHIVE-20261104 (git: bukvica49/vk-poster)
+Репо: ~/site/vk-poster (git: bukvica49/vk-poster)
 VK-группа: 200796423, «Родная Традиция»
 
 ## Что это
@@ -34,6 +34,7 @@ VK-группа: 200796423, «Родная Традиция»
    1 файл = 1). Старый `holidays.json` (массив) удалён в c3e1b60.
 
 ## Что починено
+- **`4b50da0` (2026-11-05): verify НЕ фейлит на VK index lag.** Симптом: 2671–2673 все с фото (проверено в VK), но CI красный — `wall.getById` не отдаёт пост 55с. Причина: `wall.post` синхронный (создал → id), `wall.getById` асинхронный (5+ мин). Фикс: verify = warning; `PHOTO_MISSING=1` печатается **только** при реальном upload fail (`image_path` есть, `attach is None` после 3 retry). Доказано: `4b50da0` / `d6d9607` — success.
 - 8e00336: poster.py::main() — `_ap.add_argument("config", nargs="?")`.
   До: schedule 2026-11-03 → exit 2 (argparse rejected positional config.main.json).
   После: CI ✓ workflow_dispatch 14s; schedule — ждём 18:00 KRSK.
@@ -70,14 +71,17 @@ VK-группа: 200796423, «Родная Традиция»
 - run_poster.sh         — cron wrapper
 
 ## Диагностика (первое, что делать при «сломалось»)
-tail -5  ~/site/vk-poster-ARCHIVE-20261104/log-runs.txt      # main=0 ок, main=1 упало, sync!=0 pull упал
-tail -20 ~/site/vk-poster-ARCHIVE-20261104/log-main.txt      # конкретная причина
-cd ~/site/vk-poster-ARCHIVE-20261104 && python3 poster.py --dry-run   # что будет запощено (--date YYYY-MM-DD — конкретная дата)
+tail -5  ~/site/vk-poster/log-runs.txt      # main=0 ок, main=1 упало, sync!=0 pull упал
+tail -20 ~/site/vk-poster/log-main.txt      # конкретная причина
+cd ~/site/vk-poster && python3 poster.py --dry-run   # что будет запощено (--date YYYY-MM-DD — конкретная дата)
 
 ## Известные причины отказа
 - getWallUploadServer 27 или 5 -> user_token просрочен (vkhost.github.io -> VK Admin)
 - «Файл не найден» -> фото нет в репо (залить через PagesCMS в корень)
 - sync!=0 -> конфликт git pull (смотреть log-sync.txt)
+- **`PHOTO_MISSING=1`** -> единственный реальный photo-upload fail (3 retry). Смотреть `image` в JSON, размер (у VK лимит ~50 МБ), MIME.
+- **`⚠ verify: <id> ещё не проиндексирован`** -> **не ошибка.** VK `wall.getById` кэширует 5+ мин. Пост **с фото** уже создан. Действий не требуется.
+- **`OK post_id=… attach=none`** -> пост без фото. Проверить, откуда `attach` пришёл `None` при `image_path` задан — регрессия в `poster.py::post()`.
 
 ## Формат шапки поста (2026-11-05: 3 строки, по два пробела вокруг ѿ)
 
@@ -160,7 +164,7 @@ State-key по-прежнему на fire-дате.
 js/slavic-date.js — СГЕНЕРИРОВАННЫЙ, не править руками.
 Синхронизация после правки Чертогов:
 
-    cd ~/site/vk-poster-ARCHIVE-20261104 && python3 tools/build_site_slavic_js.py
+    cd ~/site/vk-poster && python3 tools/build_site_slavic_js.py
 
 Генератор сам бампает ?v=N в index.html + nav/*.html.
 Подробности: ~/site/bukvica49.github.io-main/MANUAL.md

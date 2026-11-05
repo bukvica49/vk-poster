@@ -62,11 +62,11 @@ Ctrl+Shift+R — hard refresh (если live не обновился после 
 ВНИМАНИЕ: локальный cron НЕ нужен. Если включишь — двойные посты.
 
 ## Проверить ДО публикации
-cd ~/site/vk-poster-ARCHIVE-20261104 && python3 poster.py --dry-run
+cd ~/site/vk-poster && python3 poster.py --dry-run
 # конкретная дата: python3 poster.py --dry-run --date 2026-10-31
 
 ## Ручной запуск локально (если ПК включён)
-cd ~/site/vk-poster-ARCHIVE-20261104 && python3 poster.py; echo "exit=$?"
+cd ~/site/vk-poster && python3 poster.py; echo "exit=$?"
 # ВНИМАНИЕ: запускает РЕАЛЬНЫЙ пост в VK.
 
 ## Если пост не вышел
@@ -77,12 +77,27 @@ cd ~/site/vk-poster-ARCHIVE-20261104 && python3 poster.py; echo "exit=$?"
 3. зелёная галочка = успех, красный крестик = упало → клик на шаг `Run poster` → причина
 
 ### Шаг 2 — локально
-tail -5  ~/site/vk-poster-ARCHIVE-20261104/log-runs.txt
+tail -5  ~/site/vk-poster/log-runs.txt
 #  main=0 = ок/дубль,  main=1 = не вышел,  sync!=0 = git pull упал
 
-tail -20 ~/site/vk-poster-ARCHIVE-20261104/log-main.txt
+tail -20 ~/site/vk-poster/log-main.txt
 #  getWallUploadServer 27 → токен просрочен
 #  Файл не найден → фото нет в репо
+
+### Шаг 3 — лог CI: как читать ключевые строки
+
+В логе `Run poster` ищем одну из строк — они говорят **разное**:
+
+| Что в логе | Значение | Что делать |
+|---|---|---|
+| `→ uploaded (NNNNN B, image/jpeg) попытка 1` | фото загружено в VK | ✅ идём дальше |
+| `⚠ verify: <id> ещё не проиндексирован (VK index lag >10s, это норма)` | `wall.getById` отдал пусто, но `wall.post` подтвердил создание. **Warning, не ошибка.** | ✅ ничего — пост **с фото**, VK индексирует 5+ мин |
+| `PHOTO_MISSING=1` | **единственная настоящая ошибка фото**: `image_path` был, но upload провалился (3 retry) | ❌ `image` в JSON, размер файла, `getWallUploadServer` |
+| `OK post_id=NNNN: «…» attach=none` | пост ушёл **без фото** | ❌ как выше, но CI продолжит — пост без фото |
+
+> **Правило (с `4b50da0`, 2026-11-05):** `wall.post` **синхронный** — вернул `post_id` + `attach=photo…` = пост с фото создан.  
+> `wall.getById` — только **кэш**, отдаёт с задержкой 5+ мин. **Не фейлим** за это.  
+> Жёсткая проверка `PHOTO_MISSING=1` — только `if image_path and not attach:` в `poster.py::post()`.
 
 ## Токен сломается (раз в 1-2 года)
 vkhost.github.io/vk.html → "VK Admin" → права на группу → токен после #access_token= → заменить в config.main.json И в секрете VK_CONFIG на GitHub.
@@ -90,7 +105,7 @@ vkhost.github.io/vk.html → "VK Admin" → права на группу → т�
 ## Сайт — синхронизация с автопостером
 После правки chertogs.json / CHERTOG_STARTS / формата шапки:
 
-    cd ~/site/vk-poster-ARCHIVE-20261104 && python3 tools/build_site_slavic_js.py
+    cd ~/site/vk-poster && python3 tools/build_site_slavic_js.py
     cd ~/site/bukvica49.github.io-main
     git add js/ index.html nav/
     git commit -m "sync: славянская дата из chertogs.json"
@@ -244,12 +259,19 @@ vkhost.github.io/vk.html → "VK Admin" → права на группу → т�
 content/holidays/*.json       — праздники (PagesCMS collection, 1 файл = 1)
 make_preview.py               — генератор _site/ (превью-сайт с кнопками)
 config.main.json            — токены (НЕ в git; копия в секрете VK_CONFIG)
-state-200796423.json        — что уже постил
+state-200796423.json        — что уже постил; `{"posted": ["YYYY-MM-DD|text[:40]", ...]}`
 log-runs.txt                — итоги локальных запусков
 MANUAL.md                   — эта шпаргалка
 HANDOFF.md                  — контекст для AI
 .github/workflows/post.yml  — автозапуск постинга
 .github/workflows/pages.yml — автодеплой превью на push в main
+
+### state-200796423.json — формат и откат
+- Пишется **автоматически** CI (`state: auto …`) после успешного поста. Ключ = `YYYY-MM-DD|text[:40]`.  
+  Пока `date` в `content/holidays/*.json` = сегодня (KRAT) — крон не запостит снова.
+- **Убрать строку из state** (если случайно записалась тест-дата):
+- **Удалить пост из VK** (тестовый пост на стене — отдельно от state):
+- **Не удаляйте state через `git reset --hard`** — CI делает `pull --rebase`, конфликтнёт с auto-commit.
 
 ## Формат поста — как выглядит
 
@@ -290,18 +312,18 @@ HANDOFF.md                  — контекст для AI
 - chertogs.json / CHERTOG_STARTS — индекс начала массива Чертогов
 
 ## Профилактика — раз в месяц
-cd ~/site/vk-poster-ARCHIVE-20261104 && tail -30 log-runs.txt | grep -c "main=1"
+cd ~/site/vk-poster && tail -30 log-runs.txt | grep -c "main=1"
 0 → спи дальше
 >0 → grep "main=1" -B2 -A2 log-runs.txt → если повторится — в чат
 
 ## Для AI
-Прочитай ~/site/vk-poster-ARCHIVE-20261104/HANDOFF.md и ~/site/vk-poster-ARCHIVE-20261104/MANUAL.md — это контекст.
+Прочитай ~/site/vk-poster/HANDOFF.md и ~/site/vk-poster/MANUAL.md — это контекст.
 Продолжаем оттуда. Проблема: <одна строка что случилось>.
 
 🚀 Следующая сессия — с чего начинать
 Если вернёшься к проекту — одна команда для контекста:
 
-cd ~/site/vk-poster-ARCHIVE-20261104 && cat HANDOFF.md
+cd ~/site/vk-poster && cat HANDOFF.md
 
 - **`ed.py`** — 12 команд (`list/show/find/validate/edit/new/image/rm/preview/publish/status/export`). `validate` различает `✗` (жёсткая, exit 1) и `⚠` (нет картинки, exit 0). `--strict` — для хука в `publish`. `Итого:` печатается всегда.
 - **Картинки**: `image` копирует файл в `images/` и прописывает `/images/<file>` в JSON. `сhertog-devy` и ещё 11 — без картинок (файлов никогда не было), `image` удалён из JSON. У `chertog-busla`, `chertog-lebedy` и других — есть.
