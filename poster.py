@@ -235,21 +235,38 @@ def post(token, group_id, message, attachments=None):
         raise RuntimeError(f"VK error {e.get('error_code')}: {e.get('error_msg')}")
     pid = r["response"]["post_id"]
     if attachments:
-        try:
-            chk = requests.post(API + "wall.getById",
-                                data={"posts": f"-{group_id}_{pid}",
-                                      "access_token": token, "v": "5.199"},
-                                timeout=20).json()
-            resp = chk.get("response", {})
-            p    = resp["items"][0] if isinstance(resp, dict) and "items" in resp else resp[0]
-            phs  = [a["photo"] for a in p.get("attachments", []) if a.get("type") == "photo"]
-            if not phs:
-                print(f"  ❌ post {pid}: фото НЕ прикрепилось", file=sys.stderr)
-                print("PHOTO_MISSING=1")
-            else:
-                print(f"  ✅ verify: photo{phs[0]['owner_id']}_{phs[0]['id']}")
-        except Exception as ex:
-            print(f"  ⚠ verify post {pid}: {ex}", file=sys.stderr)
+        # VK API: wall.getById сразу после wall.post может вернуть {'response': {}} —
+        # пост ещё не проиндексирован. Retry: 0+1+2+3 = 6 сек макс.
+        import time
+        verified, last_err = False, None
+        for attempt, delay in enumerate((0, 1, 2, 3), 1):
+            if delay:
+                time.sleep(delay)
+            try:
+                chk = requests.post(API + "wall.getById",
+                                    data={"posts": f"-{group_id}_{pid}",
+                                          "access_token": token, "v": "5.199"},
+                                    timeout=20).json()
+                resp  = chk.get("response", {})
+                items = resp.get("items", []) if isinstance(resp, dict) else []
+                if not items:
+                    last_err = f"empty_items attempt={attempt}"
+                    print(f"  ⏳ verify post {pid}: пусто (attempt={attempt}, delay={delay}s)",
+                          file=sys.stderr)
+                    continue
+                phs = [a["photo"] for a in items[0].get("attachments", []) if a.get("type") == "photo"]
+                if phs:
+                    print(f"  ✅ verify: photo{phs[0]['owner_id']}_{phs[0]['id']}")
+                    verified = True
+                    break
+                last_err = f"no_photo attempt={attempt}"
+                print(f"  ❌ post {pid}: фото НЕ в attachments (attempt={attempt})", file=sys.stderr)
+            except Exception as ex:
+                last_err = repr(ex)
+                print(f"  ⚠ verify post {pid} (attempt={attempt}): {ex!r}", file=sys.stderr)
+        if not verified:
+            print(f"  ❌ verify post {pid}: НЕ подтверждено ({last_err})", file=sys.stderr)
+            print("PHOTO_MISSING=1")
     return pid
 
 
