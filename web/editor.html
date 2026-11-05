@@ -45,5 +45,59 @@
   }, 0);
 })();
 </script>
+<!-- vp-strip-inline -->
+<script>
+(function(){
+  function install(){
+    var src = document.getElementById('src');
+    if (!src || !src.parentNode) return;
+    var parent = src.parentNode;
+    if (getComputedStyle(parent).position === 'static') parent.style.position = 'relative';
+    var old = document.getElementById('vp-strip-inline');
+    if (old) old.remove();
+    var btn = document.createElement('button');
+    btn.id = 'vp-strip-inline';
+    btn.type = 'button';
+    btn.title = 'Убрать все эмодзи из текста';
+    btn.textContent = '🚫';
+    btn.style.cssText =
+      'position:absolute!important;bottom:10px!important;left:10px!important;' +
+      'width:32px!important;height:32px!important;border-radius:8px!important;' +
+      'background:#ef4444!important;color:#fff!important;border:none!important;' +
+      'cursor:pointer!important;font-size:15px!important;display:flex!important;' +
+      'align-items:center!important;justify-content:center!important;' +
+      'box-shadow:0 2px 8px rgba(0,0,0,.35)!important;z-index:10!important;' +
+      'padding:0!important;line-height:1!important;font-family:inherit!important;';
+    btn.addEventListener('mouseenter', function(){ btn.style.background = '#dc2626'; });
+    btn.addEventListener('mouseleave', function(){ btn.style.background = '#ef4444'; });
+    btn.addEventListener('click', function(e){
+      e.preventDefault(); e.stopPropagation();
+      var s = document.getElementById('src');
+      if (!s || !s.value || !s.value.trim()) {
+        if (typeof toast==='function') toast('Введи текст','err');
+        return;
+      }
+      var RE = /[\u{1F000}-\u{1FAFF}\u{2600}-\u{27BF}\u{FE00}-\u{FE0F}\u{200D}\u{20E3}]/gu;
+      var m = s.value.match(RE); var cnt = m ? m.length : 0;
+      if (!cnt) { if (typeof toast==='function') toast('Эмодзи не найдены',''); return; }
+      s.value = s.value.replace(RE,'')
+        .replace(/[ \t]{2,}/g,' ')
+        .replace(/[ \t]+$/gm,'')
+        .replace(/^[ \t]+/gm,'')
+        .replace(/\n{3,}/g,'\n\n')
+        .replace(/^\n+|\n+$/g,'');
+      s.dispatchEvent(new Event('input',{bubbles:true}));
+      if (typeof toast==='function') toast('Убрано эмодзи: ' + cnt, 'ok');
+    });
+    parent.appendChild(btn);
+  }
+  install();
+  setTimeout(install, 300);
+  setTimeout(install, 1000);
+  try { new MutationObserver(install).observe(document.body, {childList:true, subtree:true}); } catch(e) {}
+})();
+</script>
+<!-- /vp-strip-inline -->
+
 </body>
 </html>
