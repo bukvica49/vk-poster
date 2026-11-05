@@ -313,6 +313,22 @@
     if (opts.smartEmoji)   smartEmoji(out, opts.emojiRepeat);
     return out.join('\n').trim();
   }
+
+  function stripEmoji(text) {
+    if (!text) return { text: '', count: 0 };
+    const RE = /[\u{1F000}-\u{1FAFF}\u{2600}-\u{27BF}\u{2300}-\u{23FF}\u{2B00}-\u{2BFF}\u{FE00}-\u{FE0F}\u{200D}\u{20E3}\u{E0020}-\u{E007F}]/gu;
+    const UNIT = /[\u{1F000}-\u{1FAFF}\u{2600}-\u{27BF}\u{2300}-\u{23FF}\u{2B00}-\u{2BFF}]/gu;
+    const count = (text.match(UNIT) || []).length;
+    const cleaned = text
+      .replace(RE, '')
+      .replace(/[ \t]{2,}/g, ' ')
+      .replace(/[ \t]+$/gm, '')
+      .replace(/^[ \t]+/gm, '')
+      .replace(/\n{3,}/g, '\n\n')
+      .replace(/^\n+|\n+$/g, '');
+    return { text: cleaned, count };
+  }
+
   function captureTemplate(text) {
     const blocks = text.split(/\n\s*\n/).map(b => b.trim()).filter(Boolean);
     return blocks.map(b => {
@@ -641,6 +657,7 @@
   <button class="btn slav-b" data-act="slav-b">🏛 Древній</button>
   <button class="btn slav-c" data-act="slav-c">✨ AI старослав</button>
   <button class="btn" data-act="emoji">😊 Эмодзи</button>
+    <button class="btn" data-act="strip-emoji" title="Убрать все эмодзи из поля">🚫 Убрать эмодзи</button>
   <button class="btn" data-act="symbols">✳ Символы</button>
 </div>
 <div id="picker" style="display:none"><div class="picker-tabs" id="tabs"></div><div class="picker" id="grid"></div></div>
@@ -771,6 +788,13 @@ document.querySelectorAll('[data-act]').forEach(b => {
           try { dst.value=await H.slavicC(src.value); updateCounter(); toast('В','ok'); }
           catch(e) { toast('AI error: '+e.message,'err'); }
           finally { b.disabled=false; b.textContent=old; }
+        }
+        else if (act === 'strip-emoji') {
+          if (!src.value.trim()) { toast('Введи текст','err'); return; }
+          const _r = H.stripEmoji(src.value);
+          if (_r.count === 0) { toast('Эмодзи не найдены',''); return; }
+          src.value = _r.text;
+          toast('Убрано эмодзи: ' + _r.count, 'ok');
         }
         else if (act === 'emoji' || act === 'symbols') { window._vpPickerMode = act; const c = act==='emoji'?H.EMOJI:H.SYMBOLS; picker.style.display=''; renderPickerTabs(c); }
         else if (act === 'copy-src' || act === 'copy-dst') {
@@ -993,7 +1017,7 @@ document.querySelectorAll('[data-act]').forEach(b => {
   }
 
   window._vpHelp = {
-    slavicA, slavicB, slavicC, formatForVK,
+    slavicA, slavicB, slavicC, stripEmoji, formatForVK,
     captureTemplate, applyTemplate, getTemplate, setTemplate, clearTemplate,
     getAiEndpoint, setAiEndpoint, EMOJI, SYMBOLS, copyText
   };
