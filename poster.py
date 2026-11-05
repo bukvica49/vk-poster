@@ -235,37 +235,57 @@ def post(token, group_id, message, attachments=None):
         raise RuntimeError(f"VK error {e.get('error_code')}: {e.get('error_msg')}")
     pid = r["response"]["post_id"]
     if attachments:
-        # VK API: wall.getById сразу после wall.post может вернуть {'response': {}} —
-        # пост ещё не проиндексирован. Retry: 0+1+2+3 = 6 сек макс.
         import time
+        def _photo(post):
+            for a in post.get("attachments", []):
+                if a.get("type") == "photo":
+                    return a["photo"]
+            return None
+
         verified, last_err = False, None
-        for attempt, delay in enumerate((0, 1, 2, 3), 1):
+        for attempt, delay in enumerate((0, 3, 7, 15, 30), 1):
             if delay:
                 time.sleep(delay)
+
             try:
-                chk = requests.post(API + "wall.getById",
-                                    data={"posts": f"-{group_id}_{pid}",
-                                          "access_token": token, "v": "5.199"},
-                                    timeout=20).json()
-                resp  = chk.get("response", {})
-                items = resp.get("items", []) if isinstance(resp, dict) else []
-                if not items:
-                    last_err = f"empty_items attempt={attempt}"
-                    print(f"  ⏳ verify post {pid}: пусто (attempt={attempt}, delay={delay}s)",
-                          file=sys.stderr)
-                    continue
-                phs = [a["photo"] for a in items[0].get("attachments", []) if a.get("type") == "photo"]
-                if phs:
-                    print(f"  ✅ verify: photo{phs[0]['owner_id']}_{phs[0]['id']}")
+                r1 = requests.post(API + "wall.getById",
+                    data={"posts": f"-{group_id}_{pid}", "access_token": token,
+                          "v": "5.199"}, timeout=20).json()
+                resp1 = r1.get("response")
+                items1 = resp1.get("items", []) if isinstance(resp1, dict) else []
+                if items1 and _photo(items1[0]):
+                    ph = _photo(items1[0])
+                    print(f"  ✅ verify via getById: photo{ph['owner_id']}_{ph['id']} (attempt={attempt}, {delay}s)")
                     verified = True
                     break
-                last_err = f"no_photo attempt={attempt}"
-                print(f"  ❌ post {pid}: фото НЕ в attachments (attempt={attempt})", file=sys.stderr)
+                elif items1:
+                    last_err = f"getById:no_photo attempt={attempt}"
+                    print(f"  ⚠ getById: пост есть, фото нет (attempt={attempt})", file=sys.stderr)
+                else:
+                    last_err = f"getById:empty attempt={attempt}"
+                    print(f"  ⏳ getById: пусто (attempt={attempt}, delay={delay}s)", file=sys.stderr)
             except Exception as ex:
-                last_err = repr(ex)
-                print(f"  ⚠ verify post {pid} (attempt={attempt}): {ex!r}", file=sys.stderr)
+                last_err = f"getById:exc attempt={attempt}: {ex!r}"
+                print(f"  ⚠ getById ({attempt}): {ex!r}", file=sys.stderr)
+
+            try:
+                r2 = requests.post(API + "wall.get",
+                    data={"owner_id": -group_id, "filter": "all", "count": 20,
+                          "access_token": token, "v": "5.199"}, timeout=20).json()
+                items2 = r2.get("response", {}).get("items", [])
+                match = [p for p in items2 if p.get("id") == pid]
+                if match and _photo(match[0]):
+                    ph = _photo(match[0])
+                    print(f"  ✅ verify via wall.get: photo{ph['owner_id']}_{ph['id']} (attempt={attempt}, {delay}s)", file=sys.stderr)
+                    verified = True
+                    break
+                elif match:
+                    last_err = f"wall.get:no_photo attempt={attempt}"
+            except Exception as ex:
+                print(f"  ⚠ wall.get ({attempt}): {ex!r}", file=sys.stderr)
+
         if not verified:
-            print(f"  ❌ verify post {pid}: НЕ подтверждено ({last_err})", file=sys.stderr)
+            print(f"  ❌ verify post {pid}: НЕ подтверждено после 5 попыток/55с (last={last_err!r})", file=sys.stderr)
             print("PHOTO_MISSING=1")
     return pid
 
