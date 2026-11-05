@@ -267,11 +267,12 @@
       const header = isCaps(l) || endsColon(l) || isolated[i];
       if (!header) continue;
       if (!inFireBlock) { lines[i] = '🔥 ' + l + ' 🔥'; inFireBlock = true; }
-      else              { lines[i] = '***' + l + '***'; }
+      // последующие заголовки блока — без обёртки
     }
   }
 
-  function smartEmoji(lines) {
+  function smartEmoji(lines, repeat) {
+    repeat = Math.max(1, Math.min(5, repeat || 1));
     const RULES = [
       {re: /(внимани|важно|осторожн)/i, em: '⚠️', pr: 100},
       {re: /(закон|устав|запрещ|правил)/i, em: '📜', pr: 90},
@@ -291,7 +292,7 @@
       if (l.startsWith('***') || l.startsWith('**')) continue;
       let best = null;
       for (const r of RULES) if (r.re.test(l) && (!best || r.pr > best.pr)) best = r;
-      if (best) lines[i] = best.em + ' ' + l;
+      if (best) { const _em = best.em.repeat(repeat); lines[i] = _em + ' ' + l; }
     }
   }
 
@@ -309,25 +310,7 @@
       if (/^[-–—*]\s+/.test(out[i])) out[i] = '• ' + out[i].replace(/^[-–—*]\s+/, '');
     }
     if (opts.smartHeaders) smartHeaders(out);
-    if (opts.smartEmoji)   smartEmoji(out);
-    if (!opts.smartHeaders) {
-      let firstHeadingDone = false;
-      const isEmoji = /^[\u{1F300}-\u{1FAFF}\u{2600}-\u{27BF}]/u;
-      for (let i = 0; i < out.length; i++) {
-        const l = out[i]; if (!l) continue;
-        if (l.startsWith('**')) { firstHeadingDone = true; continue; }
-        if (l.startsWith('•')) continue;
-        const startsEmoji = isEmoji.test(l);
-        const isShort = l.length <= 80 && !'.,!?:;'.includes(l[l.length - 1]);
-        if (startsEmoji) {
-          out[i] = '**' + l + '**'; if (!firstHeadingDone) firstHeadingDone = true;
-        } else if (!firstHeadingDone && isShort && !/^\d/.test(l)) {
-          out[i] = '**' + l + '**';
-          if (i + 1 < out.length && out[i + 1] !== '') out.splice(i + 1, 0, '');
-          firstHeadingDone = true;
-        }
-      }
-    }
+    if (opts.smartEmoji)   smartEmoji(out, opts.emojiRepeat);
     return out.join('\n').trim();
   }
   function captureTemplate(text) {
@@ -657,8 +640,6 @@
   <button class="btn slav-a" data-act="slav-a">🕯 Дореформенный</button>
   <button class="btn slav-b" data-act="slav-b">🏛 Древній</button>
   <button class="btn slav-c" data-act="slav-c">✨ AI старослав</button>
-  <label style="display:inline-flex;align-items:center;gap:6px;padding:6px 10px;font-size:12px;opacity:.9;user-select:none;cursor:pointer"><input type="checkbox" id="opt-smart-h" style="margin:0;cursor:pointer" checked>🔥 Умные заголовки</label>
-  <label style="display:inline-flex;align-items:center;gap:6px;padding:6px 10px;font-size:12px;opacity:.9;user-select:none;cursor:pointer"><input type="checkbox" id="opt-smart-e" style="margin:0;cursor:pointer" checked>😊 Эмодзи в строках</label>
   <button class="btn" data-act="emoji">😊 Эмодзи</button>
   <button class="btn" data-act="symbols">✳ Символы</button>
 </div>
@@ -673,6 +654,7 @@
 </div>
 <div class="btns">
   
+  <button class="btn" id="btn-variant">🔄 Вид: 🔥 Классика</button>
   <button class="btn" data-act="to-src">↺ Из результата → во ввод</button>
   
 </div>
@@ -752,17 +734,31 @@
   refreshTpl();
 
   // ============ ОСНОВНЫЕ КНОПКИ ============
-  ['opt-smart-h','opt-smart-e'].forEach(id=>{const el=document.getElementById(id);if(!el)return;const v=localStorage.getItem('vp-'+id);if(v!==null)el.checked=(v==='1');el.addEventListener('change',()=>localStorage.setItem('vp-'+id, el.checked?'1':'0'));});
-const _cc = document.getElementById('confirm-clear');
+  const _cc = document.getElementById('confirm-clear');
 if (_cc) {
   _cc.checked = localStorage.getItem('vk_confirm_clear') !== '0';
   _cc.addEventListener('change', () => localStorage.setItem('vk_confirm_clear', _cc.checked ? '1' : '0'));
 }
+  // ═══════════ ПРЕСЕТЫ ВИДА (🔄 Вид) ═══════════
+  const FORMAT_PRESETS = [
+    {id:'classic', icon:'🔥',   name:'Классика',     opts:{smartHeaders:true,  smartEmoji:true,  emojiRepeat:1}},
+    {id:'triple',  icon:'🔥✨', name:'Эмодзи ×3',    opts:{smartHeaders:true,  smartEmoji:true,  emojiRepeat:3}},
+    {id:'minimal', icon:'🔥·',  name:'Минимум',       opts:{smartHeaders:true,  smartEmoji:false, emojiRepeat:1}},
+    {id:'emoji',   icon:'😊',   name:'Только эмодзи', opts:{smartHeaders:false, smartEmoji:true,  emojiRepeat:1}},
+    {id:'plain',   icon:'📄',   name:'Без обработки', opts:{smartHeaders:false, smartEmoji:false, emojiRepeat:1}},
+  ];
+  let _presetIdx = 0;
+  try { const s = parseInt(localStorage.getItem('vp-format-preset')||'0',10); if (s >= 0 && s < FORMAT_PRESETS.length) _presetIdx = s; } catch(e){}
+  function _setVariantBtnLabel(){ const btn = document.getElementById('btn-variant'); if (!btn) return; const p = FORMAT_PRESETS[_presetIdx]; btn.textContent = '🔄 Вид: ' + p.icon + ' ' + p.name; }
+  function applyCurrentPreset(){ if (!src.value.trim()) { toast('Введи текст','err'); return; } const p = FORMAT_PRESETS[_presetIdx]; dst.value = H.formatForVK(src.value, p.opts); updateCounter(); _setVariantBtnLabel(); toast('Вид: ' + p.name, 'ok'); }
+  function cyclePreset(){ _presetIdx = (_presetIdx + 1) % FORMAT_PRESETS.length; try { localStorage.setItem('vp-format-preset', String(_presetIdx)); } catch(e){} applyCurrentPreset(); }
+  (function initVariantBtn(){ const btn = document.getElementById('btn-variant'); if (!btn) { console.warn('[variant] кнопка не найдена'); return; } btn.addEventListener('click', cyclePreset); _setVariantBtnLabel(); })();
+
 document.querySelectorAll('[data-act]').forEach(b => {
     b.addEventListener('click', async () => {
       const act = b.dataset.act;
       try {
-        if (act === 'format') { if (!src.value.trim()){toast('Введи текст','err');return;} const _o={smartHeaders:document.getElementById('opt-smart-h')?.checked!==false,smartEmoji:document.getElementById('opt-smart-e')?.checked!==false}; dst.value=H.formatForVK(src.value,_o); updateCounter(); toast(_o.smartHeaders||_o.smartEmoji?'Умно ✓':'Оформлено','ok'); }
+        if (act === 'format') { applyCurrentPreset(); }
         else if (act === 'slav-a') { if (!src.value.trim()){toast('Введи текст','err');return;} dst.value=H.slavicA(src.value); updateCounter(); toast('А','ok'); }
         else if (act === 'slav-b') { if (!src.value.trim()){toast('Введи текст','err');return;} dst.value=H.slavicB(src.value); updateCounter(); toast('Б','ok'); }
         else if (act === 'slav-c') {
