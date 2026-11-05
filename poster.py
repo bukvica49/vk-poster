@@ -184,11 +184,30 @@ def upload_photo(token, group_id, filepath):
         raise RuntimeError(f"getWallUploadServer {e.get('error_code')}: {e.get('error_msg')}")
     upload_url = r["response"]["upload_url"]
 
-    # 2. залить файл
-    with open(filepath, "rb") as f:
-        up = requests.post(upload_url, files={"photo": f}, timeout=120).json()
+    # 2. залить файл (retry — VK иногда отдаёт photo:'' на флакинг)
+    import mimetypes
+    fname = filepath.name
+    mime  = mimetypes.guess_type(str(filepath))[0] or "image/jpeg"
+    size  = filepath.stat().st_size
+
+    up = None
+    for attempt in (1, 2, 3):
+        with open(filepath, "rb") as f:
+            up = requests.post(upload_url,
+                               files={"photo": (fname, f, mime)},
+                               timeout=120).json()
+        if up.get("photo"):
+            print(f"  → uploaded ({size}B, {mime}) попытка {attempt}")
+            break
+        print(f"  ⚠ upload попытка {attempt} пустой ({size}B, '{fname}'): {up}", file=sys.stderr)
+        if attempt < 3:
+            r2 = requests.post(API + "photos.getWallUploadServer", data={
+                "access_token": token, "group_id": group_id, "v": "5.199",
+            }, timeout=30).json()
+            if "error" not in r2:
+                upload_url = r2["response"]["upload_url"]
     if not up.get("photo"):
-        raise RuntimeError(f"upload: пустой ответ {up}")
+        raise RuntimeError(f"upload: пустой ответ после 3 попыток {up}")
 
     # 3. сохранить на стене
     r = requests.post(API + "photos.saveWallPhoto", data={
@@ -214,7 +233,24 @@ def post(token, group_id, message, attachments=None):
     if "error" in r:
         e = r["error"]
         raise RuntimeError(f"VK error {e.get('error_code')}: {e.get('error_msg')}")
-    return r["response"]["post_id"]
+    pid = r["response"]["post_id"]
+    if attachments:
+        try:
+            chk = requests.post(API + "wall.getById",
+                                data={"posts": f"-{group_id}_{pid}",
+                                      "access_token": token, "v": "5.199"},
+                                timeout=20).json()
+            resp = chk.get("response", {})
+            p    = resp["items"][0] if isinstance(resp, dict) and "items" in resp else resp[0]
+            phs  = [a["photo"] for a in p.get("attachments", []) if a.get("type") == "photo"]
+            if not phs:
+                print(f"  ❌ post {pid}: фото НЕ прикрепилось", file=sys.stderr)
+                print("PHOTO_MISSING=1")
+            else:
+                print(f"  ✅ verify: photo{phs[0]['owner_id']}_{phs[0]['id']}")
+        except Exception as ex:
+            print(f"  ⚠ verify post {pid}: {ex}", file=sys.stderr)
+    return pid
 
 
 # ─── state ──────────────────────────────────────────────────────
@@ -406,6 +442,10 @@ def main(dry_run=False, test=False, force=False, republish=False, override_date=
                       "Для проверки без постинга: poster.py --dry-run (плейсхолдер не мешает).",
                       file=sys.stderr)
                 sys.exit(2)
+            # Если фото ожидалось, но upload провалился (3 retry) —
+            # сигналим CI через PHOTO_MISSING, post уйдёт без фото
+            if image_path and not attach:
+                print("PHOTO_MISSING=1", file=sys.stderr)
             pid = post(CONFIG["token"], CONFIG["group_id"], message, attach)
             print(f"OK post_id={pid}: «{text[:60]}» attach={attach or 'none'}")
             if key:

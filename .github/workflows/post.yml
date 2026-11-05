@@ -49,12 +49,19 @@ jobs:
           TZ: Asia/Krasnoyarsk           # ⚠️ КРИТИЧНО — без этого slavic_now не сдвинется
           GIT_SSH_COMMAND: 'ssh -i ~/.ssh/deploy_key -o IdentitiesOnly=yes'
         run: |
+          set -euo pipefail
           if [ "${{ github.event_name }}" = "workflow_dispatch" ] && [ "${{ inputs.force }}" = "true" ]; then
             echo "── Mode: FORCE (ignore post_time) ──"
-            python3 poster.py config.main.json --force
+            python3 poster.py config.main.json --force 2>&1 | tee /tmp/poster.log
           else
             echo "── Mode: NORMAL (respect post_time) ──"
-            python3 poster.py config.main.json
+            python3 poster.py config.main.json 2>&1 | tee /tmp/poster.log
+          fi
+
+          # Fail CI if photo was expected but failed to attach
+          if grep -q 'PHOTO_MISSING=1' /tmp/poster.log; then
+            echo "::error::Photo failed to attach — VK upload glitch or missing file, see log"
+            exit 1
           fi
 
       - name: Commit & push state → triggers Pages
