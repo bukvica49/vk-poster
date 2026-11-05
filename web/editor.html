@@ -45,6 +45,7 @@
   }, 0);
 })();
 </script>
+
 <!-- vp-strip-inline -->
 <script>
 (function(){
@@ -58,18 +59,23 @@
     var btn = document.createElement('button');
     btn.id = 'vp-strip-inline';
     btn.type = 'button';
-    btn.title = 'Убрать все эмодзи из текста';
+    btn.title = 'Убрать все эмодзи';
     btn.textContent = '🚫';
     btn.style.cssText =
-      'position:absolute!important;bottom:10px!important;left:10px!important;' +
-      'width:32px!important;height:32px!important;border-radius:8px!important;' +
-      'background:#ef4444!important;color:#fff!important;border:none!important;' +
-      'cursor:pointer!important;font-size:15px!important;display:flex!important;' +
-      'align-items:center!important;justify-content:center!important;' +
-      'box-shadow:0 2px 8px rgba(0,0,0,.35)!important;z-index:10!important;' +
-      'padding:0!important;line-height:1!important;font-family:inherit!important;';
-    btn.addEventListener('mouseenter', function(){ btn.style.background = '#dc2626'; });
-    btn.addEventListener('mouseleave', function(){ btn.style.background = '#ef4444'; });
+      'position:absolute!important;bottom:8px!important;right:8px!important;' +
+      'width:24px!important;height:24px!important;border-radius:6px!important;' +
+      'background:rgba(239,68,68,.15)!important;color:#ef4444!important;' +
+      'border:none!important;cursor:pointer!important;font-size:13px!important;' +
+      'display:flex!important;align-items:center!important;justify-content:center!important;' +
+      'box-shadow:none!important;z-index:10!important;padding:0!important;' +
+      'line-height:1!important;font-family:inherit!important;opacity:.7!important;' +
+      'transition:opacity .15s,background .15s,color .15s!important;';
+    btn.addEventListener('mouseenter', function(){
+      btn.style.opacity='1'; btn.style.background='#ef4444'; btn.style.color='#fff';
+    });
+    btn.addEventListener('mouseleave', function(){
+      btn.style.opacity='.7'; btn.style.background='rgba(239,68,68,.15)'; btn.style.color='#ef4444';
+    });
     btn.addEventListener('click', function(e){
       e.preventDefault(); e.stopPropagation();
       var s = document.getElementById('src');
@@ -81,11 +87,8 @@
       var m = s.value.match(RE); var cnt = m ? m.length : 0;
       if (!cnt) { if (typeof toast==='function') toast('Эмодзи не найдены',''); return; }
       s.value = s.value.replace(RE,'')
-        .replace(/[ \t]{2,}/g,' ')
-        .replace(/[ \t]+$/gm,'')
-        .replace(/^[ \t]+/gm,'')
-        .replace(/\n{3,}/g,'\n\n')
-        .replace(/^\n+|\n+$/g,'');
+        .replace(/[ \t]{2,}/g,' ').replace(/[ \t]+$/gm,'').replace(/^[ \t]+/gm,'')
+        .replace(/\n{3,}/g,'\n\n').replace(/^\n+|\n+$/g,'');
       s.dispatchEvent(new Event('input',{bubbles:true}));
       if (typeof toast==='function') toast('Убрано эмодзи: ' + cnt, 'ok');
     });

@@ -657,7 +657,7 @@
   <button class="btn slav-b" data-act="slav-b">🏛 Древній</button>
   <button class="btn slav-c" data-act="slav-c">✨ AI старослав</button>
   <button class="btn" data-act="emoji">😊 Эмодзи</button>
-    <button class="btn" data-act="strip-emoji" title="Убрать все эмодзи из поля" style="background:#ef4444;color:#fff;">🚫 Убрать эмодзи</button>
+    
   <button class="btn" data-act="symbols">✳ Символы</button>
 </div>
 <div id="picker" style="display:none"><div class="picker-tabs" id="tabs"></div><div class="picker" id="grid"></div></div>
@@ -1106,33 +1106,3 @@ document.querySelectorAll('[data-act]').forEach(b => {
   else makeButton();
 })();
 
-
-// ═══ STRIP-EMOJI FIX ═══
-(function(){
-  function style(btn){
-    if (!btn) return;
-    if (btn.dataset.vpStyled === '1') return;
-    btn.dataset.vpStyled = '1';
-    btn.textContent = '🚫 Убрать эмодзи';
-    btn.style.cssText =
-      'background:#ef4444!important;color:#fff!important;' +
-      'border:none!important;font-weight:600!important;' +
-      'padding:6px 12px!important;border-radius:6px!important;' +
-      'cursor:pointer!important;font-size:13px!important;' +
-      'white-space:nowrap!important;display:inline-flex!important;' +
-      'align-items:center!important;gap:4px!important;' +
-      'visibility:visible!important;opacity:1!important;' +
-      'position:static!important;transform:none!important;' +
-      'margin-left:6px!important;';
-    btn.onmouseenter = function(){ btn.style.background = '#dc2626'; };
-    btn.onmouseleave = function(){ btn.style.background = '#ef4444'; };
-  }
-  function scan(){
-    document.querySelectorAll('[data-act="strip-emoji"]').forEach(style);
-  }
-  scan();
-  try {
-    new MutationObserver(scan).observe(document.body, {childList:true, subtree:true});
-  } catch(e) {}
-  setInterval(scan, 500);
-})();
