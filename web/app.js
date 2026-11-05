@@ -1002,3 +1002,34 @@ document.querySelectorAll('[data-act]').forEach(b => {
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', () => { buildUI(); doFilter(''); });
   else { buildUI(); doFilter(''); }
 })();
+/* ═══════════ ПЛАВАЮЩАЯ КНОПКА «НАВЕРХ» ═══════════ */
+/* Появляется при прокрутке > 300px, правый-нижний угол. */
+(function _vpInitBackToTop(){
+  if (typeof window === 'undefined') return undefined;
+  if (window._vpBackToTopLoaded) return undefined;
+  window._vpBackToTopLoaded = true;
+  function makeButton() {
+    if (!document.body) return;
+    if (document.getElementById('vp-back-to-top')) return;
+    var btn = document.createElement('button');
+    btn.id = 'vp-back-to-top';
+    btn.type = 'button';
+    btn.title = 'Наверх';
+    btn.setAttribute('aria-label', 'К началу страницы');
+    btn.textContent = '↑';
+    btn.style.cssText = 'position:fixed;bottom:24px;right:24px;width:48px;height:48px;border-radius:50%;border:none;background:#2563eb;color:#fff;font-size:24px;line-height:1;padding:0;cursor:pointer;box-shadow:0 4px 14px rgba(37,99,235,.45);opacity:0;visibility:hidden;transition:opacity .2s,visibility .2s,background .15s,transform .15s;z-index:9999;font-family:system-ui,-apple-system,sans-serif;display:flex;align-items:center;justify-content:center;';
+    btn.addEventListener('mouseenter', function(){ btn.style.background = '#1d4ed8'; btn.style.transform = 'scale(1.06)'; });
+    btn.addEventListener('mouseleave', function(){ btn.style.background = '#2563eb'; btn.style.transform = 'scale(1)'; });
+    btn.addEventListener('click', function(){ window.scrollTo({ top: 0, behavior: 'smooth' }); });
+    document.body.appendChild(btn);
+    function updateVisibility(){
+      var show = (window.scrollY || window.pageYOffset || 0) > 300;
+      btn.style.opacity = show ? '1' : '0';
+      btn.style.visibility = show ? 'visible' : 'hidden';
+    }
+    window.addEventListener('scroll', updateVisibility, {passive:true});
+    updateVisibility();
+  }
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', makeButton);
+  else makeButton();
+})();
