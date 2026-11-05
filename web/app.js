@@ -649,7 +649,7 @@
   <div class="field-actions">
     <button type="button" class="icon-btn-sm" data-act="copy-src" title="Копировать">📋</button>
     <button type="button" class="icon-btn-sm" data-act="clear-src" title="Очистить">🗑</button>
-                  <button type="button" class="icon-btn-sm" data-act="vp-strip-toggle" title="Убрать/вернуть эмодзи" style="font-size:13px;">🚫</button>
+                  <button type="button" class="icon-btn-sm" data-act="vp-strip-toggle" title="Убрать/вернуть эмодзи" onclick="return window.vpStripToggle && window.vpStripToggle(event)" style="font-size:13px;">🚫</button>
   </div>
 </div>
 <div class="btns">
@@ -1107,94 +1107,102 @@ document.querySelectorAll('[data-act]').forEach(b => {
   else makeButton();
 })();
 
-
 // ═══ vp-strip-toggle (убрать ↔ вернуть эмодзи) ═══
 (function(){
   'use strict';
   var saved = { orig: null, stripped: null };
-  var _btn = '[data-act="vp-strip-toggle"]';
+  var SEL = '[data-act="vp-strip-toggle"]';
 
-  function getBtn(){ return document.querySelector(_btn); }
+  function btn(){ return document.querySelector(SEL); }
+  function src(){ return document.getElementById('src'); }
+  function msg(m, k){
+    try { if (typeof window.toast === 'function') return window.toast(m, k||''); } catch(_){}
+    console.log('[vp] toast:', m);
+  }
 
-  function updateBtn(){
-    var b = getBtn(); if (!b) return;
-    var s = document.getElementById('src');
+  function refresh(){
+    var b = btn(); if (!b) return;
+    var s = src();
     if (saved.stripped !== null && (!s || s.value !== saved.stripped)) {
       saved.orig = null; saved.stripped = null;
     }
-    if (saved.stripped !== null) {
-      if (b.textContent !== '\u21A9') b.textContent = '\u21A9';
-      b.title = 'Вернуть эмодзи';
-      b.style.background = '#10b981';
-      b.style.color = '#fff';
-      b.style.borderColor = '#10b981';
-    } else {
-      if (b.textContent !== '\uD83D\uDEAB') b.textContent = '\uD83D\uDEAB';
-      b.title = 'Убрать все эмодзи';
-      b.style.background = '';
-      b.style.color = '';
-      b.style.borderColor = '';
-    }
+    var active = saved.stripped !== null;
+    if (b.textContent !== (active ? '↩' : '🚫')) b.textContent = active ? '↩' : '🚫';
+    b.title = active ? 'Вернуть эмодзи' : 'Убрать все эмодзи';
+    b.style.background  = active ? '#10b981' : '';
+    b.style.color       = active ? '#fff' : '';
+    b.style.borderColor = active ? '#10b981' : '';
+    b.dataset.vpState   = active ? 'stripped' : 'idle';
   }
 
-  function stripText(t){
+  function strip(t){
     var RE = /[\u{1F000}-\u{1FAFF}\u{2600}-\u{27BF}\u{FE00}-\u{FE0F}\u{200D}\u{20E3}]/gu;
     var m = t.match(RE);
-    return {
-      count: m ? m.length : 0,
-      text: t.replace(RE,'')
-        .replace(/[ \t]{2,}/g,' ')
-        .replace(/[ \t]+$/gm,'')
-        .replace(/^[ \t]+/gm,'')
-        .replace(/\n{3,}/g,'\n\n')
-        .replace(/^\n+|\n+$/g,'')
-    };
+    var count = m ? m.length : 0;
+    var text = t.replace(RE,'')
+      .replace(/[ \t]{2,}/g,' ')
+      .replace(/[ \t]+$/gm,'')
+      .replace(/^[ \t]+/gm,'')
+      .replace(/\n{3,}/g,'\n\n')
+      .replace(/^\n+|\n+$/g,'');
+    return { count: count, text: text };
   }
 
-  document.addEventListener('click', function(e){
-    var b = e.target && e.target.closest && e.target.closest(_btn);
-    if (!b) return;
-    e.preventDefault(); e.stopPropagation();
-    var s = document.getElementById('src');
-    if (!s) return;
+  window.vpStripToggle = function(e){
+    try {
+      if (e && e.preventDefault) e.preventDefault();
+      if (e && e.stopPropagation) e.stopPropagation();
+    } catch(_){}
+    console.log('[vp] click fired. state=', saved);
 
-    // возврат
+    var s = src();
+    if (!s) { console.warn('[vp] #src не найден'); return false; }
+
+    // Возврат
     if (saved.orig !== null && s.value === saved.stripped) {
       s.value = saved.orig;
       saved.orig = null; saved.stripped = null;
-      updateBtn();
+      refresh();
       s.dispatchEvent(new Event('input',{bubbles:true}));
-      if (typeof toast==='function') toast('Эмодзи возвращены','ok');
-      return;
+      msg('Эмодзи возвращены','ok');
+      console.log('[vp] RESTORED (len=' + s.value.length + ')');
+      return false;
     }
-    // сброс неактуального state
-    saved.orig = null; saved.stripped = null;
-    updateBtn();
 
-    if (!s.value || !s.value.trim()) {
-      if (typeof toast==='function') toast('Введи текст','err');
-      return;
-    }
-    var r = stripText(s.value);
-    if (!r.count) {
-      if (typeof toast==='function') toast('Эмодзи не найдены','');
-      return;
-    }
+    // Сброс неактуального state
+    saved.orig = null; saved.stripped = null;
+
+    if (!s.value || !s.value.trim()) { msg('Введи текст','err'); refresh(); return false; }
+
+    var r = strip(s.value);
+    console.log('[vp] strip: count=' + r.count + ' len_before=' + s.value.length + ' len_after=' + r.text.length);
+    if (!r.count) { msg('Эмодзи не найдены',''); refresh(); return false; }
+
     saved.orig = s.value;
-    s.value = r.text;
+    s.value   = r.text;
     saved.stripped = s.value;
-    updateBtn();
+    refresh();
     s.dispatchEvent(new Event('input',{bubbles:true}));
-    if (typeof toast==='function') toast('Убрано: ' + r.count + ' (клик ещё раз — вернуть)','ok');
-  }, false);
+    msg('Убрано: ' + r.count + ' (клик ещё раз — вернуть)','ok');
+    return false;
+  };
+
+  // Fallback: capture-фаза на случай если кто-то делает stopPropagation в bubble
+  document.addEventListener('click', function(e){
+    var t = e.target;
+    if (!t || !t.closest) return;
+    if (!t.closest(SEL)) return;
+    window.vpStripToggle(e);
+  }, true);
 
   document.addEventListener('input', function(e){
-    if (e.target && e.target.id === 'src') updateBtn();
+    if (e.target && e.target.id === 'src') refresh();
   }, false);
 
-  // при каждом перерендере кнопки — синхронизировать визуал
-  try {
-    new MutationObserver(updateBtn).observe(document.body, {childList:true, subtree:true});
-  } catch(_e) {}
-  setInterval(updateBtn, 800);
+  try { new MutationObserver(refresh).observe(document.body, {childList:true, subtree:true}); } catch(_){}
+  setInterval(refresh, 600);
+  refresh();
+
+  console.log('[vp] vp-strip-toggle installed. btn=' + !!btn() + ' src=' + !!src());
+  if (btn()) console.log('[vp] button onclick=', btn().getAttribute('onclick'));
 })();
