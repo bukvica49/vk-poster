@@ -31,6 +31,78 @@
       document.write(html);
       document.close();
       console.log('[vp-boot] OK');
+      /* ═══ vp-strip popup: кнопка 🚫 + handler после document.write ═══ */
+      (function(){
+        var RE = /[\u{1F000}-\u{1FAFF}\u{2600}-\u{27BF}\u{2B00}-\u{2BFF}\u{FE00}-\u{FE0F}\u{200D}\u{20E3}\u{E0020}-\u{E007F}]/gu;
+        function install(){
+          var s = document.getElementById('src');
+          if (!s) return false;
+          if (document.querySelector('[data-act="vp-strip"]')) {
+            console.log('%c\u25BA vp-strip: app.js уже установил кнопку \u25C4', 'color:lime');
+            return true;
+          }
+          var anchor = document.querySelector('[data-act="clear-src"]');
+          if (!anchor) {
+            var bts = document.querySelectorAll('button');
+            for (var i = 0; i < bts.length; i++) {
+              var t = bts[i].textContent || '';
+              if (t.indexOf('\uD83D\uDCCB') !== -1 || t.indexOf('\uD83D\uDDD1') !== -1) { anchor = bts[i]; }
+            }
+          }
+          if (!anchor || !anchor.parentNode) return false;
+          var btn = document.createElement('button');
+          btn.type = 'button';
+          btn.setAttribute('data-act', 'vp-strip');
+          btn.textContent = '\uD83D\uDEAB';
+          btn.title = 'Убрать все эмодзи';
+          btn.style.cssText = 'font-size:13px;padding:2px 6px;margin-left:4px;border:1px solid #d4d4d8;background:#fff;border-radius:4px;cursor:pointer;font-family:inherit;';
+          anchor.parentNode.insertBefore(btn, anchor.nextSibling);
+          function paint(){
+            var st = s.dataset.vpStrip;
+            if (st !== undefined && s.value !== st) {
+              delete s.dataset.vpOrig; delete s.dataset.vpStrip; st = undefined;
+            }
+            var active = st !== undefined;
+            btn.textContent = active ? '\u21A9' : '\uD83D\uDEAB';
+            btn.title = active ? 'Вернуть эмодзи' : 'Убрать все эмодзи';
+            btn.style.background  = active ? '#10b981' : '#fff';
+            btn.style.color       = active ? '#fff' : '';
+            btn.style.borderColor = active ? '#10b981' : '#d4d4d8';
+          }
+          btn.addEventListener('click', function(e){
+            e.preventDefault();
+            var o = s.dataset.vpOrig, st = s.dataset.vpStrip;
+            if (o !== undefined && s.value === st) {
+              s.value = o;
+              delete s.dataset.vpOrig; delete s.dataset.vpStrip;
+              paint();
+              s.dispatchEvent(new Event('input', {bubbles:true}));
+              console.log('[vp-strip] RESTORED len=' + s.value.length);
+              return;
+            }
+            delete s.dataset.vpOrig; delete s.dataset.vpStrip;
+            if (!s.value || !s.value.trim()) { paint(); return; }
+            var m = s.value.match(RE), count = m ? m.length : 0;
+            if (!count) { paint(); return; }
+            var cleaned = s.value.replace(RE,'')
+              .replace(/[ \t]{2,}/g,' ')
+              .replace(/[ \t]+$/gm,'').replace(/^[ \t]+/gm,'')
+              .replace(/\n{3,}/g,'\n\n').replace(/^\n+|\n+$/g,'');
+            s.dataset.vpOrig = s.value;
+            s.value = cleaned;
+            s.dataset.vpStrip = cleaned;
+            paint();
+            s.dispatchEvent(new Event('input', {bubbles:true}));
+            console.log('[vp-strip] STRIPPED count=' + count + ' len=' + s.value.length);
+          });
+          s.addEventListener('input', paint);
+          paint();
+          console.log('%c\u25BA vp-strip handler READY (popup) \u25C4', 'color:lime;font-weight:bold;font-size:14px');
+          return true;
+        }
+        if (install()) return;
+        [100, 300, 800, 1500, 3000].forEach(function(d){ setTimeout(install, d); });
+      })();
     } catch(e) {
       console.error('[vp-boot] write failed:', e);
       try {
