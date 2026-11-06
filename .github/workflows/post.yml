@@ -2,7 +2,7 @@ name: VK Poster
 
 on:
   schedule:
-    - cron: '0 11 * * *'      # 11:00 UTC = 18:00 Красноярск (UTC+7)
+    - cron: '0 * * * *'      # 11:00 UTC = 18:00 Красноярск (UTC+7)
   workflow_dispatch:
     inputs:
       force:
