@@ -18,7 +18,7 @@ FIELDS = [
     ("slug",      "Slug",             False),
     ("date",      "Дата MM-DD",       False),
     ("date_to",   "Дата окончания",   False),
-    ("post_time", "Время HH:MM",      False),
+    ("post_time", "Время HH:MM или HH-MM", False),
     ("text",      "Заголовок",        False),
     ("text_md",   "Тело (Markdown)",  True),
     ("info",      "Info (по строкам)",True),
