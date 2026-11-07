@@ -9,6 +9,20 @@
   .vp-boot-msg{margin:120px auto;max-width:520px;padding:24px 28px;background:#fff;border:1px solid #d4d4d8;border-radius:12px;text-align:center;font-size:15px;line-height:1.5;box-shadow:0 4px 16px rgba(0,0,0,.06)}
   .vp-boot-msg b{color:#2563eb}
   .vp-boot-msg code{background:#f0f0f3;padding:2px 6px;border-radius:4px;font-size:13px}
+
+    /* ── подсветка HTML в pre#vp-html-out ─────────────────────── */
+    .vp-hl-code{font-family:Consolas,Menlo,monospace!important;font-size:12px!important;
+      line-height:1.5!important;tab-size:2!important;white-space:pre-wrap!important;
+      word-break:break-word!important;overflow-wrap:anywhere!important}
+    .vp-hl-code .t-p{color:#abb2bf!important}
+    .vp-hl-code .t-tag{color:#61afef!important}
+    .vp-hl-code .t-attr{color:#e5c07b!important}
+    .vp-hl-code .t-str{color:#98c379!important}
+    .vp-hl-code .t-doc{color:#c678dd!important}
+    .vp-hl-code .t-com{color:#5c6370!important;font-style:italic!important}
+    .vp-hl-code .t-ent{color:#d19a66!important}
+    .vp-hl-code[data-empty]::before{content:attr(data-ph);color:#5c6370!important;
+      pointer-events:none!important;user-select:none!important}
 </style>
 </head>
 <body>
@@ -229,6 +243,250 @@ window.__vpSetupTabs = function(){
     }
 
     // ── поле (textarea/input) + кнопки 📋/🗑 в правом верхнем углу ──
+
+
+    // ── runtime CSS для .vp-hl-code (не зависит от <style> в HTML) ──
+    (function vpHlInject(){
+      try {
+        if (document.getElementById('vp-hl-css')) return;
+        var css = ''
+          + '.vp-hl-code{font-family:Consolas,Menlo,monospace!important;font-size:12px!important;'
+          + 'line-height:1.5!important;tab-size:2!important;white-space:pre-wrap!important;'
+          + 'word-break:break-word!important;overflow-wrap:anywhere!important;'
+          + 'max-height:40vh!important;overflow-y:auto!important;overflow-x:hidden!important;'
+          + 'resize:none!important}'
+          + '.vp-hl-code::-webkit-scrollbar{width:10px;height:10px}'
+          + '.vp-hl-code::-webkit-scrollbar-track{background:rgba(255,255,255,0.04)}'
+          + '.vp-hl-code::-webkit-scrollbar-thumb{background:rgba(255,255,255,0.18);border-radius:5px}'
+          + '.vp-hl-code::-webkit-scrollbar-thumb:hover{background:rgba(255,255,255,0.30)}'
+          + '#vp-html-src::-webkit-scrollbar{width:10px;height:10px}'
+          + '#vp-html-src::-webkit-scrollbar-track{background:rgba(255,255,255,0.04)}'
+          + '#vp-html-src::-webkit-scrollbar-thumb{background:rgba(255,255,255,0.18);border-radius:5px}'
+          + '#vp-html-src::-webkit-scrollbar-thumb:hover{background:rgba(255,255,255,0.30)}'
+          + '.vp-hl-code .t-p{color:#abb2bf!important}'
+          + '.vp-hl-code .t-tag{color:#61afef!important}'
+          + '.vp-hl-code .t-attr{color:#e5c07b!important}'
+          + '.vp-hl-code .t-str{color:#98c379!important}'
+          + '.vp-hl-code .t-doc{color:#c678dd!important}'
+          + '.vp-hl-code .t-com{color:#5c6370!important;font-style:italic!important}'
+          + '.vp-hl-code .t-ent{color:#d19a66!important}'
+          + '.vp-hl-code[data-empty]::before{content:attr(data-ph);color:#5c6370!important;'
+          + 'pointer-events:none!important;user-select:none!important}';
+        var st = document.createElement('style');
+        st.id = 'vp-hl-css';
+        st.textContent = css;
+        (document.head || document.documentElement).appendChild(st);
+      } catch(e){
+        try { console.warn('[vp-hl] CSS inject failed:', e && e.message); } catch(_){}
+      }
+    })();
+
+    // ── vpHlFit v10.0: CSS calc + overflow-feedback ──────────
+    (function vpHlFitSetup(){
+      var V = 10.0;
+      var prevV = window.__vpHlFitV || 0;
+      if (prevV >= V) { console.log('[vpfit v' + V + '] bail=' + prevV); return; }
+      window.__vpHlFitV = V;
+      try { delete window.__vpHlFitBound; } catch(_){}
+      console.log('[vpfit v' + V + '] loaded (calc + overflow-feedback)');
+
+      var CHROME_BASE = 290;
+      var applying    = false;
+
+      function measureOverflow(){
+        try {
+          var vh = window.innerHeight || document.documentElement.clientHeight;
+          var dh = document.documentElement.scrollHeight || 0;
+          var bh = document.body ? document.body.scrollHeight : 0;
+          return Math.max(0, Math.max(dh, bh) - vh);
+        } catch(_){ return 0; }
+      }
+
+      function setFields(chrome){
+        var src = document.getElementById('vp-html-src');
+        var out = document.getElementById('vp-html-out');
+        if (!src || !out) return false;
+        var base = '(100vh - ' + chrome + 'px)';
+        var sH   = 'max(60px, calc(' + base + ' * 0.35))';
+        var oH   = 'max(90px, calc(' + base + ' * 0.65))';
+
+        src.style.setProperty('height',     sH, 'important');
+        src.style.setProperty('min-height', sH, 'important');
+        src.style.setProperty('max-height', sH, 'important');
+        src.style.setProperty('overflow-y', 'auto', 'important');
+        src.style.setProperty('resize',     'none', 'important');
+
+        out.style.setProperty('height',     oH, 'important');
+        out.style.setProperty('min-height', oH, 'important');
+        out.style.setProperty('max-height', oH, 'important');
+        out.style.setProperty('overflow-y', 'auto', 'important');
+        out.style.setProperty('resize',     'none', 'important');
+        return true;
+      }
+
+      function apply(reason){
+        if (applying) return;
+        var src = document.getElementById('vp-html-src');
+        var out = document.getElementById('vp-html-out');
+        if (!src || !out) return;
+        if (!src.offsetParent || !out.offsetParent) return;
+
+        applying = true;
+        try {
+          setFields(CHROME_BASE);   // чистое состояние — дрейфа не может быть
+
+          requestAnimationFrame(function(){
+            try {
+              var vh   = window.innerHeight || document.documentElement.clientHeight;
+              var over = measureOverflow();
+              if (over > 4) {
+                var maxChrome = Math.round(vh * 0.72);
+                var adjusted  = Math.min(CHROME_BASE + over + 4, maxChrome);
+                setFields(adjusted);
+                console.log('[vpfit v' + V + '] shrink(' + reason + ') over=' + over +
+                            ' chrome=' + adjusted + ' max=' + maxChrome + ' vh=' + vh);
+              } else {
+                console.log('[vpfit v' + V + '] apply(' + reason + ') chrome=' + CHROME_BASE +
+                            ' over=' + over + ' vh=' + (window.innerHeight || 0));
+              }
+            } finally {
+              applying = false;
+            }
+          });
+        } catch(e){
+          applying = false;
+          console.warn('[vpfit err]', e && e.message);
+        }
+      }
+
+      window.vpfit = function(){ apply('manual'); };
+
+      apply('init');
+      [100, 300, 700, 1500, 3000, 5000].forEach(function(t){
+        setTimeout(function(){ apply('t' + t); }, t);
+      });
+
+      if (window.__vpHlT) clearTimeout(window.__vpHlT);
+      window.addEventListener('resize', function(){
+        if (window.__vpHlT) clearTimeout(window.__vpHlT);
+        window.__vpHlT = setTimeout(function(){ apply('resize'); }, 120);
+      });
+
+      document.addEventListener('click', function(){
+        setTimeout(function(){ apply('click'); }, 30);
+      }, true);
+
+      try {
+        if (window.__vpHlMO) window.__vpHlMO.disconnect();
+        var moT = null;
+        var mo = new MutationObserver(function(){
+          if (moT) clearTimeout(moT);
+          moT = setTimeout(function(){ apply('mutation'); }, 250);
+        });
+        mo.observe(document.body, { childList: true, subtree: true });
+        window.__vpHlMO = mo;
+        console.log('[vpfit v' + V + '] MO body (banner detect)');
+      } catch(e){ console.warn('[vpfit MO err]', e && e.message); }
+    })();
+
+    // ── подсветка HTML в поле «Готовый HTML» ────────────────────
+    function escAttr(v){
+      return esc(v).replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+    }
+    function hlText(t){
+      if (!t) return '';
+      // разделяем entity (&amp;, &#123;, &#x1F;) и обычный текст
+      var parts = t.split(/(&(?:[a-zA-Z]+|#\d+|#x[0-9a-fA-F]+);)/);
+      var out = '';
+      for (var i = 0; i < parts.length; i++){
+        if (!parts[i]) continue;
+        if (i % 2 === 1) out += '<span class="t-ent">' + esc(parts[i]) + '</span>';
+        else out += esc(parts[i]);
+      }
+      return out;
+    }
+    function hlAttrs(t){
+      if (!t) return '';
+      var re = /(\s*)([a-zA-Z_:][a-zA-Z0-9_.:-]*)(\s*=\s*)("[^"]*"|'[^']*'|[^\s>]+)?|(\s+)(\/?)/g;
+      var out = '', last = 0, m;
+      while ((m = re.exec(t)) !== null){
+        if (m[0].length === 0){ re.lastIndex++; continue; }
+        if (m[2]){
+          out += '<span class="t-p">' + esc(m[1] || ' ') + '</span>';
+          out += '<span class="t-attr">' + esc(m[2]) + '</span>';
+          if (m[3] && m[4]){
+            out += '<span class="t-p">' + esc(m[3]) + '</span>';
+            out += '<span class="t-str">' + esc(m[4]) + '</span>';
+          } else if (m[3]){
+            out += '<span class="t-p">' + esc(m[3]) + '</span>';
+          }
+        }
+        last = re.lastIndex;
+      }
+      if (last < t.length) out += esc(t.slice(last));
+      return out;
+    }
+    function hlHtml(html){
+      if (!html) return '';
+      var re = /(<!--[\s\S]*?-->)|(<!DOCTYPE\b[^>]*>)|(<\/?)([a-zA-Z][a-zA-Z0-9-]*)((?:\s+[^<>]*?)?)(\/?>)/gi;
+      var out = '', last = 0, m;
+      while ((m = re.exec(html)) !== null){
+        if (m.index > last) out += hlText(html.slice(last, m.index));
+        if (m[1]) out += '<span class="t-com">' + esc(m[1]) + '</span>';
+        else if (m[2]) out += '<span class="t-doc">' + esc(m[2]) + '</span>';
+        else {
+          out += '<span class="t-p">' + esc(m[3]) + '</span>';
+          out += '<span class="t-tag">' + esc(m[4]) + '</span>';
+          out += hlAttrs(m[5] || '');
+          out += '<span class="t-p">' + esc(m[6]) + '</span>';
+        }
+        last = m.index + m[0].length;
+      }
+      if (last < html.length) out += hlText(html.slice(last));
+      return out;
+    }
+    function makeHlOut(ph, minH, onCopy, onClear){
+      var wrap = mkEl('div');
+      wrap.style.cssText = 'margin:0 0 14px !important;position:relative !important';
+      var pre = document.createElement('pre');
+      pre.id = 'vp-html-out';
+      pre.className = 'vp-hl-code';
+      pre.style.cssText =
+        'width:100% !important;box-sizing:border-box !important;'
+        + 'padding:36px 14px 10px !important;margin:0 !important;'
+        + 'background:' + IN.bg + ' !important;color:' + IN.fg + ' !important;'
+        + 'border:1px solid ' + IN.border + ' !important;border-radius:' + IN.radius + ' !important;'
+        + 'font-family:Consolas,Menlo,monospace !important;font-size:12px !important;'
+        + 'line-height:1.5 !important;display:block !important;outline:none !important;'
+        + 'min-height:' + (minH || '240px') + ' !important;'
+        + 'max-height:40vh !important;overflow-y:auto !important;overflow-x:hidden !important;'
+        + 'resize:none !important;'
+        + 'white-space:pre-wrap !important;tab-size:2 !important';
+      if (ph) pre.setAttribute('data-ph', ph);
+      pre.setAttribute('data-empty', '1');
+      var raw = '';
+      Object.defineProperty(pre, 'value', {
+        configurable: true,
+        get: function(){ return raw; },
+        set: function(v){
+          raw = (v == null ? '' : String(v));
+          if (!raw){ pre.innerHTML = ''; pre.setAttribute('data-empty', '1'); return; }
+          pre.removeAttribute('data-empty');
+          pre.innerHTML = hlHtml(raw);
+        }
+      });
+      wrap.appendChild(pre);
+      var row = mkEl('div');
+      row.className = 'vp-field-actions';
+      row.style.cssText =
+        'position:absolute !important;top:6px !important;right:6px !important;z-index:10 !important;'
+        + 'display:flex !important;align-items:center !important;gap:4px !important';
+      if (onCopy) row.appendChild(iconBtn('\u{1F4CB}', 'Копировать', onCopy));
+      if (onClear) row.appendChild(iconBtn('\u{1F5D1}', 'Очистить', function(e){ e.preventDefault(); onClear(); }));
+      wrap.appendChild(row);
+      return { wrap: wrap, el: pre };
+    }
+
     function mkField(tag, id, ph, mono, withCopy, withClear, onCopy, onClearConfirmed, minH){
       var hasActions = withCopy || withClear;
       var wrap = mkEl('div');
@@ -244,7 +502,7 @@ window.__vpSetupTabs = function(){
         + 'border:1px solid ' + IN.border + ' !important;border-radius:' + IN.radius + ' !important;'
         + 'font-family:' + (mono ? 'Consolas,Menlo,monospace' : FONT) + ' !important;'
         + 'font-size:' + (mono ? '12px' : '13px') + ' !important;'
-        + 'line-height:1.5 !important;resize:vertical !important;display:block !important;'
+        + 'line-height:1.5 !important;resize:none !important;display:block !important;'
         + 'outline:none !important;min-height:' + (minH || '240px') + ' !important';
       wrap.appendChild(el);
       if (hasActions){
@@ -395,10 +653,9 @@ window.__vpSetupTabs = function(){
 
     // ── готовый HTML + 📋🗑 ──
     panel.appendChild(addLabel('Готовый HTML:'));
-    var f3 = mkField('textarea', 'vp-html-out', 'Готовый HTML появится здесь…', true, true, true,
+    var f3 = makeHlOut('Готовый HTML появится здесь…', '240px',
       function(){ if (!f3.el.value.trim()) return toastMsg('Сначала сверстай'); copyText(f3.el.value); },
       function(){ clearAndUndo(f3.el, f3.wrap, null); });
-    f3.el.readOnly = true;
     panel.appendChild(f3.wrap);
     panel.appendChild(globalBar);
 
