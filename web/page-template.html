@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>__TITLE__</title>
+  <link rel="stylesheet" href="../css/pages.css">
+  <script src="../js/article.js"></script>
+</head>
+<body>
+
+<h1>__TITLE__</h1>
+
+__BODY__
+
+<footer class="article-footer">
+  <button class="action-btn" type="button" onclick="goBackFromArticle()" aria-label="Вернуться к списку статей">
+    <span class="icon">←</span> Назад
+  </button>
+  <a class="action-btn source"
+     href="__SOURCE__"
+     target="_blank"
+     rel="noopener noreferrer"
+     aria-label="Перейти к источнику статьи">
+    Источник <span class="icon">→</span>
+  </a>
+</footer>
+<br>
+<!-- Yandex.Metrika counter -->
+<script type="text/javascript">
+    (function(m,e,t,r,i,k,a){
+        m[i]=m[i]||function(){(m[i].a=m[i].a||[]).push(arguments)};
+        m[i].l=1*new Date();
+        for (var j = 0; j < document.scripts.length; j++) {if (document.scripts[j].src === r) { return; }}
+        k=e.createElement(t),a=e.getElementsByTagName(t)[0],k.async=1,k.src=r,a.parentNode.insertBefore(k,a)
+    })(window, document,'script','https://mc.yandex.ru/metrika/tag.js?id=113705409', 'ym');
+
+    ym(113705409, 'init', {ssr:true, webvisor:true, clickmap:true, ecommerce:"dataLayer", referrer: document.referrer, url: location.href, accurateTrackBounce:true, trackLinks:true});
+</script>
+<noscript><div><img src="https://mc.yandex.ru/watch/113705409" style="position:absolute; left:-9999px;" alt="" /></div></noscript>
+<!-- /Yandex.Metrika counter -->
+</body>
+</html>
