@@ -696,6 +696,14 @@
   if (!H) { document.body.innerHTML = '<p style="color:#c33;padding:20px;font:16px sans-serif">Ошибка: нет доступа к родителю. Открой редактор с главной страницы.</p>'; return; }
   const $ = id => document.getElementById(id);
   const src=$('src'), dst=$('dst'), picker=$('picker'), tabs=$('tabs'), grid=$('grid');
+
+  // — vp: последнее активное поле (#src/#dst) для вставки из палитры
+  let _vpLastField = src;
+  [src, dst].forEach(el => {
+    if (!el) return;
+    el.addEventListener('focus', () => { _vpLastField = el; });
+    el.addEventListener('click', () => { _vpLastField = el; });
+  });
   const toastEl=$('toast'), counter=$('counter');
   function toast(m,k){ toastEl.textContent=m; toastEl.className='toast show'+(k?' '+k:''); clearTimeout(toastEl._to); toastEl._to=setTimeout(()=>{toastEl.className='toast'},2200); }
   function insertAtCursor(ta,text){ const s=ta.selectionStart,e=ta.selectionEnd; ta.value=ta.value.slice(0,s)+text+ta.value.slice(e); ta.selectionStart=ta.selectionEnd=s+text.length; ta.focus(); }
@@ -888,7 +896,7 @@ document.querySelectorAll('[data-act]').forEach(b => {
       d.textContent = 'Кликайте на эмодзи/символы — они появятся здесь';
       grid.appendChild(d); return;
     }
-    chars.forEach(ch=>{ const b=document.createElement('button'); b.type='button'; b.textContent=ch; b.addEventListener('click', ()=>{ insertAtCursor(src,ch); trackRecent(ch); toast('Вставлено: '+ch); }); grid.appendChild(b); });
+    chars.forEach(ch=>{ const b=document.createElement('button'); b.type='button'; b.textContent=ch; b.addEventListener('mousedown', e=>e.preventDefault()); b.addEventListener('click', ()=>{ const _tgt = _vpLastField || src; insertAtCursor(_tgt,ch); trackRecent(ch); toast('Вставлено: '+ch); }); grid.appendChild(b); });
   }
 
   applyTheme(); applyBg();
