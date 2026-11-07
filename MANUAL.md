@@ -433,5 +433,6 @@ Cron локально **отключён**. Не возвращать.
 | [MANUAL.md](MANUAL.md) | Админ (этот файл) |
 | [MANUAL_VK_EDITOR.md](MANUAL_VK_EDITOR.md) | Редактор ВК (создание постов) |
 | [MANUAL_CODE_EDITOR.md](MANUAL_CODE_EDITOR.md) | HTML-редактор (попап ✍) |
+| [MANUAL_SITE_FEATURES.md](MANUAL_SITE_FEATURES.md) | Фичи превью-сайта: поиск, фон, ↑ Наверх |
 | [HANDOFF.md](HANDOFF.md) | Контекст для ИИ |
 | [TODO.md](TODO.md) | Открытые задачи |
