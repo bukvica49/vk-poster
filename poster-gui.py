@@ -225,7 +225,7 @@ class App(tk.Tk):
         ttk.Label(top, text="Так пост будет выглядеть в ВК:",
                   font=("", 10, "bold")).pack(anchor=tk.W)
         ttk.Label(top, text=f"slug: {self.current_slug}  ·  date: {d.get('date','—')}"
-                            f"  ·  post_time: {d.get('post_time','18:00 (по умолчанию)')}",
+                            f"  ·  post_time: {str(d.get('post_time','18:00 (по умолчанию)')).replace('-', ':')}",
                   foreground="#666", font=("", 8)).pack(anchor=tk.W)
 
         # картинка
