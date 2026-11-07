@@ -26,6 +26,17 @@ content:
         required: true
         pattern: '\d{2}-\d{2}'
         description: "Дата поста: MM-DD (напр. 11-10 = 10 ноября). Пост выйдет в этот день в 18:00 KRAT."
+      - name: date_to
+        label: Дата окончания (MM-DD, для диапазона)
+        type: string
+        required: false
+        pattern: '\d{2}-\d{2}'
+        description: "Для диапазонных постов (вход в Чертог): дата окончания периода, MM-DD. Пример: 12-15. Пусто = однодневный пост."
+      - name: chertog
+        label: Чертог (для диапазона)
+        type: string
+        required: false
+        description: "Название Чертога (напр. Змей, Волк). Включает специальный шаблон поста. Пусто = обычный праздник."
       - name: text
         label: Текст поста (заголовок карточки)
         type: string
