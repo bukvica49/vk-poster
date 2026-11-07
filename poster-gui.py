@@ -211,11 +211,28 @@ class App(tk.Tk):
         self.log_msg(f"✓ скопировано → images/{src.name}, image = /images/{src.name}")
         self.status.set(f"Картинка: {src.name}")
 
+    def _form_data(self, slug):
+        """Данные из полей формы; пустые поля — из кэша файла.
+        Нужно для живого превью: изменения в полях видны без сохранения."""
+        base = dict(self.posts[slug][1]) if slug in self.posts else {}
+        for k, (w, ml) in self.fields.items():
+            v = w.get("1.0", tk.END).rstrip("\n") if ml else w.get().strip()
+            if k == "info":
+                v = [l for l in v.split("\n") if l.strip()]
+                if v: base[k] = v
+                else: base.pop(k, None)
+            elif k in ("slug", "date"):
+                if v: base[k] = v
+            else:
+                if v: base[k] = v
+                else: base.pop(k, None)
+        return base
+
     # ── 👁 превью VK-поста ─────────────────────────────────
     def preview_vk(self):
         if not self.current_slug:
             messagebox.showwarning("Внимание", "Сначала выбери пост слева"); return
-        d = self.posts[self.current_slug][1]
+        d = self._form_data(self.current_slug)
         win = tk.Toplevel(self)
         win.title(f"Предпросмотр VK — {self.current_slug}")
         win.geometry("620x780")
