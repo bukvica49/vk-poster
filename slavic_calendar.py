@@ -126,7 +126,7 @@ def header_full(dt=None, add_smzh: bool = True, range_to=None, chertog_block=Non
                  f"{CIVIL_MONTHS_GEN[nd.month]}, {nd.year} г. местн.вр.)")
         lines = [line1, line2, line3]
     else:
-        slav_end = range_to + timedelta(days=1)
+        slav_end = range_to
         _, mi2, d2, _ = krugолет(slav_end)
         mn2 = SLAVIC_MONTHS[mi2]
         desc2 = MONTH_DESC[mi2 + 1]
