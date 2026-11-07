@@ -400,11 +400,10 @@ def main(dry_run=False, test=False, force=False, republish=False, override_date=
                 _offset_min += 24 * 60
             _target_dt = _start + timedelta(minutes=_offset_min)
 
-        _slot_dt = _target_dt + timedelta(minutes=_pos * POST_INTERVAL_MIN) if _target_dt else None
+        _slot_dt = _target_dt + timedelta(minutes=_pos * 30) if _target_dt else None
 
         if (not dry_run) and (not force) and (not override_date) and _slot_dt:
             POST_WINDOW_HOURS = 6
-            POST_INTERVAL_MIN = 30
             if _now < _slot_dt:
                 wait_s = (_slot_dt - _now).total_seconds()
                 if wait_s > POST_WINDOW_HOURS * 3600:
