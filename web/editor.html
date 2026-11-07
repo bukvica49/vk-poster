@@ -284,7 +284,7 @@ window.__vpSetupTabs = function(){
         + 'font-family:' + (mono ? 'Consolas,Menlo,monospace' : FONT) + ' !important;'
         + 'font-size:' + (mono ? '12px' : '13px') + ' !important;'
         + 'line-height:1.5 !important;resize:vertical !important;display:block !important;'
-        + 'outline:none !important;min-height:' + (minH || (mono ? '150px' : '120px')) + ' !important';
+        + 'outline:none !important;min-height:' + (minH || '240px') + ' !important';
       wrap.appendChild(el);
       if (hasActions){
         var iconRow = mkEl('div');
@@ -335,15 +335,10 @@ window.__vpSetupTabs = function(){
       + 'font-family:' + FONT + ' !important;font-size:13px !important;line-height:1.5 !important;'
       + 'box-sizing:border-box !important';
 
-    var head = mkEl('div');
-    head.style.cssText = 'margin:0 0 14px !important;padding:0 0 10px !important;border-bottom:1px solid ' + S.btnBorder + ' !important';
-    head.appendChild(mkEl('div', 'font-size:16px !important;font-weight:600 !important;color:' + ACCENT + ' !important;margin:0 0 4px !important', {text:'📄 HTML шаблон'}));
-    head.appendChild(mkEl('div', 'font-size:11px !important;color:' + PANEL_FG + ' !important;opacity:0.55 !important', {text:'# H1 · ## H2 · ![alt](url) → картинка · пустая строка = абзац'}));
-    panel.appendChild(head);
 
     // ═══ Global control bar: ☑ Подтверждать очистку + ? help ═══
     var globalBar = mkEl('div');
-    globalBar.style.cssText = 'display:flex !important;align-items:center !important;gap:12px !important;margin:0 0 12px !important;flex-wrap:wrap !important';
+    globalBar.style.cssText = 'display:flex !important;align-items:center !important;gap:12px !important;margin:12px 0 0 !important;flex-wrap:wrap !important';
     var confirmLbl = document.createElement('label');
     confirmLbl.title = 'Требовать подтверждение перед очисткой любого поля';
     confirmLbl.style.cssText = 'display:inline-flex !important;align-items:center !important;gap:6px !important;font-size:12px !important;color:' + PANEL_FG + ' !important;cursor:pointer !important;user-select:none !important;margin:0 !important';
@@ -367,7 +362,6 @@ window.__vpSetupTabs = function(){
     helpBtn.addEventListener('click', function(e){ e.preventDefault(); showEditorHelp(); });
     globalBar.appendChild(helpBtn);
 
-    panel.appendChild(globalBar);
 
     function addLabel(text){
       var l = mkEl('label', null, {text:text});
@@ -445,6 +439,7 @@ window.__vpSetupTabs = function(){
       function(){ clearAndUndo(f3.el, f3.wrap, null); });
     f3.el.readOnly = true;
     panel.appendChild(f3.wrap);
+    panel.appendChild(globalBar);
 
     var $src = f1.el, $source = f2.el, $out = f3.el;
 
