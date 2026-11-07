@@ -19,6 +19,7 @@ on:
 
 permissions:
   contents: write
+  issues: write   # для уведомлений о сбоях
 
 concurrency:
   group: vk-poster
@@ -81,3 +82,70 @@ jobs:
           git commit -m "state: auto $(date -u +%Y-%m-%d_%H:%M)"
           GIT_SSH_COMMAND='ssh -i ~/.ssh/deploy_key -o IdentitiesOnly=yes' \
             git push origin main
+
+      # ── Уведомление о провале (вариант B: GitHub Issue) ──
+      - name: Report failure as GitHub Issue
+        if: failure()
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const title = '⚠️ VK Poster FAILED';
+            const runUrl = `https://github.com/${context.repo.owner}/${context.repo.repo}/actions/runs/${context.runId}`;
+            const when = new Date().toISOString();
+            const body = [
+              '## Провал автопостинга в ВК',
+              '',
+              `- **Run:** #${context.runNumber}`,
+              `- **Когда:** ${when}`,
+              `- **Триггер:** ${context.eventName}`,
+              `- **Ссылка:** ${runUrl}`,
+              '',
+              '### Что делать',
+              '1. Открой ссылку выше.',
+              '2. Нажми на красный шаг с крестиком.',
+              '3. Прочитай последние 20–30 строк лога.',
+              '4. Частые причины: истёк токен ВК / битая картинка / временный сбой VK.'
+            ].join('\n');
+            const q = `repo:${context.repo.owner}/${context.repo.repo} is:issue is:open in:title "VK Poster FAILED"`;
+            const found = await github.rest.search.issuesAndPullRequests({ q });
+            if (found.data.total_count > 0) {
+              const n = found.data.items[0].number;
+              await github.rest.issues.createComment({
+                owner: context.repo.owner, repo: context.repo.repo,
+                issue_number: n,
+                body: `🔁 Ещё один провал: [run #${context.runNumber}](${runUrl}) в ${when}`
+              });
+              core.info(`Добавил комментарий в Issue #${n}`);
+            } else {
+              const created = await github.rest.issues.create({
+                owner: context.repo.owner, repo: context.repo.repo,
+                title, body
+              });
+              core.info(`Создал Issue #${created.data.number}`);
+            }
+
+      # ── Авто-закрытие Issue при следующем успехе ──
+      - name: Close failure issue on success
+        if: success()
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const q = `repo:${context.repo.owner}/${context.repo.repo} is:issue is:open in:title "VK Poster FAILED"`;
+            const found = await github.rest.search.issuesAndPullRequests({ q });
+            if (found.data.total_count === 0) {
+              core.info('Открытых failure-Issue нет — закрывать нечего');
+            } else {
+              const issue = found.data.items[0];
+              const runUrl = `https://github.com/${context.repo.owner}/${context.repo.repo}/actions/runs/${context.runId}`;
+              await github.rest.issues.createComment({
+                owner: context.repo.owner, repo: context.repo.repo,
+                issue_number: issue.number,
+                body: `✅ Автоматически закрыто: [run #${context.runNumber}](${runUrl}) прошёл успешно.`
+              });
+              await github.rest.issues.update({
+                owner: context.repo.owner, repo: context.repo.repo,
+                issue_number: issue.number,
+                state: 'closed'
+              });
+              core.info(`Закрыл Issue #${issue.number}`);
+            }
