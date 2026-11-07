@@ -85,7 +85,7 @@ def cmd_show(args):
     print(f'{cyan("slug:"):<12} {it["_stem"]}')
     print(f'{cyan("дата:"):<12} {d}')
     if it.get('chertog'):   print(f'{cyan("чертог:"):<12} {it["chertog"]}')
-    if it.get('post_time'): print(f'{cyan("время:"):<12} {it["post_time"]}')
+    if it.get('post_time'): print(f'{cyan("время:"):<12} {str(it["post_time"]).replace("-", ":")}')
     if it.get('image'):
         img = HERE / str(it['image']).lstrip('/')
         mark = '✓' if img.exists() else '✗ НЕТ ФАЙЛА'
@@ -188,7 +188,7 @@ def cmd_new(args):
         print(red('date должно быть MM-DD, например 11-05')); return 1
     dt = ask('date_to MM-DD (пусто = нет)')
     ct = ask('chertog (пусто = нет)')
-    tm = ask('post_time [18:00]') or '18:00'
+    tm = (ask('post_time [18:00]') or '18:00').replace('-', ':')
     slug = ask('slug (a-z 0-9 дефис)', required=True)
     if not re.fullmatch(r'[a-z0-9][a-z0-9-]*', slug):
         print(red('slug: только a-z 0-9 и дефис')); return 1

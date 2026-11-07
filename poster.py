@@ -376,7 +376,7 @@ def main(dry_run=False, test=False, force=False, republish=False, override_date=
         # ── post_time + slot ──
         post_hh, post_mm = 18, 0
         if h:
-            _pt = (h.get("post_time") or "").strip()
+            _pt = (h.get("post_time") or "").strip().replace("-", ":")
             if _pt and ":" in _pt:
                 try:
                     _h, _m = _pt.split(":", 1)

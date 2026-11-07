@@ -43,12 +43,12 @@ content:
         required: false
         description: "VK понимает: жирный, курсив, зачёркнутый, ссылки, хэштеги, emoji. Заголовки/списки конвертируются в poster.py."
       - name: post_time
-        label: "⏰ Время поста (ЧЧ:ММ, KRAT)"
+        label: "⏰ Время поста (ЧЧ:ММ или ЧЧ-ММ, KRAT)"
         type: string
         required: false
         placeholder: "18:00"
-        pattern: '^\d{2}:\d{2}$'
-        description: "Время публикации в KRAT (UTC+7). Пусто = 18:00 (постер ВК подставит по умолчанию). Примеры: 09:00, 21:30, 02:00."
+        pattern: '^\d{2}[-:]\d{2}$'
+        description: "Время публикации в KRAT (UTC+7). Пусто = 18:00. Примеры: 09:00, 21:30, 19-50, 02-00 (допустимы как :, так и -)."
 
   - name: chertogs
     label: Чертоги
