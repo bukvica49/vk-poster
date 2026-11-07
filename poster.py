@@ -222,6 +222,43 @@ def upload_photo(token, group_id, filepath):
     return f"photo{ph['owner_id']}_{ph['id']}"
 
 
+def _wall_post_retry(data, max_attempts=3):
+    """wall.post с retry: сетевые ошибки + временные VK-ошибки (1, 6, 10)."""
+    import time as _t
+    RETRY_VK_CODES = {1, 6, 10}  # 1=unknown, 6=too many req/s, 10=internal
+    last_err = None
+    for attempt in range(1, max_attempts + 1):
+        try:
+            r = requests.post(API + "wall.post", data=data, timeout=30).json()
+        except (requests.Timeout, requests.ConnectionError) as e:
+            last_err = f"network: {e}"
+            print(f"  ⚠ wall.post attempt {attempt}/{max_attempts}: {last_err}", file=sys.stderr)
+            if attempt < max_attempts:
+                _t.sleep(2 * attempt)
+            continue
+        except ValueError as e:
+            last_err = f"bad json: {e}"
+            print(f"  ⚠ wall.post attempt {attempt}/{max_attempts}: {last_err}", file=sys.stderr)
+            if attempt < max_attempts:
+                _t.sleep(2 * attempt)
+            continue
+        if "error" in r:
+            e = r["error"]
+            code = e.get("error_code")
+            msg = e.get("error_msg")
+            if code not in RETRY_VK_CODES:
+                raise RuntimeError(f"VK error {code}: {msg}")
+            last_err = f"VK {code}: {msg}"
+            print(f"  ⚠ wall.post attempt {attempt}/{max_attempts}: {last_err} (retryable)", file=sys.stderr)
+            if attempt < max_attempts:
+                _t.sleep(2 * attempt)
+            continue
+        if attempt > 1:
+            print(f"  ✓ wall.post succeeded on attempt {attempt}/{max_attempts}")
+        return r
+    raise RuntimeError(f"wall.post: все {max_attempts} попытки провалились, последняя: {last_err}")
+
+
 def post(token, group_id, message, attachments=None):
     data = {
         "access_token": token, "owner_id": -abs(group_id),
@@ -229,10 +266,7 @@ def post(token, group_id, message, attachments=None):
     }
     if attachments:
         data["attachments"] = attachments
-    r = requests.post(API + "wall.post", data=data, timeout=30).json()
-    if "error" in r:
-        e = r["error"]
-        raise RuntimeError(f"VK error {e.get('error_code')}: {e.get('error_msg')}")
+    r = _wall_post_retry(data)
     pid = r["response"]["post_id"]
     if attachments:
         # wall.post синхронный: вернул post_id + мы отправили attachments → пост С фото создан.
