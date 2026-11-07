@@ -137,7 +137,8 @@ def build():
                      'slavic': slavic_calendar.header_full(occ, add_smzh=add_krug,
                                                           range_to=_range_to, chertog_block=_block),
                      'posted': key in posted, 'slug': h.get('slug') or '',
-                     'filename': h.get('_filename', '')})
+                     'filename': h.get('_filename', ''),
+                     'post_time': h.get('post_time') or '18:00'})
     rows.sort(key=lambda r: r['occ'])
     def card_edit_url(slug):
         """URL редактирования конкретного праздника в PagesCMS."""
@@ -177,7 +178,8 @@ def build():
     cards = []
     for _idx, r in enumerate(rows):
         _key = r.get('slug') or f'_idx{_idx}'
-        when = r['fire_civil'].strftime('%d.%m.%Y') + ' 18:00'
+        _t = str(r.get('post_time') or '18:00').replace('-', ':')
+        when = r['fire_civil'].strftime('%d.%m.%Y') + ' ' + _t
         delta = ('сегодня' if r['delta'] == 0 else 'завтра' if r['delta'] == 1
                  else f"через {r['delta']} дн." if r['delta'] > 0 else 'прошло')
         # fix: badge всегда ⏳ (пост опубликован → карточка уже внизу на след. год)
