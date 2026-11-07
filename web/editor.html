@@ -145,45 +145,6 @@ window.__vpSetupTabs = function(){
     function setConfirmClearPref(v){
       try { localStorage.setItem(CONFIRM_KEY, v ? '1' : '0'); } catch(e){}
     }
-    function makeClearBtn(onClear){
-      var wrap = document.createElement('span');
-      wrap.className = 'vp-clear-wrap';
-      wrap.style.cssText = 'display:inline-flex !important;align-items:center !important;gap:8px !important';
-      var trash = iconBtn('🗑', 'Очистить', function(e){ e.preventDefault(); onClear(); });
-      wrap.appendChild(trash);
-      var lbl = document.createElement('label');
-      lbl.title = 'Требовать подтверждение перед очисткой';
-      lbl.style.cssText =
-        'display:inline-flex !important;align-items:center !important;gap:4px !important;'
-        + 'font-size:11px !important;color:#9a9aad !important;cursor:pointer !important;user-select:none !important;'
-        + 'font-family:inherit !important;white-space:nowrap !important;margin:0 !important';
-      var cb = document.createElement('input');
-      cb.type = 'checkbox';
-      cb.checked = getConfirmClearPref();
-      cb.style.cssText = 'margin:0 !important;cursor:pointer !important;accent-color:#10b981 !important;width:14px !important;height:14px !important';
-      cb.addEventListener('change', function(){
-        setConfirmClearPref(cb.checked);
-        toastMsg(cb.checked ? '☑ Спрашивать перед очисткой' : '☐ Удалять сразу');
-      });
-      lbl.appendChild(cb);
-      var txt = document.createElement('span');
-      txt.textContent = 'подтверждать';
-      lbl.appendChild(txt);
-      wrap.appendChild(lbl);
-      var help = document.createElement('button');
-      help.type = 'button';
-      help.textContent = '?';
-      help.title = 'Справка по редактору';
-      help.style.cssText =
-        'width:24px !important;height:24px !important;padding:0 !important;'
-        + 'border-radius:50% !important;background:rgba(201,122,29,0.15) !important;color:#c97a1d !important;'
-        + 'border:1px solid #c97a1d !important;cursor:pointer !important;font-weight:700 !important;'
-        + 'font-family:inherit !important;font-size:13px !important;line-height:1 !important;'
-        + 'display:inline-flex !important;align-items:center !important;justify-content:center !important';
-      help.addEventListener('click', function(e){ e.preventDefault(); showEditorHelp(); });
-      wrap.appendChild(help);
-      return wrap;
-    }
     function clearAndUndo(el, wrapper, lsKey){
       if (!el.value || !el.value.trim()){ toastMsg('Поле уже пустое'); return; }
       try { wrapper.querySelectorAll('.vp-undo-bar').forEach(function(b){ if (b.parentNode) b.parentNode.removeChild(b); }); } catch(e){}
