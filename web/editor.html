@@ -247,13 +247,13 @@ window.__vpSetupTabs = function(){
         + '</div>'
         + '<h3 style="margin:16px 0 8px;font-size:14px;color:#c97a1d">Кнопки</h3>'
         + '<ul style="margin:0 0 12px;padding-left:20px">'
-        + '<li><b>📋</b> — скопировать весь код в буфер обмена</li>'
-        + '<li><b>🗑</b> — очистить поле. Если стоит ☑ «подтверждать» — сначала спросит</li>'
-        + '<li><b>☑ подтверждать</b> — вкл/выкл подтверждение перед очисткой (сохраняется)</li>'
+        + '<li><b>📋</b> — скопировать весь код в буфер обмена (правый верхний угол поля)</li>'
+        + '<li><b>🗑</b> — очистить поле (правый верхний угол). Если стоит ☑ «Подтверждать очистку» — сначала спросит</li>'
+        + '<li><b>☑ Подтверждать очистку</b> — ОДНА общая галочка над полями (сохраняется)</li>'
         + '<li><b>?</b> — эта справка</li>'
         + '</ul>'
-        + '<h3 style="margin:16px 0 8px;font-size:14px;color:#c97a1d">Галочка «подтверждать»</h3>'
-        + '<p style="margin:0 0 8px"><b>☑ стоит</b> → клик 🗑 показывает плашку «Очистить? [✗ Отмена] [✓ Подтвердить]» — текст удаляется только после ✓</p>'
+        + '<h3 style="margin:16px 0 8px;font-size:14px;color:#c97a1d">Галочка «Подтверждать очистку»</h3>'
+        + '<p style="margin:0 0 8px"><b>☑ стоит</b> → клик 🗑 показывает плашку «Очистить? [✗ Отмена] [✓ Подтвердить]» — текст удаляется только после ✓. Одна общая галочка над полями — действует для всех полей сразу</p>'
         + '<p style="margin:0 0 12px"><b>☐ не стоит</b> → клик 🗑 удаляет сразу, без вопросов</p>'
         + '<h3 style="margin:16px 0 8px;font-size:14px;color:#c97a1d">Автосохранение</h3>'
         + '<p style="margin:0 0 12px">Всё, что вводишь — сохраняется автоматически. Текст не потеряется при закрытии попапа.</p>'
@@ -267,16 +267,18 @@ window.__vpSetupTabs = function(){
       if (xx) xx.addEventListener('click', function(){ ov.remove(); });
     }
 
-    // ── поле (textarea/input) + кнопки 📋/🗑 ПОД полем ──
+    // ── поле (textarea/input) + кнопки 📋/🗑 в правом верхнем углу ──
     function mkField(tag, id, ph, mono, withCopy, withClear, onCopy, onClearConfirmed, minH){
+      var hasActions = withCopy || withClear;
       var wrap = mkEl('div');
-      wrap.style.cssText = 'margin:0 0 14px !important';
+      wrap.style.cssText = 'margin:0 0 14px !important' + (hasActions ? ';position:relative !important' : '');
       var el = document.createElement(tag);
       if (id) el.id = id;
       if (ph) el.placeholder = ph;
+      var padTop = hasActions ? '36px' : '10px';
       el.style.cssText =
         'width:100% !important;box-sizing:border-box !important;'
-        + 'padding:10px 14px !important;margin:0 !important;'
+        + 'padding:' + padTop + ' 14px 10px !important;margin:0 !important;'
         + 'background:' + IN.bg + ' !important;color:' + IN.fg + ' !important;'
         + 'border:1px solid ' + IN.border + ' !important;border-radius:' + IN.radius + ' !important;'
         + 'font-family:' + (mono ? 'Consolas,Menlo,monospace' : FONT) + ' !important;'
@@ -284,11 +286,14 @@ window.__vpSetupTabs = function(){
         + 'line-height:1.5 !important;resize:vertical !important;display:block !important;'
         + 'outline:none !important;min-height:' + (minH || (mono ? '150px' : '120px')) + ' !important';
       wrap.appendChild(el);
-      if (withCopy || withClear){
+      if (hasActions){
         var iconRow = mkEl('div');
-        iconRow.style.cssText = 'display:flex !important;justify-content:flex-end !important;gap:6px !important;margin-top:6px !important';
+        iconRow.className = 'vp-field-actions';
+        iconRow.style.cssText =
+          'position:absolute !important;top:6px !important;right:6px !important;z-index:10 !important;'
+          + 'display:flex !important;align-items:center !important;gap:4px !important';
         if (withCopy) iconRow.appendChild(iconBtn('📋', 'Копировать', onCopy));
-        if (withClear) iconRow.appendChild(makeClearBtn(onClearConfirmed));
+        if (withClear) iconRow.appendChild(iconBtn('🗑', 'Очистить', function(e){ e.preventDefault(); onClearConfirmed(); }));
         wrap.appendChild(iconRow);
       }
       return { wrap: wrap, el: el };
@@ -335,6 +340,34 @@ window.__vpSetupTabs = function(){
     head.appendChild(mkEl('div', 'font-size:16px !important;font-weight:600 !important;color:' + ACCENT + ' !important;margin:0 0 4px !important', {text:'📄 HTML шаблон'}));
     head.appendChild(mkEl('div', 'font-size:11px !important;color:' + PANEL_FG + ' !important;opacity:0.55 !important', {text:'# H1 · ## H2 · ![alt](url) → картинка · пустая строка = абзац'}));
     panel.appendChild(head);
+
+    // ═══ Global control bar: ☑ Подтверждать очистку + ? help ═══
+    var globalBar = mkEl('div');
+    globalBar.style.cssText = 'display:flex !important;align-items:center !important;gap:12px !important;margin:0 0 12px !important;flex-wrap:wrap !important';
+    var confirmLbl = document.createElement('label');
+    confirmLbl.title = 'Требовать подтверждение перед очисткой любого поля';
+    confirmLbl.style.cssText = 'display:inline-flex !important;align-items:center !important;gap:6px !important;font-size:12px !important;color:' + PANEL_FG + ' !important;cursor:pointer !important;user-select:none !important;margin:0 !important';
+    var confirmCb = document.createElement('input');
+    confirmCb.type = 'checkbox';
+    confirmCb.checked = getConfirmClearPref();
+    confirmCb.style.cssText = 'margin:0 !important;cursor:pointer !important;accent-color:' + ACCENT + ' !important;width:14px !important;height:14px !important';
+    confirmCb.addEventListener('change', function(){
+      setConfirmClearPref(confirmCb.checked);
+      toastMsg(confirmCb.checked ? '☑ Спрашивать перед очисткой' : '☐ Удалять сразу');
+    });
+    confirmLbl.appendChild(confirmCb);
+    confirmLbl.appendChild(document.createTextNode('Подтверждать очистку'));
+    globalBar.appendChild(confirmLbl);
+
+    var helpBtn = document.createElement('button');
+    helpBtn.type = 'button';
+    helpBtn.textContent = '?';
+    helpBtn.title = 'Справка по редактору';
+    helpBtn.style.cssText = 'width:24px !important;height:24px !important;padding:0 !important;border-radius:50% !important;background:rgba(201,122,29,0.15) !important;color:#c97a1d !important;border:1px solid #c97a1d !important;cursor:pointer !important;font-weight:700 !important;font-family:inherit !important;font-size:13px !important;line-height:1 !important;display:inline-flex !important;align-items:center !important;justify-content:center !important';
+    helpBtn.addEventListener('click', function(e){ e.preventDefault(); showEditorHelp(); });
+    globalBar.appendChild(helpBtn);
+
+    panel.appendChild(globalBar);
 
     function addLabel(text){
       var l = mkEl('label', null, {text:text});
