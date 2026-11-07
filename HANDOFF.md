@@ -46,7 +46,8 @@ VK-группа: 200796423, «Родная Традиция»
   * Чертог в шапке с полом: «Бог-Покровитель» / «Богиня-Покровительница»
   * «🌳 Священное Древо: <порода>» — в шапке
   * «от С.М.З.Х.» приклеено к строке 1 (без строки-дубля)
-  * сдвиг Чертогов +1 (индекс CHERTOG_STARTS в chertogs.json)
+  * сдвиг Чертогов +1 (массив CHERTOG_STARTS — в slavic_auto.py, НЕ в chertogs.json;
+    на 2026-11-04 откатан на −1, см. запись `049ebb8` ниже)
   проверка: python3 poster.py config.main.json --dry-run
 - c3e1b60: holidays.json → content/holidays/*.json (PagesCMS collection)
 - e30c509: кнопки ✏️/📋 в правом верхнем углу карточки превью
@@ -54,12 +55,20 @@ VK-группа: 200796423, «Родная Традиция»
 - d30a506: toolbar ровно — убран inline-style margin-left:auto
   (перебивал .secondary{margin-left:6px} → gap=0)
 
+- **`049ebb8` (2026-11-04): Чертоги на сутки раньше.** `CHERTOG_STARTS` сдвинут
+  на −1 (кроме Рамхата = дня 1): `[1, 23, 45, 66, 88, 110, 134, 159, 184,
+  207, 229, 252, 274, 297, 319, 343]`. Длины восстанавливают эталон
+  `22+22+21+22+22+24+25+25+23+22+23+22+23+22+24+23 = 365`.
+  `chertog_number()` не трогали. Синхронизировано с сайтом
+  (`bukvica49.github.io` `aa4bd0a`). Правка только в `slavic_auto.py`.
+
 ## Файлы
 - poster.py             — код (main(), holidays_today(), load_state(),
                            сборка шапки поста в НАЧАЛЕ)
 - slavic_auto.py        — build_info(day): Чертог + пол + Древо + Круголет
 - slavic_calendar.py    — календарь, header(day)
-- chertogs.json         — массив Чертогов + CHERTOG_STARTS (индекс начала)
+- chertogs.json         — данные Чертогов 1..16 (name / patron / tree / pol)
+- slavic_auto.py        — CHERTOG_STARTS (границы Чертогов, дни лета) + chertog_number()
 - tools/build_site_slavic_js.py — генератор js/slavic-date.js для сайта
 - md_to_vk.py           — Markdown -> VK
 - content/holidays/*.json — праздники (PagesCMS collection, 1 файл = 1)
