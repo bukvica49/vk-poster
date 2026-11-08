@@ -215,6 +215,45 @@ LS-ключи, которые ведёт редактор:
 
 **Правило:** hot-path (внутри MutationObserver / на каждую мутацию) — **удалять**. Boot (1 раз) — **оставлять**.
 
+## CSS в `editor.html` — где править и где НЕ править (V44c, ноябрь 2026)
+
+**Правило:** `<style>` блоки в `<head>` файла `web/editor.html` **не работают**. Не правь их — увидел `<style id="...">` до `<script>vp-boot>` — это **мёртвый исходник**, до DOM не доедет.
+
+**Причина:** `vp-boot` делает `document.open() + write() + close()` — стирает весь исходный документ и оставляет в DOM только ~17KB JS-инжектнутых частей (`boot-styles`, `boot-content`, `app.js`, `config.js`).
+
+### Куда писать CSS
+
+**Вариант 1 — внутри существующего IIFE** (`st.textContent += '...'`):
+- Живые блоки ищутся так: `grep -n "st.textContent" web/editor.html`
+- Пример: V44c — правка `vp-tip-css-v11` (~line 1603)
+
+**Вариант 2 — `document.head.appendChild(style)` из post-boot скрипта:**
+- Пример: `vp-zombie-tip-killer-v43`
+- Живёт до перезагрузки вкладки — после F5 ставится заново
+
+### Как проверить, что CSS реально в DOM
+
+```js
+const s = document.getElementById('vp-tip-css-v11');   // твой id
+console.log('в DOM:', !!s, '| длина:', s?.textContent.length);
+```
+
+- `в DOM: false` → правишь мёртвый `<style>` в `<head>`
+- `длина: 0` → блок есть, но пустой
+- `длина > 500` → живой, работает
+
+### Грабли (реальная история, V44 → V44c)
+
+- **V44** — `<style id=vp-tip-kill-after-v44>` в `<head>` с `content:none!important`. **Не сработал** — `document.write` стёр.
+- **V44b** — усилил специфичность `html body [data-vp-tip]::after` в том же `<style>`. **Снова не сработал.**
+- **V44c (рабочий)** — удалил `'content:attr(data-vp-tip);'` из `st.textContent` в `vp-tip-css-v11` (~line 1603) + добавил туда же guard `content:none!important`. **Сработал.**
+
+**Проверка на проде (после Ctrl+Shift+R):**
+
+```js
+getElementById('vp-tip-css-v11').textContent.includes('attr(data-vp-tip)') === false
+```
+
 ## Устаревшие детали V13–V23 (архив)
 
 ⚠️ **Всё в этом разделе — из старых версий.** Перед использованием **проверь в текущей `web/app.js`** — что-то могло быть убрано, переименовано или оптимизировано. Считай это исторической справкой, а не инструкцией.
