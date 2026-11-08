@@ -4,6 +4,20 @@
 <meta charset="utf-8">
 <title>✍ Редактор</title>
 <link rel="icon" href="favicon.svg" type="image/svg+xml">
+<!-- CodeMirror 5.65.16 -->
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/codemirror.min.css">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/addon/dialog/dialog.css">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/theme/dracula.min.css">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/codemirror.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/mode/xml/xml.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/mode/javascript/javascript.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/mode/css/css.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/mode/htmlmixed/htmlmixed.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/addon/edit/closebrackets.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/addon/edit/closetag.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/addon/search/search.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/addon/search/searchcursor.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/addon/dialog/dialog.min.js"></script>
 <style>
   html,body{margin:0;padding:0;min-height:100vh;font-family:system-ui,-apple-system,"Segoe UI",sans-serif;background:#f5f5f7;color:#333}
   .vp-boot-msg{margin:120px auto;max-width:520px;padding:24px 28px;background:#fff;border:1px solid #d4d4d8;border-radius:12px;text-align:center;font-size:15px;line-height:1.5;box-shadow:0 4px 16px rgba(0,0,0,.06)}
@@ -23,7 +37,274 @@
     .vp-hl-code .t-ent{color:#d19a66!important}
     .vp-hl-code[data-empty]::before{content:attr(data-ph);color:#5c6370!important;
       pointer-events:none!important;user-select:none!important}
+
+    /* ── CodeMirror: поле «Готовый HTML» ────────────────────── */
+    .vp-cm-wrap{position:relative!important;margin:0 0 14px!important}
+    .vp-cm-wrap .CodeMirror{
+      height:auto!important;min-height:240px!important;max-height:40vh!important;
+      border:1px solid #3a3a4a!important;border-radius:6px!important;
+      font-family:Consolas,Menlo,monospace!important;font-size:12px!important;line-height:1.5!important;
+    }
+    .vp-cm-wrap .CodeMirror-scroll{min-height:240px!important;max-height:40vh!important;
+      overflow-y:auto!important;overflow-x:hidden!important}
+    .vp-cm-wrap .CodeMirror-gutters{background:#21222c!important;border-right:1px solid #3a3a4a!important}
+    .vp-cm-wrap .CodeMirror-linenumber{color:#6a6a7e!important}
+    .vp-cm-wrap .CodeMirror-cursor{border-left:1px solid #f8f8f2!important}
+    .vp-cm-wrap .CodeMirror-focused{border-color:#c97a1d!important}
 </style>
+<style id="vp-cm-css">
+/* ═══ CodeMirror 5.65.16 core (inlined) ═══ */
+.CodeMirror{font-family:monospace;height:300px;color:#000;direction:ltr}.CodeMirror-lines{padding:4px 0}.CodeMirror pre.CodeMirror-line,.CodeMirror pre.CodeMirror-line-like{padding:0 4px}.CodeMirror-gutter-filler,.CodeMirror-scrollbar-filler{background-color:#fff}.CodeMirror-gutters{border-right:1px solid #ddd;background-color:#f7f7f7;white-space:nowrap}.CodeMirror-linenumber{padding:0 3px 0 5px;min-width:20px;text-align:right;color:#999;white-space:nowrap}.CodeMirror-guttermarker{color:#000}.CodeMirror-guttermarker-subtle{color:#999}.CodeMirror-cursor{border-left:1px solid #000;border-right:none;width:0}.CodeMirror div.CodeMirror-secondarycursor{border-left:1px solid silver}.cm-fat-cursor .CodeMirror-cursor{width:auto;border:0!important;background:#7e7}.cm-fat-cursor div.CodeMirror-cursors{z-index:1}.cm-fat-cursor .CodeMirror-line::selection,.cm-fat-cursor .CodeMirror-line>span::selection,.cm-fat-cursor .CodeMirror-line>span>span::selection{background:0 0}.cm-fat-cursor .CodeMirror-line::-moz-selection,.cm-fat-cursor .CodeMirror-line>span::-moz-selection,.cm-fat-cursor .CodeMirror-line>span>span::-moz-selection{background:0 0}.cm-fat-cursor{caret-color:transparent}@-moz-keyframes blink{50%{background-color:transparent}}@-webkit-keyframes blink{50%{background-color:transparent}}@keyframes blink{50%{background-color:transparent}}.cm-tab{display:inline-block;text-decoration:inherit}.CodeMirror-rulers{position:absolute;left:0;right:0;top:-50px;bottom:0;overflow:hidden}.CodeMirror-ruler{border-left:1px solid #ccc;top:0;bottom:0;position:absolute}.cm-s-default .cm-header{color:#00f}.cm-s-default .cm-quote{color:#090}.cm-negative{color:#d44}.cm-positive{color:#292}.cm-header,.cm-strong{font-weight:700}.cm-em{font-style:italic}.cm-link{text-decoration:underline}.cm-strikethrough{text-decoration:line-through}.cm-s-default .cm-keyword{color:#708}.cm-s-default .cm-atom{color:#219}.cm-s-default .cm-number{color:#164}.cm-s-default .cm-def{color:#00f}.cm-s-default .cm-variable-2{color:#05a}.cm-s-default .cm-type,.cm-s-default .cm-variable-3{color:#085}.cm-s-default .cm-comment{color:#a50}.cm-s-default .cm-string{color:#a11}.cm-s-default .cm-string-2{color:#f50}.cm-s-default .cm-meta{color:#555}.cm-s-default .cm-qualifier{color:#555}.cm-s-default .cm-builtin{color:#30a}.cm-s-default .cm-bracket{color:#997}.cm-s-default .cm-tag{color:#170}.cm-s-default .cm-attribute{color:#00c}.cm-s-default .cm-hr{color:#999}.cm-s-default .cm-link{color:#00c}.cm-s-default .cm-error{color:red}.cm-invalidchar{color:red}.CodeMirror-composing{border-bottom:2px solid}div.CodeMirror span.CodeMirror-matchingbracket{color:#0b0}div.CodeMirror span.CodeMirror-nonmatchingbracket{color:#a22}.CodeMirror-matchingtag{background:rgba(255,150,0,.3)}.CodeMirror-activeline-background{background:#e8f2ff}.CodeMirror{position:relative;overflow:hidden;background:#fff}.CodeMirror-scroll{overflow:scroll!important;margin-bottom:-50px;margin-right:-50px;padding-bottom:50px;height:100%;outline:0;position:relative;z-index:0}.CodeMirror-sizer{position:relative;border-right:50px solid transparent}.CodeMirror-gutter-filler,.CodeMirror-hscrollbar,.CodeMirror-scrollbar-filler,.CodeMirror-vscrollbar{position:absolute;z-index:6;display:none;outline:0}.CodeMirror-vscrollbar{right:0;top:0;overflow-x:hidden;overflow-y:scroll}.CodeMirror-hscrollbar{bottom:0;left:0;overflow-y:hidden;overflow-x:scroll}.CodeMirror-scrollbar-filler{right:0;bottom:0}.CodeMirror-gutter-filler{left:0;bottom:0}.CodeMirror-gutters{position:absolute;left:0;top:0;min-height:100%;z-index:3}.CodeMirror-gutter{white-space:normal;height:100%;display:inline-block;vertical-align:top;margin-bottom:-50px}.CodeMirror-gutter-wrapper{position:absolute;z-index:4;background:0 0!important;border:none!important}.CodeMirror-gutter-background{position:absolute;top:0;bottom:0;z-index:4}.CodeMirror-gutter-elt{position:absolute;cursor:default;z-index:4}.CodeMirror-gutter-wrapper ::selection{background-color:transparent}.CodeMirror-gutter-wrapper ::-moz-selection{background-color:transparent}.CodeMirror-lines{cursor:text;min-height:1px}.CodeMirror pre.CodeMirror-line,.CodeMirror pre.CodeMirror-line-like{-moz-border-radius:0;-webkit-border-radius:0;border-radius:0;border-width:0;background:0 0;font-family:inherit;font-size:inherit;margin:0;white-space:pre;word-wrap:normal;line-height:inherit;color:inherit;z-index:2;position:relative;overflow:visible;-webkit-tap-highlight-color:transparent;-webkit-font-variant-ligatures:contextual;font-variant-ligatures:contextual}.CodeMirror-wrap pre.CodeMirror-line,.CodeMirror-wrap pre.CodeMirror-line-like{word-wrap:break-word;white-space:pre-wrap;word-break:normal}.CodeMirror-linebackground{position:absolute;left:0;right:0;top:0;bottom:0;z-index:0}.CodeMirror-linewidget{position:relative;z-index:2;padding:.1px}.CodeMirror-rtl pre{direction:rtl}.CodeMirror-code{outline:0}.CodeMirror-gutter,.CodeMirror-gutters,.CodeMirror-linenumber,.CodeMirror-scroll,.CodeMirror-sizer{-moz-box-sizing:content-box;box-sizing:content-box}.CodeMirror-measure{position:absolute;width:100%;height:0;overflow:hidden;visibility:hidden}.CodeMirror-cursor{position:absolute;pointer-events:none}.CodeMirror-measure pre{position:static}div.CodeMirror-cursors{visibility:hidden;position:relative;z-index:3}div.CodeMirror-dragcursors{visibility:visible}.CodeMirror-focused div.CodeMirror-cursors{visibility:visible}.CodeMirror-selected{background:#d9d9d9}.CodeMirror-focused .CodeMirror-selected{background:#d7d4f0}.CodeMirror-crosshair{cursor:crosshair}.CodeMirror-line::selection,.CodeMirror-line>span::selection,.CodeMirror-line>span>span::selection{background:#d7d4f0}.CodeMirror-line::-moz-selection,.CodeMirror-line>span::-moz-selection,.CodeMirror-line>span>span::-moz-selection{background:#d7d4f0}.cm-searching{background-color:#ffa;background-color:rgba(255,255,0,.4)}.cm-force-border{padding-right:.1px}@media print{.CodeMirror div.CodeMirror-cursors{visibility:hidden}}.cm-tab-wrap-hack:after{content:''}span.CodeMirror-selectedtext{background:0 0}
+/* ═══ dracula theme (inlined) ═══ */
+.cm-s-dracula .CodeMirror-gutters,.cm-s-dracula.CodeMirror{background-color:#282a36!important;color:#f8f8f2!important;border:none}.cm-s-dracula .CodeMirror-gutters{color:#282a36}.cm-s-dracula .CodeMirror-cursor{border-left:solid thin #f8f8f0}.cm-s-dracula .CodeMirror-linenumber{color:#6d8a88}.cm-s-dracula .CodeMirror-selected{background:rgba(255,255,255,.1)}.cm-s-dracula .CodeMirror-line::selection,.cm-s-dracula .CodeMirror-line>span::selection,.cm-s-dracula .CodeMirror-line>span>span::selection{background:rgba(255,255,255,.1)}.cm-s-dracula .CodeMirror-line::-moz-selection,.cm-s-dracula .CodeMirror-line>span::-moz-selection,.cm-s-dracula .CodeMirror-line>span>span::-moz-selection{background:rgba(255,255,255,.1)}.cm-s-dracula span.cm-comment{color:#6272a4}.cm-s-dracula span.cm-string,.cm-s-dracula span.cm-string-2{color:#f1fa8c}.cm-s-dracula span.cm-number{color:#bd93f9}.cm-s-dracula span.cm-variable{color:#50fa7b}.cm-s-dracula span.cm-variable-2{color:#fff}.cm-s-dracula span.cm-def{color:#50fa7b}.cm-s-dracula span.cm-operator{color:#ff79c6}.cm-s-dracula span.cm-keyword{color:#ff79c6}.cm-s-dracula span.cm-atom{color:#bd93f9}.cm-s-dracula span.cm-meta{color:#f8f8f2}.cm-s-dracula span.cm-tag{color:#ff79c6}.cm-s-dracula span.cm-attribute{color:#50fa7b}.cm-s-dracula span.cm-qualifier{color:#50fa7b}.cm-s-dracula span.cm-property{color:#66d9ef}.cm-s-dracula span.cm-builtin{color:#50fa7b}.cm-s-dracula span.cm-type,.cm-s-dracula span.cm-variable-3{color:#ffb86c}.cm-s-dracula .CodeMirror-activeline-background{background:rgba(255,255,255,.1)}.cm-s-dracula .CodeMirror-matchingbracket{text-decoration:underline;color:#fff!important}
+/* ═══ dialog addon (inlined) ═══ */
+.CodeMirror-dialog {
+  position: absolute;
+  left: 0; right: 0;
+  background: inherit;
+  z-index: 15;
+  padding: .1em .8em;
+  overflow: hidden;
+  color: inherit;
+}
+
+.CodeMirror-dialog-top {
+  border-bottom: 1px solid #eee;
+  top: 0;
+}
+
+.CodeMirror-dialog-bottom {
+  border-top: 1px solid #eee;
+  bottom: 0;
+}
+
+.CodeMirror-dialog input {
+  border: none;
+  outline: none;
+  background: transparent;
+  width: 20em;
+  color: inherit;
+  font-family: monospace;
+}
+
+.CodeMirror-dialog button {
+  font-size: 70%;
+}
+
+/* ═══ sizing для контейнера редактора ═══ */
+#vp-html-out .CodeMirror { min-height: 120px;  border:1px solid #3a3a4a; border-radius:6px; }
+</style>
+
+<script id="vp-cm-fit-script">
+(function(){
+  if (window.__vpFitCMInstalled) return;
+  window.__vpFitCMInstalled = true;
+  var MIN_H = 120, BOTTOM_PAD = 16, MAX_H = 1400;
+  function fitCM(){
+    try {
+      var out = document.getElementById('vp-html-out');
+      if (!out) return;
+      var dom = out.querySelector('.CodeMirror');
+      var cm  = dom && dom.CodeMirror;
+      if (!cm) return;
+      var outRect = out.getBoundingClientRect();
+      if (outRect.width < 60) return;
+      var cmRect = dom.getBoundingClientRect();
+      var vh = (window.visualViewport && window.visualViewport.height) || window.innerHeight;
+      var h = Math.floor(vh - cmRect.top - BOTTOM_PAD);
+      if (outRect.bottom < vh) {
+        h = Math.min(h, Math.floor(outRect.bottom - cmRect.top - BOTTOM_PAD));
+      }
+      if (h < MIN_H) h = MIN_H;
+      if (h > MAX_H) h = MAX_H;
+      cm.setSize('100%', h);
+      cm.refresh();
+    } catch(e){ console.warn('[vp-fit-cm]', e); }
+  }
+  window.__vpFitCM = fitCM;
+  window.addEventListener('resize', function(){ requestAnimationFrame(fitCM); });
+  if (window.visualViewport) {
+    window.visualViewport.addEventListener('resize', function(){ requestAnimationFrame(fitCM); });
+    window.visualViewport.addEventListener('scroll', function(){ requestAnimationFrame(fitCM); });
+  }
+  document.addEventListener('click', function(){ setTimeout(fitCM, 100); }, true);
+  function installRO(){
+    var out = document.getElementById('vp-html-out');
+    if (!out) return;
+    if (window.ResizeObserver && !out.__vpRO) {
+      try {
+        out.__vpRO = new ResizeObserver(function(){ requestAnimationFrame(fitCM); });
+        out.__vpRO.observe(out);
+      } catch(e){}
+    }
+    fitCM();
+  }
+  setInterval(installRO, 800);
+  setTimeout(installRO, 100);
+  setTimeout(fitCM, 500);
+  setTimeout(fitCM, 1500);
+  setTimeout(fitCM, 3000);
+  setTimeout(fitCM, 6000);
+  console.log('[vp-fit-cm] installed — adapt to popup size');
+})();
+</script>
+
+
+<style id="vp-lock-body-css">
+html, body { overflow: hidden !important; }
+</style>
+<script id="vp-img-script">
+/* vp-img v2: ascii-safe, no backslashes, no 4-byte literals */
+(function(){
+  if (window.__vpImgInstalled) return;
+  window.__vpImgInstalled = true;
+
+  var IMG_EMOJI = String.fromCodePoint(0x1F5BC);
+  var NL = String.fromCharCode(10);
+
+  function escA(s){
+    return String(s || '')
+      .replace(/&/g, '&amp;')
+      .replace(/"/g, '&quot;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;');
+  }
+  function escH(s){
+    return String(s || '')
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;');
+  }
+  function makeTpl(url, cap){
+    var u = escA(url), c = escA(cap), h = escH(cap);
+    return '<figure class="center-image-block">' + NL
+         + '<img src="' + u + '" alt="' + c + '">' + NL
+         + '<figcaption style="text-align:center;font-style:italic;font-size:0.9em;color:#666;text-indent:0;padding-top:8px;margin:0;">'
+         + h + '</figcaption>' + NL
+         + '</figure>';
+  }
+  function getCM(){
+    var out = document.getElementById('vp-html-out');
+    var dom = out && out.querySelector('.CodeMirror');
+    return dom && dom.CodeMirror;
+  }
+  function isValidUrl(u){
+    return u.indexOf('http://') === 0 || u.indexOf('https://') === 0;
+  }
+  function openModal(){
+    var old = document.getElementById('vp-img-modal'); if (old) old.remove();
+    var m = document.createElement('div');
+    m.id = 'vp-img-modal';
+    m.style.cssText = 'position:fixed;inset:0;z-index:200000;background:rgba(0,0,0,.55);display:flex;align-items:center;justify-content:center';
+    m.innerHTML =
+      '<div style="background:#282a36;color:#f8f8f2;border:1px solid #3a3a4a;border-radius:10px;padding:18px;min-width:340px;max-width:92vw;box-shadow:0 10px 40px rgba(0,0,0,.7);font:14px/1.45 system-ui,sans-serif">'
+      + '<div style="margin-bottom:14px;font-weight:600;font-size:15px">Вставить рисунок</div>'
+      + '<label style="display:block;margin-bottom:10px">URL:'
+      + '<input id="vp-img-url" type="url" placeholder="https://..." autocomplete="off" style="display:block;width:100%;margin-top:4px;padding:7px;border-radius:5px;border:1px solid #555;background:#1e1e28;color:#f8f8f2;font:13px/1.4 monospace;box-sizing:border-box">'
+      + '</label>'
+      + '<label style="display:block;margin-bottom:14px">Подпись:'
+      + '<input id="vp-img-cap" type="text" placeholder="необязательно" style="display:block;width:100%;margin-top:4px;padding:7px;border-radius:5px;border:1px solid #555;background:#1e1e28;color:#f8f8f2;font:13px/1.4 system-ui,sans-serif;box-sizing:border-box">'
+      + '</label>'
+      + '<div style="display:flex;gap:8px;justify-content:flex-end">'
+      + '<button id="vp-img-cancel" type="button" style="padding:7px 16px;border-radius:5px;border:1px solid #555;background:#3a3a4a;color:#f8f8f2;cursor:pointer;font-size:13px">Отмена</button>'
+      + '<button id="vp-img-ok" type="button" style="padding:7px 16px;border-radius:5px;border:1px solid #c97a1d;background:#c97a1d;color:#fff;cursor:pointer;font-size:13px;font-weight:600">Вставить</button>'
+      + '</div></div>';
+    document.body.appendChild(m);
+    var u = document.getElementById('vp-img-url');
+    var c = document.getElementById('vp-img-cap');
+    u.focus();
+    function close(){ m.remove(); }
+    function insert(){
+      var url = (u.value || '').trim();
+      if (!isValidUrl(url)) { u.style.borderColor = '#c00'; u.focus(); return; }
+      var cm = getCM();
+      if (!cm) { alert('Открой вкладку HTML-редактора и кликни в поле'); close(); return; }
+      cm.replaceSelection(makeTpl(url, (c.value || '').trim()));
+      cm.focus(); close();
+    }
+    document.getElementById('vp-img-cancel').onclick = close;
+    document.getElementById('vp-img-ok').onclick = insert;
+    m.addEventListener('click', function(e){ if (e.target === m) close(); });
+    u.addEventListener('keydown', function(e){ if (e.key === 'Enter') insert(); });
+    c.addEventListener('keydown', function(e){ if (e.key === 'Enter') insert(); });
+  }
+
+  function findHtmlToolbar(){
+    var out = document.getElementById('vp-html-out');
+    if (!out) return null;
+    var sib = out.nextElementSibling;
+    if (sib && sib.classList && sib.classList.contains('vp-field-actions')){
+      return sib;
+    }
+    var wrap = out.parentNode;
+    if (wrap){
+      var list = wrap.querySelectorAll('.vp-field-actions');
+      for (var i = 0; i < list.length; i++){
+        if (out.compareDocumentPosition(list[i]) & Node.DOCUMENT_POSITION_FOLLOWING){
+          return list[i];
+        }
+      }
+    }
+    return null;
+  }
+
+  function injectBtn(){
+    if (document.getElementById('vp-img-inline')) return true;
+    var tb = findHtmlToolbar();
+    if (!tb) return false;
+    var sample = tb.querySelector('button');
+    var b = sample ? sample.cloneNode(true) : document.createElement('button');
+    b.id = 'vp-img-inline';
+    b.type = 'button';
+    b.title = 'Вставить рисунок';
+    b.textContent = IMG_EMOJI;
+    b.removeAttribute('onclick');
+    b.removeAttribute('disabled');
+    b.style.marginLeft = 'auto';
+    b.addEventListener('click', function(e){
+      e.preventDefault();
+      e.stopPropagation();
+      var tabs = document.querySelectorAll('.vp-tabs-row button');
+      if (tabs && tabs.length >= 2 && tabs[1]){
+        var on = tabs[1].classList.contains('active') || tabs[1].classList.contains('on');
+        if (!on) tabs[1].click();
+      }
+      setTimeout(openModal, 60);
+    });
+    var trash = null;
+    var allB = tb.querySelectorAll('button');
+    for (var k = 0; k < allB.length; k++){
+      if (allB[k].id === 'vp-img-inline') continue;
+      if (allB[k].title === 'Очистить') { trash = allB[k]; break; }
+    }
+    if (!trash && sample && sample.nextElementSibling && sample.nextElementSibling.parentNode === tb){
+      trash = sample.nextElementSibling;
+    }
+    if (trash && trash.parentNode === tb){
+      tb.insertBefore(b, trash);
+    } else {
+      tb.appendChild(b);
+    }
+    console.log('[vp-img] OK: in html toolbar (pos=2) | y=' + Math.round(tb.getBoundingClientRect().top) + ' | parent=' + (tb.className || '(none)'));
+    return true;
+  }
+
+  var n = 0;
+  var iv = setInterval(function(){
+    n++;
+    if (injectBtn() || n > 80){
+      clearInterval(iv);
+      if (n > 80) console.warn('[vp-img] WARN: 80 attempts, no toolbar found');
+    }
+  }, 250);
+  setTimeout(injectBtn, 100);
+  setTimeout(injectBtn, 800);
+  setTimeout(injectBtn, 2000);
+  var mo = new MutationObserver(function(){ if (!document.getElementById('vp-img-inline')) injectBtn(); });
+  try { mo.observe(document.documentElement, {childList:true, subtree:true}); } catch(_){}
+  console.log('[vp-img] installed v2 (inline html-toolbar, ascii-safe)');
+})();
+</script>
 </head>
 <body>
 <script>
@@ -41,13 +322,278 @@ window.__vpSetupTabs = function(){
         var _st = document.createElement('style');
         _st.id = 'vp-hide-bg-panel-v21';
         _st.textContent =
-          '.bg-panel{display:none !important;height:0 !important;min-height:0 !important;'
+          '.bg-panel:not(.vp-bg-real){display:none !important;height:0 !important;min-height:0 !important;'
           + 'max-height:0 !important;overflow:hidden !important;margin:0 !important;'
           + 'padding:0 !important;border:none !important;box-shadow:none !important}'
-          + '.bg-panel-title,.bg-preview{display:none !important}';
+          + '.bg-panel-title,.bg-preview{display:none !important}'
+          + '.vp-tabs-row,.vp-html-panel,.vp-cm-wrap,.vp-field-actions{min-width:0 !important;max-width:100% !important;box-sizing:border-box !important}'
+          + '#vp-html-out,#vp-html-src,#vp-html-source,.CodeMirror,.CodeMirror-wrap{min-width:0 !important;max-width:100% !important;box-sizing:border-box !important}'
+          + '.CodeMirror{width:100% !important}'
+          + '.vp-tabs-row{flex-wrap:wrap !important;row-gap:4px !important}'
+          + 'html,body{max-width:100vw !important;overflow-x:hidden !important}'
+          + 'textarea,input,select,button{max-width:100% !important;box-sizing:border-box !important}'          + '.vp-html-panel{display:flex !important;flex-direction:column !important;height:calc(100vh - 45px) !important;max-height:calc(100vh - 45px) !important;min-height:0 !important;overflow-y:auto !important;padding:8px 12px 12px !important;box-sizing:border-box !important}'
+          + '.vp-html-panel > *{flex:0 0 auto !important;min-height:0 !important}'
+          + '.vp-html-panel > .vp-cm-wrap{flex:1 0 auto !important;min-height:120px !important;margin:0 0 8px 0 !important;display:flex !important;flex-direction:column !important}'
+          + '#vp-html-out{flex:1 1 auto !important;min-height:100px !important;padding:0 !important;display:flex !important;flex-direction:column !important;height:auto !important}'
+          + '#vp-html-out > .CodeMirror{flex:1 1 auto !important;height:100% !important;min-height:0 !important;max-height:none !important}'
+
+          + '@media (max-width:520px){.vp-tabs-row button,.vp-tabs-row>*{font-size:12px !important;padding:6px 8px !important}.vp-field-actions button{padding:2px 6px !important;font-size:13px !important}}';
         (document.head || document.documentElement).appendChild(_st);
         console.log('[V21] CSS injected: .bg-panel скрыт НАВСЕГДА (переживёт re-render VK)');
       }
+      /* vp-bg-rescue v2: want-флаг + toggle btn-bg, скрытие по умолчанию */
+      (function(){
+        if (window.__vpBgRescueOn) return;
+        window.__vpBgRescueOn = true;
+        window.__vpBgWanted = false;
+
+        function applyPanel(p, want){
+          if (!p) return;
+          if (want) {
+            p.classList.add('vp-bg-real');
+            p.style.setProperty('display','block','important');
+            p.style.setProperty('height','auto','important');
+            p.style.setProperty('max-height','none','important');
+            p.style.setProperty('overflow','visible','important');
+            p.style.setProperty('margin','10px 0','important');
+            p.style.setProperty('padding','12px','important');
+            p.style.setProperty('border','1px solid rgba(201,122,29,.55)','important');
+            p.style.setProperty('border-radius','8px','important');
+            p.style.setProperty('box-shadow','0 4px 16px rgba(0,0,0,.35)','important');
+          } else {
+            p.classList.remove('vp-bg-real');
+            p.style.setProperty('display','none','important');
+          }
+        }
+        function applyAll(){
+          var want = window.__vpBgWanted === true;
+          var panels = document.querySelectorAll('.bg-panel');
+          for (var i = 0; i < panels.length; i++){
+            var p = panels[i];
+            if (!p.querySelector('#bg-upload') && !p.querySelector('#bg-reset') && !p.querySelector('#bg-close')) continue;
+            applyPanel(p, want);
+          }
+        }
+        function bind(){
+          var btnShow = document.getElementById('btn-bg');
+          if (btnShow && !btnShow.__vpBgBound){
+            btnShow.__vpBgBound = true;
+            btnShow.addEventListener('click', function(e){
+              e.preventDefault();
+              window.__vpBgWanted = !window.__vpBgWanted;
+              applyAll();
+            }, true);
+          }
+          var btnClose = document.getElementById('bg-close');
+          if (btnClose && !btnClose.__vpBgCloseBound){
+            btnClose.__vpBgCloseBound = true;
+            btnClose.addEventListener('click', function(e){
+              e.preventDefault();
+              window.__vpBgWanted = false;
+              applyAll();
+            }, true);
+          }
+        }
+        applyAll(); bind();
+        setInterval(function(){ applyAll(); bind(); }, 600);
+        console.log('[vp-bg-rescue] armed v2 (want-flag + toggle)');
+      })();
+
+      /* vp-cm-force v10: БЕЗ interval, self-correct overflow, observer только по style */
+      (function(){
+        if (window.__vpCmForceOn === 'v10') return;
+        window.__vpCmForceOn = 'v10';
+        var pending = false;
+
+        function setH(el, prop, val){
+          if (!el || !el.style) return;
+          if (el.style.getPropertyValue(prop) !== val){
+            el.style.setProperty(prop, val, 'important');
+          }
+        }
+        function isHtml(){
+          var p = document.querySelector('.vp-html-panel');
+          return p && p.offsetParent !== null;
+        }
+        function lockRoot(){
+          try {
+            var de = document.documentElement, bd = document.body;
+            ['overflow','overflow-x','overflow-y'].forEach(function(p){
+              de.style.setProperty(p, 'hidden', 'important');
+              bd.style.setProperty(p, 'hidden', 'important');
+            });
+          } catch(e){}
+        }
+        function apply(){
+          pending = false;
+          lockRoot();
+          if (!isHtml()) return;
+          var panel = document.querySelector('.vp-html-panel');
+          if (!panel || panel.getBoundingClientRect().width === 0) return;
+
+          setH(panel, 'display', 'flex');
+          setH(panel, 'flex-direction', 'column');
+          setH(panel, 'height', 'calc(100vh - 45px)');
+          setH(panel, 'max-height', 'calc(100vh - 45px)');
+          setH(panel, 'min-height', '0');
+          setH(panel, 'overflow', 'hidden');
+          setH(panel, 'box-sizing', 'border-box');
+
+          var kids = panel.children;
+          var taWrap = null, cmWrap = null, ta = null;
+          for (var i = 0; i < kids.length; i++){
+            var ch = kids[i];
+            var isCmW = ch.classList && ch.classList.contains('vp-cm-wrap');
+            var taIn = ch.querySelector && ch.querySelector('textarea');
+            if (isCmW){
+              cmWrap = ch;
+              setH(ch, 'flex', '1 1 0');
+              setH(ch, 'display', 'flex');
+              setH(ch, 'flex-direction', 'column');
+              setH(ch, 'flex-shrink', '1');
+              setH(ch, 'overflow', 'hidden');
+            } else if (taIn){
+              taWrap = ch; ta = taIn;
+              setH(ch, 'flex', '0 0 auto');
+              setH(ch, 'display', 'flex');
+              setH(ch, 'flex-direction', 'column');
+              setH(ch, 'height', 'auto');
+              setH(ch, 'min-height', '0');
+              setH(ch, 'overflow', 'visible');
+              if (ta.hasAttribute('placeholder')) ta.removeAttribute('placeholder');
+              setH(ta, 'flex', '0 0 auto');
+              setH(ta, 'resize', 'none');
+              setH(ta, 'box-sizing', 'border-box');
+              setH(ta, 'padding', '4px 6px');
+              setH(ta, 'line-height', '1.3');
+              setH(ta, 'overflow-x', 'hidden');
+              var acts = ch.querySelectorAll('.vp-field-actions');
+              for (var j = 0; j < acts.length; j++) setH(acts[j], 'flex-shrink', '0');
+            } else {
+              setH(ch, 'flex-shrink', '0');
+              setH(ch, 'min-height', '0');
+            }
+          }
+
+          var panelCS = getComputedStyle(panel);
+          var padY = (parseFloat(panelCS.paddingTop) || 0) + (parseFloat(panelCS.paddingBottom) || 0);
+          var rowGap = parseFloat(panelCS.rowGap) || 0;
+          var gaps = rowGap * Math.max(0, kids.length - 1);
+
+          var fixed = 0;
+          for (var k = 0; k < kids.length; k++){
+            var c2 = kids[k];
+            if (c2 === cmWrap) continue;
+            if (c2 === taWrap){
+              var wrapR = c2.getBoundingClientRect();
+              var taR = ta.getBoundingClientRect();
+              var wcs = getComputedStyle(c2);
+              fixed += wrapR.height - taR.height
+                     + (parseFloat(wcs.marginTop) || 0)
+                     + (parseFloat(wcs.marginBottom) || 0);
+              continue;
+            }
+            var r = c2.getBoundingClientRect();
+            var cs = getComputedStyle(c2);
+            fixed += r.height
+                   + (parseFloat(cs.marginTop) || 0)
+                   + (parseFloat(cs.marginBottom) || 0);
+          }
+
+          var avail = panel.clientHeight - fixed - padY - gaps;
+          if (avail < 64) avail = 64;
+
+          var taH, cmH;
+          if (avail >= 210){
+            taH = 110; cmH = avail - 110;
+          } else if (avail >= 130){
+            taH = 70;  cmH = avail - 70;
+          } else {
+            taH = Math.max(32, Math.round(avail * 0.45));
+            cmH = Math.max(32, avail - taH);
+          }
+
+          if (ta){
+            setH(ta, 'height', taH + 'px');
+            setH(ta, 'min-height', taH + 'px');
+            setH(ta, 'max-height', taH + 'px');
+            var hasVal = ta.value && ta.value.length > 0;
+            var hasOv  = hasVal && ta.scrollHeight > ta.clientHeight + 2;
+            setH(ta, 'overflow-y', hasOv ? 'auto' : 'hidden');
+          }
+          if (cmWrap) setH(cmWrap, 'min-height', cmH + 'px');
+
+          var out = document.getElementById('vp-html-out');
+          if (out){
+            setH(out, 'flex', '1 1 0');
+            setH(out, 'min-height', '0');
+            setH(out, 'height', 'auto');
+            setH(out, 'display', 'flex');
+            setH(out, 'flex-direction', 'column');
+            setH(out, 'overflow', 'hidden');
+          }
+          var cm = out && out.querySelector('.CodeMirror');
+          if (cm){
+            setH(cm, 'flex', '1 1 0');
+            setH(cm, 'min-height', '0');
+            setH(cm, 'max-height', 'none');
+            setH(cm, 'clip-path', 'none');
+          }
+
+          /* Self-correct overflow: ужимаем cmH на остаток (один проход) */
+          var over = panel.scrollHeight - panel.clientHeight;
+          if (over > 2 && cmWrap){
+            var corrected = Math.max(32, cmH - over);
+            setH(cmWrap, 'min-height', corrected + 'px');
+            over = panel.scrollHeight - panel.clientHeight;
+          }
+
+        }
+        function schedule(){
+          if (pending) return;
+          pending = true;
+          requestAnimationFrame(apply);
+        }
+        window.addEventListener('resize', schedule);
+        document.addEventListener('input', function(e){
+          if (e.target && e.target.id === 'vp-html-src') schedule();
+        });
+        if (typeof MutationObserver !== 'undefined'){
+          var attachTimer = null;
+          function attach(){
+            var panel = document.querySelector('.vp-html-panel');
+            var ta = document.querySelector('#vp-html-src');
+            var observerReady = false;
+            if (panel && !panel._vpObsP){
+              try {
+                var moP = new MutationObserver(function(){ schedule(); });
+                moP.observe(panel, { attributes: true, attributeFilter: ['style','class'] });
+                panel._vpObsP = 1; observerReady = true;
+              } catch(e){}
+            }
+            if (ta && !ta._vpObsT){
+              try {
+                var moT = new MutationObserver(function(){ schedule(); });
+                moT.observe(ta, { attributes: true, attributeFilter: ['style'] });
+                ta._vpObsT = 1; observerReady = true;
+              } catch(e){}
+            }
+            if (observerReady) schedule();
+          }
+          var moBody = new MutationObserver(function(){
+            if (attachTimer) clearTimeout(attachTimer);
+            attachTimer = setTimeout(attach, 100);
+          });
+          moBody.observe(document.body, { childList: true, subtree: true });
+          attach();
+        }
+        setTimeout(schedule, 100);
+        setTimeout(schedule, 400);
+        setTimeout(schedule, 1000);
+        setTimeout(schedule, 2000);
+        setTimeout(schedule, 5000);
+        console.log('[vp-cm-force] armed v10 (no interval, self-correct overflow, style observer)');
+      })();
       // API для возврата (если вдруг понадобится)
       window.__vpShowBgPanel = function(){
         var s = document.getElementById('vp-hide-bg-panel-v21');
@@ -304,23 +850,16 @@ window.__vpSetupTabs = function(){
 
       function setFields(chrome){
         var src = document.getElementById('vp-html-src');
-        var out = document.getElementById('vp-html-out');
-        if (!src || !out) return false;
+        if (!src) return false;
         var base = '(100vh - ' + chrome + 'px)';
         var sH   = 'max(60px, calc(' + base + ' * 0.35))';
-        var oH   = 'max(90px, calc(' + base + ' * 0.65))';
 
         src.style.setProperty('height',     sH, 'important');
         src.style.setProperty('min-height', sH, 'important');
         src.style.setProperty('max-height', sH, 'important');
         src.style.setProperty('overflow-y', 'auto', 'important');
         src.style.setProperty('resize',     'none', 'important');
-
-        out.style.setProperty('height',     oH, 'important');
-        out.style.setProperty('min-height', oH, 'important');
-        out.style.setProperty('max-height', oH, 'important');
-        out.style.setProperty('overflow-y', 'auto', 'important');
-        out.style.setProperty('resize',     'none', 'important');
+        // #vp-html-out = CodeMirror — он сам рулит своей высотой через CSS
         return true;
       }
 
@@ -447,35 +986,41 @@ window.__vpSetupTabs = function(){
     }
     function makeHlOut(ph, minH, onCopy, onClear){
       var wrap = mkEl('div');
+      wrap.className = 'vp-cm-wrap';
       wrap.style.cssText = 'margin:0 0 14px !important;position:relative !important';
-      var pre = document.createElement('pre');
-      pre.id = 'vp-html-out';
-      pre.className = 'vp-hl-code';
-      pre.style.cssText =
+
+      var div = document.createElement('div');
+      div.id = 'vp-html-out';
+      div.style.setProperty('height',     '240px', 'important');
+      div.style.setProperty('max-height', '40vh',  'important');
+      div.style.setProperty('width',      '100%',  'important');
+      div.style.setProperty('position',   'relative', 'important');
+      wrap.appendChild(div);
+
+      // fallback textarea (виден если CDM не загрузится)
+      var ta = document.createElement('textarea');
+      ta.placeholder = ph || '';
+      ta.style.cssText =
         'width:100% !important;box-sizing:border-box !important;'
         + 'padding:36px 14px 10px !important;margin:0 !important;'
-        + 'background:' + IN.bg + ' !important;color:' + IN.fg + ' !important;'
-        + 'border:1px solid ' + IN.border + ' !important;border-radius:' + IN.radius + ' !important;'
+        + 'background:#282a36 !important;color:#f8f8f2 !important;'
+        + 'border:1px solid #3a3a4a !important;border-radius:6px !important;'
         + 'font-family:Consolas,Menlo,monospace !important;font-size:12px !important;'
-        + 'line-height:1.5 !important;display:block !important;outline:none !important;'
-        + 'min-height:' + (minH || '240px') + ' !important;'
-        + 'max-height:40vh !important;overflow-y:auto !important;overflow-x:hidden !important;'
-        + 'resize:none !important;'
-        + 'white-space:pre-wrap !important;tab-size:2 !important';
-      if (ph) pre.setAttribute('data-ph', ph);
-      pre.setAttribute('data-empty', '1');
+        + 'line-height:1.5 !important;min-height:' + (minH || '240px') + ' !important;'
+        + 'max-height:40vh !important;resize:vertical !important;outline:none !important';
+      div.appendChild(ta);
+
       var raw = '';
-      Object.defineProperty(pre, 'value', {
+      Object.defineProperty(div, 'value', {
         configurable: true,
-        get: function(){ return raw; },
+        get: function(){ return div.__cm ? div.__cm.getValue() : ta.value; },
         set: function(v){
           raw = (v == null ? '' : String(v));
-          if (!raw){ pre.innerHTML = ''; pre.setAttribute('data-empty', '1'); return; }
-          pre.removeAttribute('data-empty');
-          pre.innerHTML = hlHtml(raw);
+          if (div.__cm) div.__cm.setValue(raw);
+          else ta.value = raw;
         }
       });
-      wrap.appendChild(pre);
+
       var row = mkEl('div');
       row.className = 'vp-field-actions';
       row.style.cssText =
@@ -484,9 +1029,58 @@ window.__vpSetupTabs = function(){
       if (onCopy) row.appendChild(iconBtn('\u{1F4CB}', 'Копировать', onCopy));
       if (onClear) row.appendChild(iconBtn('\u{1F5D1}', 'Очистить', function(e){ e.preventDefault(); onClear(); }));
       wrap.appendChild(row);
-      return { wrap: wrap, el: pre };
-    }
 
+      div.__initCM = function(){
+        if (div.__cm) return div.__cm;
+        if (!window.CodeMirror){
+          if ((div.__cm_retry = (div.__cm_retry || 0) + 1) <= 10){
+            setTimeout(function(){ div.__initCM(); }, 300);
+          } else {
+            console.warn('[vp-cm] CodeMirror не загрузился за 3с — оставляю textarea');
+          }
+          return;
+        }
+        try {
+          var cm = window.CodeMirror(div, {
+            value: raw || ta.value || '',
+            mode: 'htmlmixed',
+            theme: 'dracula',
+            lineNumbers: true,
+            lineWrapping: true,
+            indentUnit: 2,
+            tabSize: 2,
+            indentWithTabs: false,
+            autoCloseBrackets: true,
+            autoCloseTags: true,
+            highlightActiveLine: true,
+            extraKeys: {
+              'Ctrl-S': function(){ var b=document.querySelector('button[data-vp-download]'); if(b){b.click();} return false; },
+              'Cmd-S':  function(){ var b=document.querySelector('button[data-vp-download]'); if(b){b.click();} return false; },
+              'Ctrl-F': 'findPersistent',
+              'Cmd-F':  'findPersistent'
+            }
+          });
+          div.__cm = cm;
+          ta.style.display = 'none';
+          var cmWrap = cm.getWrapperElement();
+
+          cm.on('change', function(){ raw = cm.getValue(); });
+          [0, 100, 300, 800].forEach(function(ms){
+            setTimeout(function(){ try { cm.refresh(); } catch(_){} }, ms);
+          });
+          console.log('[vp-cm] init OK, rect:', cmWrap.getBoundingClientRect());
+          return cm;
+        } catch(e) {
+          console.error('[vp-cm] init FAIL:', e && e.message);
+          console.error('[vp-cm] stack:', e && e.stack);
+          ta.style.display = '';   // вернул textarea
+          console.warn('[vp-cm] fallback → textarea (CM не сработал)');
+          return null;
+        }
+      };
+
+      return { wrap: wrap, el: div };
+    }
     function mkField(tag, id, ph, mono, withCopy, withClear, onCopy, onClearConfirmed, minH){
       var hasActions = withCopy || withClear;
       var wrap = mkEl('div');
@@ -642,6 +1236,7 @@ window.__vpSetupTabs = function(){
     actRow.style.cssText = 'display:flex !important;gap:8px !important;flex-wrap:wrap !important;margin:0 0 16px !important';
     var btnFormat = mkActionBtn('📄 Сверстать', true);
     var btnDownload = mkActionBtn('⬇ Скачать', false);
+    btnDownload.setAttribute('data-vp-download', '1');
     actRow.appendChild(btnFormat); actRow.appendChild(btnDownload);
     panel.appendChild(actRow);
 
@@ -657,6 +1252,9 @@ window.__vpSetupTabs = function(){
       function(){ if (!f3.el.value.trim()) return toastMsg('Сначала сверстай'); copyText(f3.el.value); },
       function(){ clearAndUndo(f3.el, f3.wrap, null); });
     panel.appendChild(f3.wrap);
+
+    // CodeMirror инициализируется в setView('html') — только при первом показе
+    // (иначе CM при display:none измеряет размеры как 0×0 и «не рисуется»).
     panel.appendChild(globalBar);
 
     var $src = f1.el, $source = f2.el, $out = f3.el;
@@ -690,6 +1288,16 @@ window.__vpSetupTabs = function(){
       panel.style.setProperty('display', isHtml ? 'block' : 'none', 'important');
       paintTab(btnVk, !isHtml); paintTab(btnHtml, isHtml);
       try { window.scrollTo(0,0); } catch(e){}
+      if (isHtml) [30, 100, 250, 600].forEach(function(ms){
+        setTimeout(function(){
+          try {
+            if (typeof f3 !== 'undefined' && f3 && f3.el){
+              if (f3.el.__initCM && !f3.el.__cm) f3.el.__initCM();
+              if (f3.el.__cm) f3.el.__cm.refresh();
+            }
+          } catch(e){}
+        }, ms);
+      });
     }
     btnVk.addEventListener('click', function(){ setView('vk'); });
     btnHtml.addEventListener('click', function(){ setView('html'); });
@@ -1069,7 +1677,7 @@ window.__vpSetupTabs = function(){
             hidden++;
           }
         }
-        if (hidden) console.log('[V20] скрыто пустых .bg-panel:', hidden);
+        /* v1-cleanup: log removed (hot path) */
       } catch(e){ console.warn('[V20] bg-panel hide err:', e); }
     }, 100);
     // повтор на случай поздней подгрузки VK
@@ -1081,7 +1689,7 @@ window.__vpSetupTabs = function(){
             var prev = bgs[i].querySelector('.bg-preview');
             if (prev && /не выбран/i.test(prev.textContent || '')){
               bgs[i].style.setProperty('display', 'none', 'important');
-              console.log('[V20] скрыта поздняя .bg-panel');
+              /* v1-cleanup: log removed (hot path) */
             }
           }
         }
@@ -1182,11 +1790,46 @@ window.__vpSetupTabs = function(){
           }
         } catch(e){}
       } catch(e){ console.warn('[V16 boot] LS err:', e); }
+      // ═══ FIX: инжект vp-cm-css + vp-cm-fit-script в перезаписываемый HTML ═══
+      try {
+        var _wantIds = ['vp-cm-css', 'vp-cm-fit-script', 'vp-img-script', 'vp-lock-body-css'];
+        var _injectParts = [];
+        _wantIds.forEach(function(id){
+          var el = document.getElementById(id);
+          if (el && html.indexOf('id="' + id + '"') < 0) _injectParts.push(el.outerHTML);
+        });
+        if (_injectParts.length) {
+          var _ex = _injectParts.join('\n');
+          if (html.indexOf('</head>') >= 0) html = html.replace('</head>', _ex + '\n</head>');
+          else if (/<body[^>]*>/i.test(html)) html = html.replace(/<body[^>]*>/i, function(m){ return m + _ex; });
+          else html = _ex + html;
+          console.log('[vp-boot] ✓ injected ' + _injectParts.length + ' parts (' + _ex.length + ' bytes) — CSS+fit в новом DOM');
+        } else {
+          console.log('[vp-boot] inject: всё уже в html (localStorage) или нет исходных элементов');
+        }
+      } catch(e) { console.warn('[vp-boot] inject err:', e); }
       console.log('[vp-boot] document.open + write + close...');
       document.open();
       document.write(html);
       document.close();
       console.log('[vp-boot] OK');
+
+      // ═══ FIX: пересчёт CodeMirror ПОСЛЕ document.close (если стили применились позже) ═══
+      try {
+        setTimeout(function(){
+          try {
+            if (typeof window.__vpFitCM === 'function') {
+              window.__vpFitCM();
+              console.log('[vp-boot] ✓ __vpFitCM() после close');
+            } else {
+              var _out = document.getElementById('vp-html-out');
+              var _dom = _out && _out.querySelector('.CodeMirror');
+              var _cm  = _dom && _dom.CodeMirror;
+              if (_cm && typeof _cm.refresh === 'function') _cm.refresh();
+            }
+          } catch(e){ console.warn('[vp-boot] cm.refresh:', e); }
+        }, 60);
+      } catch(e) {}
       try { window.__vpSetupTabs && window.__vpSetupTabs(); } catch(e) { console.error("[vp-setup-call]", e); }
       /* ═══ vp-strip popup: кнопка 🚫 + handler после document.write ═══ */
       (function(){

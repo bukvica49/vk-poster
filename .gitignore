@@ -43,3 +43,5 @@ poster.py.bak
 # Cloudflare артефакты
 .wrangler/
 functions/
+web/*.bak-*
+_site/*.bak-*
