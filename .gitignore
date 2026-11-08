@@ -45,3 +45,5 @@ poster.py.bak
 functions/
 web/*.bak-*
 _site/*.bak-*
+web/editor.html.FINAL_*
+web/editor.html.v25_*

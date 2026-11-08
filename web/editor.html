@@ -22,17 +22,6 @@
 })();
 </script>
 
-<style id="vp-fix-v41">
-/* V41 — вставлено ПОСЛЕ <title> (реальная точка в <head>).
-   Диагностический тест: полностью убираем ::after у label(галочка 14×14) и .vp-splitter(8px).
-   Если flicker уйдёт → ::after виноват. Если нет → причина НЕ в тултипе.
-   У остальных элементов тултипы не трогаем. */
-label[data-vp-tip]::after,
-.vp-splitter[data-vp-tip]::after {
-  content: none !important;
-  display: none !important;
-}
-</style>
 <link rel="icon" href="favicon.svg" type="image/svg+xml">
 <!-- CodeMirror 5.65.16 -->
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/codemirror.min.css">
