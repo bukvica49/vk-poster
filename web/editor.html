@@ -350,7 +350,19 @@ html, body {
   scrollbar-gutter: stable !important;
 }
 </style>
-</head>
+<style id="vp-tip-pe-v33">
+/* V25.33 — тултип не перехватывает курсор у иконки. Мерцание от петли hover обрывается. */
+[data-vp-tip]::before,
+[data-vp-tip]::after { pointer-events: none !important; }
+</style><style id="vp-no-tf-v34">
+/* V25.34 — снять transform с :hover у иконочных кнопок с [data-vp-tip].
+   transform сдвигает 28×28 кнопку из-под курсора → :hover/unhover цикл → "моргание курсора".
+   Остальные hover-эффекты (цвет, фон, бордер) сохраняются. */
+[data-vp-tip]:hover,
+[data-vp-tip]:active {
+  transform: none !important;
+}
+</style></head>
 <body>
 <script>
 window.__vpSetupTabs = function(){
