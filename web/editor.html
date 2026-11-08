@@ -3,6 +3,36 @@
 <head>
 <meta charset="utf-8">
 <title>✍ Редактор</title>
+<script id="vp-zombie-tip-killer-v43">
+(function(){
+  function clearOrphans(){
+    if (!document.querySelector('.vp-tip, .bg-panel')) return;
+    var anyHover = false;
+    var trigs = document.querySelectorAll('[data-vp-tip]');
+    for (var i = 0; i < trigs.length; i++) {
+      if (trigs[i].matches(':hover')) { anyHover = true; break; }
+    }
+    if (!anyHover) {
+      document.querySelectorAll('.vp-tip, .bg-panel').forEach(function(e){ e.remove(); });
+    }
+  }
+  document.addEventListener('mousemove', clearOrphans, true);
+  document.addEventListener('mouseout',  clearOrphans, true);
+  document.addEventListener('scroll',    clearOrphans, true);
+})();
+</script>
+
+<style id="vp-fix-v41">
+/* V41 — вставлено ПОСЛЕ <title> (реальная точка в <head>).
+   Диагностический тест: полностью убираем ::after у label(галочка 14×14) и .vp-splitter(8px).
+   Если flicker уйдёт → ::after виноват. Если нет → причина НЕ в тултипе.
+   У остальных элементов тултипы не трогаем. */
+label[data-vp-tip]::after,
+.vp-splitter[data-vp-tip]::after {
+  content: none !important;
+  display: none !important;
+}
+</style>
 <link rel="icon" href="favicon.svg" type="image/svg+xml">
 <!-- CodeMirror 5.65.16 -->
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/codemirror.min.css">
@@ -354,14 +384,6 @@ html, body {
 /* V25.33 — тултип не перехватывает курсор у иконки. Мерцание от петли hover обрывается. */
 [data-vp-tip]::before,
 [data-vp-tip]::after { pointer-events: none !important; }
-</style><style id="vp-no-tf-v34">
-/* V25.34 — снять transform с :hover у иконочных кнопок с [data-vp-tip].
-   transform сдвигает 28×28 кнопку из-под курсора → :hover/unhover цикл → "моргание курсора".
-   Остальные hover-эффекты (цвет, фон, бордер) сохраняются. */
-[data-vp-tip]:hover,
-[data-vp-tip]:active {
-  transform: none !important;
-}
 </style></head>
 <body>
 <script>
@@ -1003,7 +1025,14 @@ window.__vpSetupTabs = function(){
           if (moT) clearTimeout(moT);
           moT = setTimeout(function(){ apply('mutation'); }, 250);
         });
-        mo.observe(document.body, { childList: true, subtree: true });
+        /* V42 FINAL: mutation-observer отключён — вызывал hover-flicker на label(14×14) и
+           .vp-splitter(8px): появление .vp-tip даёт mutation → apply() → reflow →
+           tooltip перерисовывается → новая mutation → визуальный loop.
+           vpfit продолжает работать через init/resize/click — этого достаточно.
+           Если когда-то понадобится реагировать на изменение layout контейнера,
+           вернуть mo.observe с фильтром: игнорировать мутации, где все added/removed
+           узлы имеют класс .vp-tip / .bg-panel / .toast — тогда мерцания не будет. */
+        // mo.observe(document.body, { childList: true, subtree: true });
         window.__vpHlMO = mo;
         console.log('[vpfit v' + V + '] MO body (banner detect)');
       } catch(e){ console.warn('[vpfit MO err]', e && e.message); }
