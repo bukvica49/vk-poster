@@ -1589,7 +1589,6 @@ window.__vpSetupTabs = function(){
       st.textContent =
         '[data-vp-tip]{position:relative}' +
         '[data-vp-tip]:hover::after{' +
-          'content:attr(data-vp-tip);' +
           'position:absolute;bottom:calc(100% + 6px);left:50%;' +
           'transform:translateX(-50%);' +
           'background:rgba(20,20,30,.96);color:#f8f8f2;' +
@@ -1600,6 +1599,7 @@ window.__vpSetupTabs = function(){
           'white-space:nowrap;max-width:340px;' +
           'animation:vp-tip-fade .12s ease .15s both;' +
         '}' +
+        'html body [data-vp-tip]::after,html body [data-vp-tip]:hover::after,html body [data-vp-tip]:focus::after{content:none !important;display:none !important}' +
         '@keyframes vp-tip-fade{from{opacity:0}to{opacity:1}}' +
         '.vp-field-actions{overflow:visible !important}' +
         '.vp-field-actions button, .vp-field-actions button *,' +

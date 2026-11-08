@@ -65,3 +65,30 @@ Observer больше не вызывается. `vpfit` работает чер
 - `git log --grep="V42 FINAL"` — фикс observer'а
 - `git log --grep="V43"` — фикс зомби-тултипа
 - Файл: `web/editor.html`
+
+## V44c — 2025-11
+
+**Fixed:** duplicate tooltip on `[data-vp-tip]` buttons (видны два прямоугольника при hover).
+
+**Root cause:** tooltip CSS emitted by `vp-tip-css-v11` IIFE (~line 1603):
+`st.textContent = '...' + 'content:attr(data-vp-tip);' + '...'`.
+The static `<style id=vp-tip-v22>` at line 357 is irrelevant — `vp-boot` runs
+`document.open() + write() + close()` and wipes the document, re-injecting only
+the ~17KB of JS-built parts. Any `<style>` before `<script>vp-boot</script>` is dead.
+
+**Fix:**
+1. removed `'content:attr(data-vp-tip);' +` from `st.textContent` in `vp-tip-css-v11`;
+2. appended guard to same textContent:
+   `html body [data-vp-tip]::after, :hover::after, :focus::after{content:none!important;display:none!important}`;
+3. dropped dead static `<style id=vp-tip-kill-after-v44>` near `<title>`.
+
+`.vp-tip` div (JS) is now the sole tooltip mechanism.
+
+**Rule for future CSS edits in editor.html:**
+> Do NOT edit `<style>` blocks in `<head>`. `vp-boot` erases them via document.write().
+> All persistent CSS must be emitted from JS after boot — e.g. append to
+> `st.textContent` in the relevant IIFE, or `document.head.appendChild(style)`
+> from a post-boot script (like `vp-zombie-tip-killer-v43`).
+
+**Verified:** `getElementById('vp-tip-css-v11').textContent.includes('attr(data-vp-tip)') === false`;
+single tooltip on 4 buttons in 4 sections after Ctrl+Shift+R.
