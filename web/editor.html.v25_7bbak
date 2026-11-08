@@ -1,0 +1,2188 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<title>✍ Редактор</title>
+<link rel="icon" href="favicon.svg" type="image/svg+xml">
+<!-- CodeMirror 5.65.16 -->
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/codemirror.min.css">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/addon/dialog/dialog.css">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/theme/dracula.min.css">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/codemirror.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/mode/xml/xml.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/mode/javascript/javascript.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/mode/css/css.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/mode/htmlmixed/htmlmixed.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/addon/edit/closebrackets.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/addon/edit/closetag.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/addon/search/search.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/addon/search/searchcursor.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/addon/dialog/dialog.min.js"></script>
+<style>
+  html,body{margin:0;padding:0;min-height:100vh;font-family:system-ui,-apple-system,"Segoe UI",sans-serif;background:#f5f5f7;color:#333}
+  .vp-boot-msg{margin:120px auto;max-width:520px;padding:24px 28px;background:#fff;border:1px solid #d4d4d8;border-radius:12px;text-align:center;font-size:15px;line-height:1.5;box-shadow:0 4px 16px rgba(0,0,0,.06)}
+  .vp-boot-msg b{color:#2563eb}
+  .vp-boot-msg code{background:#f0f0f3;padding:2px 6px;border-radius:4px;font-size:13px}
+
+    /* ── подсветка HTML в pre#vp-html-out ─────────────────────── */
+    .vp-hl-code{font-family:Consolas,Menlo,monospace!important;font-size:12px!important;
+      line-height:1.5!important;tab-size:2!important;white-space:pre-wrap!important;
+      word-break:break-word!important;overflow-wrap:anywhere!important}
+    .vp-hl-code .t-p{color:#abb2bf!important}
+    .vp-hl-code .t-tag{color:#61afef!important}
+    .vp-hl-code .t-attr{color:#e5c07b!important}
+    .vp-hl-code .t-str{color:#98c379!important}
+    .vp-hl-code .t-doc{color:#c678dd!important}
+    .vp-hl-code .t-com{color:#5c6370!important;font-style:italic!important}
+    .vp-hl-code .t-ent{color:#d19a66!important}
+    .vp-hl-code[data-empty]::before{content:attr(data-ph);color:#5c6370!important;
+      pointer-events:none!important;user-select:none!important}
+
+    /* ── CodeMirror: поле «Готовый HTML» ────────────────────── */
+    .vp-cm-wrap{position:relative!important;margin:0 0 14px!important}
+    .vp-cm-wrap .CodeMirror{
+      height:auto!important;min-height:240px!important;max-height:40vh!important;
+      border:1px solid #3a3a4a!important;border-radius:6px!important;
+      font-family:Consolas,Menlo,monospace!important;font-size:12px!important;line-height:1.5!important;
+    }
+    .vp-cm-wrap .CodeMirror-scroll{min-height:240px!important;max-height:40vh!important;
+      overflow-y:auto!important;overflow-x:hidden!important}
+    .vp-cm-wrap .CodeMirror-gutters{background:#21222c!important;border-right:1px solid #3a3a4a!important}
+    .vp-cm-wrap .CodeMirror-linenumber{color:#6a6a7e!important}
+    .vp-cm-wrap .CodeMirror-cursor{border-left:1px solid #f8f8f2!important}
+    .vp-cm-wrap .CodeMirror-focused{border-color:#c97a1d!important}
+</style>
+<style id="vp-cm-css">
+/* ═══ CodeMirror 5.65.16 core (inlined) ═══ */
+.CodeMirror{font-family:monospace;height:300px;color:#000;direction:ltr}.CodeMirror-lines{padding:4px 0}.CodeMirror pre.CodeMirror-line,.CodeMirror pre.CodeMirror-line-like{padding:0 4px}.CodeMirror-gutter-filler,.CodeMirror-scrollbar-filler{background-color:#fff}.CodeMirror-gutters{border-right:1px solid #ddd;background-color:#f7f7f7;white-space:nowrap}.CodeMirror-linenumber{padding:0 3px 0 5px;min-width:20px;text-align:right;color:#999;white-space:nowrap}.CodeMirror-guttermarker{color:#000}.CodeMirror-guttermarker-subtle{color:#999}.CodeMirror-cursor{border-left:1px solid #000;border-right:none;width:0}.CodeMirror div.CodeMirror-secondarycursor{border-left:1px solid silver}.cm-fat-cursor .CodeMirror-cursor{width:auto;border:0!important;background:#7e7}.cm-fat-cursor div.CodeMirror-cursors{z-index:1}.cm-fat-cursor .CodeMirror-line::selection,.cm-fat-cursor .CodeMirror-line>span::selection,.cm-fat-cursor .CodeMirror-line>span>span::selection{background:0 0}.cm-fat-cursor .CodeMirror-line::-moz-selection,.cm-fat-cursor .CodeMirror-line>span::-moz-selection,.cm-fat-cursor .CodeMirror-line>span>span::-moz-selection{background:0 0}.cm-fat-cursor{caret-color:transparent}@-moz-keyframes blink{50%{background-color:transparent}}@-webkit-keyframes blink{50%{background-color:transparent}}@keyframes blink{50%{background-color:transparent}}.cm-tab{display:inline-block;text-decoration:inherit}.CodeMirror-rulers{position:absolute;left:0;right:0;top:-50px;bottom:0;overflow:hidden}.CodeMirror-ruler{border-left:1px solid #ccc;top:0;bottom:0;position:absolute}.cm-s-default .cm-header{color:#00f}.cm-s-default .cm-quote{color:#090}.cm-negative{color:#d44}.cm-positive{color:#292}.cm-header,.cm-strong{font-weight:700}.cm-em{font-style:italic}.cm-link{text-decoration:underline}.cm-strikethrough{text-decoration:line-through}.cm-s-default .cm-keyword{color:#708}.cm-s-default .cm-atom{color:#219}.cm-s-default .cm-number{color:#164}.cm-s-default .cm-def{color:#00f}.cm-s-default .cm-variable-2{color:#05a}.cm-s-default .cm-type,.cm-s-default .cm-variable-3{color:#085}.cm-s-default .cm-comment{color:#a50}.cm-s-default .cm-string{color:#a11}.cm-s-default .cm-string-2{color:#f50}.cm-s-default .cm-meta{color:#555}.cm-s-default .cm-qualifier{color:#555}.cm-s-default .cm-builtin{color:#30a}.cm-s-default .cm-bracket{color:#997}.cm-s-default .cm-tag{color:#170}.cm-s-default .cm-attribute{color:#00c}.cm-s-default .cm-hr{color:#999}.cm-s-default .cm-link{color:#00c}.cm-s-default .cm-error{color:red}.cm-invalidchar{color:red}.CodeMirror-composing{border-bottom:2px solid}div.CodeMirror span.CodeMirror-matchingbracket{color:#0b0}div.CodeMirror span.CodeMirror-nonmatchingbracket{color:#a22}.CodeMirror-matchingtag{background:rgba(255,150,0,.3)}.CodeMirror-activeline-background{background:#e8f2ff}.CodeMirror{position:relative;overflow:hidden;background:#fff}.CodeMirror-scroll{overflow:scroll!important;margin-bottom:-50px;margin-right:-50px;padding-bottom:50px;height:100%;outline:0;position:relative;z-index:0}.CodeMirror-sizer{position:relative;border-right:50px solid transparent}.CodeMirror-gutter-filler,.CodeMirror-hscrollbar,.CodeMirror-scrollbar-filler,.CodeMirror-vscrollbar{position:absolute;z-index:6;display:none;outline:0}.CodeMirror-vscrollbar{right:0;top:0;overflow-x:hidden;overflow-y:scroll}.CodeMirror-hscrollbar{bottom:0;left:0;overflow-y:hidden;overflow-x:scroll}.CodeMirror-scrollbar-filler{right:0;bottom:0}.CodeMirror-gutter-filler{left:0;bottom:0}.CodeMirror-gutters{position:absolute;left:0;top:0;min-height:100%;z-index:3}.CodeMirror-gutter{white-space:normal;height:100%;display:inline-block;vertical-align:top;margin-bottom:-50px}.CodeMirror-gutter-wrapper{position:absolute;z-index:4;background:0 0!important;border:none!important}.CodeMirror-gutter-background{position:absolute;top:0;bottom:0;z-index:4}.CodeMirror-gutter-elt{position:absolute;cursor:default;z-index:4}.CodeMirror-gutter-wrapper ::selection{background-color:transparent}.CodeMirror-gutter-wrapper ::-moz-selection{background-color:transparent}.CodeMirror-lines{cursor:text;min-height:1px}.CodeMirror pre.CodeMirror-line,.CodeMirror pre.CodeMirror-line-like{-moz-border-radius:0;-webkit-border-radius:0;border-radius:0;border-width:0;background:0 0;font-family:inherit;font-size:inherit;margin:0;white-space:pre;word-wrap:normal;line-height:inherit;color:inherit;z-index:2;position:relative;overflow:visible;-webkit-tap-highlight-color:transparent;-webkit-font-variant-ligatures:contextual;font-variant-ligatures:contextual}.CodeMirror-wrap pre.CodeMirror-line,.CodeMirror-wrap pre.CodeMirror-line-like{word-wrap:break-word;white-space:pre-wrap;word-break:normal}.CodeMirror-linebackground{position:absolute;left:0;right:0;top:0;bottom:0;z-index:0}.CodeMirror-linewidget{position:relative;z-index:2;padding:.1px}.CodeMirror-rtl pre{direction:rtl}.CodeMirror-code{outline:0}.CodeMirror-gutter,.CodeMirror-gutters,.CodeMirror-linenumber,.CodeMirror-scroll,.CodeMirror-sizer{-moz-box-sizing:content-box;box-sizing:content-box}.CodeMirror-measure{position:absolute;width:100%;height:0;overflow:hidden;visibility:hidden}.CodeMirror-cursor{position:absolute;pointer-events:none}.CodeMirror-measure pre{position:static}div.CodeMirror-cursors{visibility:hidden;position:relative;z-index:3}div.CodeMirror-dragcursors{visibility:visible}.CodeMirror-focused div.CodeMirror-cursors{visibility:visible}.CodeMirror-selected{background:#d9d9d9}.CodeMirror-focused .CodeMirror-selected{background:#d7d4f0}.CodeMirror-crosshair{cursor:crosshair}.CodeMirror-line::selection,.CodeMirror-line>span::selection,.CodeMirror-line>span>span::selection{background:#d7d4f0}.CodeMirror-line::-moz-selection,.CodeMirror-line>span::-moz-selection,.CodeMirror-line>span>span::-moz-selection{background:#d7d4f0}.cm-searching{background-color:#ffa;background-color:rgba(255,255,0,.4)}.cm-force-border{padding-right:.1px}@media print{.CodeMirror div.CodeMirror-cursors{visibility:hidden}}.cm-tab-wrap-hack:after{content:''}span.CodeMirror-selectedtext{background:0 0}
+/* ═══ dracula theme (inlined) ═══ */
+.cm-s-dracula .CodeMirror-gutters,.cm-s-dracula.CodeMirror{background-color:#282a36!important;color:#f8f8f2!important;border:none}.cm-s-dracula .CodeMirror-gutters{color:#282a36}.cm-s-dracula .CodeMirror-cursor{border-left:solid thin #f8f8f0}.cm-s-dracula .CodeMirror-linenumber{color:#6d8a88}.cm-s-dracula .CodeMirror-selected{background:rgba(255,255,255,.1)}.cm-s-dracula .CodeMirror-line::selection,.cm-s-dracula .CodeMirror-line>span::selection,.cm-s-dracula .CodeMirror-line>span>span::selection{background:rgba(255,255,255,.1)}.cm-s-dracula .CodeMirror-line::-moz-selection,.cm-s-dracula .CodeMirror-line>span::-moz-selection,.cm-s-dracula .CodeMirror-line>span>span::-moz-selection{background:rgba(255,255,255,.1)}.cm-s-dracula span.cm-comment{color:#6272a4}.cm-s-dracula span.cm-string,.cm-s-dracula span.cm-string-2{color:#f1fa8c}.cm-s-dracula span.cm-number{color:#bd93f9}.cm-s-dracula span.cm-variable{color:#50fa7b}.cm-s-dracula span.cm-variable-2{color:#fff}.cm-s-dracula span.cm-def{color:#50fa7b}.cm-s-dracula span.cm-operator{color:#ff79c6}.cm-s-dracula span.cm-keyword{color:#ff79c6}.cm-s-dracula span.cm-atom{color:#bd93f9}.cm-s-dracula span.cm-meta{color:#f8f8f2}.cm-s-dracula span.cm-tag{color:#ff79c6}.cm-s-dracula span.cm-attribute{color:#50fa7b}.cm-s-dracula span.cm-qualifier{color:#50fa7b}.cm-s-dracula span.cm-property{color:#66d9ef}.cm-s-dracula span.cm-builtin{color:#50fa7b}.cm-s-dracula span.cm-type,.cm-s-dracula span.cm-variable-3{color:#ffb86c}.cm-s-dracula .CodeMirror-activeline-background{background:rgba(255,255,255,.1)}.cm-s-dracula .CodeMirror-matchingbracket{text-decoration:underline;color:#fff!important}
+/* ═══ dialog addon (inlined) ═══ */
+.CodeMirror-dialog {
+  position: absolute;
+  left: 0; right: 0;
+  background: inherit;
+  z-index: 15;
+  padding: .1em .8em;
+  overflow: hidden;
+  color: inherit;
+}
+
+.CodeMirror-dialog-top {
+  border-bottom: 1px solid #eee;
+  top: 0;
+}
+
+.CodeMirror-dialog-bottom {
+  border-top: 1px solid #eee;
+  bottom: 0;
+}
+
+.CodeMirror-dialog input {
+  border: none;
+  outline: none;
+  background: transparent;
+  width: 20em;
+  color: inherit;
+  font-family: monospace;
+}
+
+.CodeMirror-dialog button {
+  font-size: 70%;
+}
+
+/* ═══ sizing для контейнера редактора ═══ */
+#vp-html-out .CodeMirror { min-height: 120px;  border:1px solid #3a3a4a; border-radius:6px; }
+</style>
+
+<script id="vp-cm-fit-script">
+(function(){
+  if (window.__vpFitCMInstalled) return;
+  window.__vpFitCMInstalled = true;
+  var MIN_H = 120, BOTTOM_PAD = 16, MAX_H = 1400;
+  function fitCM(){
+    try {
+      var out = document.getElementById('vp-html-out');
+      if (!out) return;
+      var dom = out.querySelector('.CodeMirror');
+      var cm  = dom && dom.CodeMirror;
+      if (!cm) return;
+      var outRect = out.getBoundingClientRect();
+      if (outRect.width < 60) return;
+      // ── V25.2: при активном ручном сплите — доверяем CSS flex, не считаемся точками
+      if (window.__vpCmManualSrcH >= 32){
+        try { cm.setSize('100%', '100%'); cm.refresh(); } catch(e){}
+        return;
+      }
+      var cmRect = dom.getBoundingClientRect();
+      var vh = (window.visualViewport && window.visualViewport.height) || window.innerHeight;
+      var h = Math.floor(vh - cmRect.top - BOTTOM_PAD);
+      if (outRect.bottom < vh) {
+        h = Math.min(h, Math.floor(outRect.bottom - cmRect.top - BOTTOM_PAD));
+      }
+      if (h < MIN_H) h = MIN_H;
+      if (h > MAX_H) h = MAX_H;
+      cm.setSize('100%', h);
+      cm.refresh();
+    } catch(e){ console.warn('[vp-fit-cm]', e); }
+  }
+  window.__vpFitCM = fitCM;
+  window.addEventListener('resize', function(){ requestAnimationFrame(fitCM); });
+  if (window.visualViewport) {
+    window.visualViewport.addEventListener('resize', function(){ requestAnimationFrame(fitCM); });
+    window.visualViewport.addEventListener('scroll', function(){ requestAnimationFrame(fitCM); });
+  }
+  document.addEventListener('click', function(){ setTimeout(fitCM, 100); }, true);
+  function installRO(){
+    var out = document.getElementById('vp-html-out');
+    if (!out) return;
+    if (window.ResizeObserver && !out.__vpRO) {
+      try {
+        out.__vpRO = new ResizeObserver(function(){ requestAnimationFrame(fitCM); });
+        out.__vpRO.observe(out);
+      } catch(e){}
+    }
+    fitCM();
+  }
+  setInterval(installRO, 800);
+  setTimeout(installRO, 100);
+  setTimeout(fitCM, 500);
+  setTimeout(fitCM, 1500);
+  setTimeout(fitCM, 3000);
+  setTimeout(fitCM, 6000);
+  console.log('[vp-fit-cm] installed — adapt to popup size');
+})();
+</script>
+
+
+<style id="vp-lock-body-css">
+html, body { overflow: hidden !important; }
+</style>
+<script id="vp-img-script">
+/* vp-img v2: ascii-safe, no backslashes, no 4-byte literals */
+(function(){
+  if (window.__vpImgInstalled) return;
+  window.__vpImgInstalled = true;
+
+  var IMG_EMOJI = String.fromCodePoint(0x1F5BC);
+  var NL = String.fromCharCode(10);
+
+  function escA(s){
+    return String(s || '')
+      .replace(/&/g, '&amp;')
+      .replace(/"/g, '&quot;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;');
+  }
+  function escH(s){
+    return String(s || '')
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;');
+  }
+  function makeTpl(url, cap){
+    var u = escA(url), c = escA(cap), h = escH(cap);
+    return '<figure class="center-image-block">' + NL
+         + '<img src="' + u + '" alt="' + c + '">' + NL
+         + '<figcaption style="text-align:center;font-style:italic;font-size:0.9em;color:#666;text-indent:0;padding-top:8px;margin:0;">'
+         + h + '</figcaption>' + NL
+         + '</figure>';
+  }
+  function getCM(){
+    var out = document.getElementById('vp-html-out');
+    var dom = out && out.querySelector('.CodeMirror');
+    return dom && dom.CodeMirror;
+  }
+  function isValidUrl(u){
+    return u.indexOf('http://') === 0 || u.indexOf('https://') === 0;
+  }
+  function openModal(){
+    var old = document.getElementById('vp-img-modal'); if (old) old.remove();
+    var m = document.createElement('div');
+    m.id = 'vp-img-modal';
+    m.style.cssText = 'position:fixed;inset:0;z-index:200000;background:rgba(0,0,0,.55);display:flex;align-items:center;justify-content:center';
+    m.innerHTML =
+      '<div style="background:#282a36;color:#f8f8f2;border:1px solid #3a3a4a;border-radius:10px;padding:18px;min-width:340px;max-width:92vw;box-shadow:0 10px 40px rgba(0,0,0,.7);font:14px/1.45 system-ui,sans-serif">'
+      + '<div style="margin-bottom:14px;font-weight:600;font-size:15px">Вставить рисунок</div>'
+      + '<label style="display:block;margin-bottom:10px">URL:'
+      + '<input id="vp-img-url" type="url" placeholder="https://..." autocomplete="off" style="display:block;width:100%;margin-top:4px;padding:7px;border-radius:5px;border:1px solid #555;background:#1e1e28;color:#f8f8f2;font:13px/1.4 monospace;box-sizing:border-box">'
+      + '</label>'
+      + '<label style="display:block;margin-bottom:14px">Подпись:'
+      + '<input id="vp-img-cap" type="text" placeholder="необязательно" style="display:block;width:100%;margin-top:4px;padding:7px;border-radius:5px;border:1px solid #555;background:#1e1e28;color:#f8f8f2;font:13px/1.4 system-ui,sans-serif;box-sizing:border-box">'
+      + '</label>'
+      + '<div style="display:flex;gap:8px;justify-content:flex-end">'
+      + '<button id="vp-img-cancel" type="button" style="padding:7px 16px;border-radius:5px;border:1px solid #555;background:#3a3a4a;color:#f8f8f2;cursor:pointer;font-size:13px">Отмена</button>'
+      + '<button id="vp-img-ok" type="button" style="padding:7px 16px;border-radius:5px;border:1px solid #c97a1d;background:#c97a1d;color:#fff;cursor:pointer;font-size:13px;font-weight:600">Вставить</button>'
+      + '</div></div>';
+    document.body.appendChild(m);
+    var u = document.getElementById('vp-img-url');
+    var c = document.getElementById('vp-img-cap');
+    u.focus();
+    function close(){ m.remove(); }
+    function insert(){
+      var url = (u.value || '').trim();
+      if (!isValidUrl(url)) { u.style.borderColor = '#c00'; u.focus(); return; }
+      var cm = getCM();
+      if (!cm) { alert('Открой вкладку HTML-редактора и кликни в поле'); close(); return; }
+      cm.replaceSelection(makeTpl(url, (c.value || '').trim()));
+      cm.focus(); close();
+    }
+    document.getElementById('vp-img-cancel').onclick = close;
+    document.getElementById('vp-img-ok').onclick = insert;
+    m.addEventListener('click', function(e){ if (e.target === m) close(); });
+    u.addEventListener('keydown', function(e){ if (e.key === 'Enter') insert(); });
+    c.addEventListener('keydown', function(e){ if (e.key === 'Enter') insert(); });
+  }
+
+  function findHtmlToolbar(){
+    var out = document.getElementById('vp-html-out');
+    if (!out) return null;
+    var sib = out.nextElementSibling;
+    if (sib && sib.classList && sib.classList.contains('vp-field-actions')){
+      return sib;
+    }
+    var wrap = out.parentNode;
+    if (wrap){
+      var list = wrap.querySelectorAll('.vp-field-actions');
+      for (var i = 0; i < list.length; i++){
+        if (out.compareDocumentPosition(list[i]) & Node.DOCUMENT_POSITION_FOLLOWING){
+          return list[i];
+        }
+      }
+    }
+    return null;
+  }
+
+  function injectBtn(){
+    if (document.getElementById('vp-img-inline')) return true;
+    var tb = findHtmlToolbar();
+    if (!tb) return false;
+    var sample = tb.querySelector('button');
+    var b = sample ? sample.cloneNode(true) : document.createElement('button');
+    b.id = 'vp-img-inline';
+    b.type = 'button';
+    b.title = 'Вставить рисунок';
+    b.textContent = IMG_EMOJI;
+    b.removeAttribute('onclick');
+    b.removeAttribute('disabled');
+    b.style.marginLeft = 'auto';
+    b.addEventListener('click', function(e){
+      e.preventDefault();
+      e.stopPropagation();
+      var tabs = document.querySelectorAll('.vp-tabs-row button');
+      if (tabs && tabs.length >= 2 && tabs[1]){
+        var on = tabs[1].classList.contains('active') || tabs[1].classList.contains('on');
+        if (!on) tabs[1].click();
+      }
+      setTimeout(openModal, 60);
+    });
+    var trash = null;
+    var allB = tb.querySelectorAll('button');
+    for (var k = 0; k < allB.length; k++){
+      if (allB[k].id === 'vp-img-inline') continue;
+      if (allB[k].title === 'Очистить') { trash = allB[k]; break; }
+    }
+    if (!trash && sample && sample.nextElementSibling && sample.nextElementSibling.parentNode === tb){
+      trash = sample.nextElementSibling;
+    }
+    if (trash && trash.parentNode === tb){
+      tb.insertBefore(b, trash);
+    } else {
+      tb.appendChild(b);
+    }
+    console.log('[vp-img] OK: in html toolbar (pos=2) | y=' + Math.round(tb.getBoundingClientRect().top) + ' | parent=' + (tb.className || '(none)'));
+    return true;
+  }
+
+  var n = 0;
+  var iv = setInterval(function(){
+    n++;
+    if (injectBtn() || n > 80){
+      clearInterval(iv);
+      if (n > 80) console.warn('[vp-img] WARN: 80 attempts, no toolbar found');
+    }
+  }, 250);
+  setTimeout(injectBtn, 100);
+  setTimeout(injectBtn, 800);
+  setTimeout(injectBtn, 2000);
+  var mo = new MutationObserver(function(){ if (!document.getElementById('vp-img-inline')) injectBtn(); });
+  try { mo.observe(document.documentElement, {childList:true, subtree:true}); } catch(_){}
+  console.log('[vp-img] installed v2 (inline html-toolbar, ascii-safe)');
+})();
+</script>
+</head>
+<body>
+<script>
+window.__vpSetupTabs = function(){
+  try {
+    ['vp-tabs-row','vp-html-panel','vp-tabs-bar','vp-html-page-box','vp-html-overlay','vp-ls-chip'].forEach(function(cls){
+      var els = document.querySelectorAll('.' + cls);
+      for (var i = 0; i < els.length; i++) if (els[i].parentNode) els[i].parentNode.removeChild(els[i]);
+    });
+    var body = document.body;
+    if (!body) return console.warn('[V13] no body');
+    // ═══ V21: CSS-скрытие «Фон редактора» — переживёт любой re-render VK ═══
+    try {
+      if (!document.getElementById('vp-hide-bg-panel-v21')) {
+        var _st = document.createElement('style');
+        _st.id = 'vp-hide-bg-panel-v21';
+        _st.textContent =
+          '.bg-panel:not(.vp-bg-real){display:none !important;height:0 !important;min-height:0 !important;'
+          + 'max-height:0 !important;overflow:hidden !important;margin:0 !important;'
+          + 'padding:0 !important;border:none !important;box-shadow:none !important}'
+          + '.bg-panel-title,.bg-preview{display:none !important}'
+          + '.vp-tabs-row,.vp-html-panel,.vp-cm-wrap,.vp-field-actions{min-width:0 !important;max-width:100% !important;box-sizing:border-box !important}'
+          + '#vp-html-out,#vp-html-src,#vp-html-source,.CodeMirror,.CodeMirror-wrap{min-width:0 !important;max-width:100% !important;box-sizing:border-box !important}'
+          + '.CodeMirror{width:100% !important}'
+          + '.vp-tabs-row{flex-wrap:wrap !important;row-gap:4px !important}'
+          + 'html,body{max-width:100vw !important;overflow-x:hidden !important}'
+          + 'textarea,input,select,button{max-width:100% !important;box-sizing:border-box !important}'          + '.vp-html-panel{display:flex !important;flex-direction:column !important;height:calc(100vh - 45px) !important;max-height:calc(100vh - 45px) !important;min-height:0 !important;overflow-y:auto !important;padding:8px 12px 4px !important;box-sizing:border-box !important}'
+          + '.vp-html-panel > *{flex:0 0 auto !important;min-height:0 !important}'
+          + '.vp-html-panel > .vp-cm-wrap{flex:1 0 auto !important;min-height:120px !important;margin:0 0 8px 0 !important;display:flex !important;flex-direction:column !important}'
+          + '#vp-html-out{flex:1 1 auto !important;min-height:100px !important;padding:0 !important;display:flex !important;flex-direction:column !important;height:auto !important}'
+          + '#vp-html-out > .CodeMirror{flex:1 1 auto !important;height:100% !important;min-height:0 !important;max-height:none !important}'
+
+          + '@media (max-width:520px){.vp-tabs-row button,.vp-tabs-row>*{font-size:12px !important;padding:6px 8px !important}.vp-field-actions button{padding:2px 6px !important;font-size:13px !important}}';
+        (document.head || document.documentElement).appendChild(_st);
+        console.log('[V21] CSS injected: .bg-panel скрыт НАВСЕГДА (переживёт re-render VK)');
+      }
+      /* vp-bg-rescue v2: want-флаг + toggle btn-bg, скрытие по умолчанию */
+      (function(){
+        if (window.__vpBgRescueOn) return;
+        window.__vpBgRescueOn = true;
+        window.__vpBgWanted = false;
+
+        function applyPanel(p, want){
+          if (!p) return;
+          if (want) {
+            p.classList.add('vp-bg-real');
+            p.style.setProperty('display','block','important');
+            p.style.setProperty('height','auto','important');
+            p.style.setProperty('max-height','none','important');
+            p.style.setProperty('overflow','visible','important');
+            p.style.setProperty('margin','10px 0','important');
+            p.style.setProperty('padding','12px','important');
+            p.style.setProperty('border','1px solid rgba(201,122,29,.55)','important');
+            p.style.setProperty('border-radius','8px','important');
+            p.style.setProperty('box-shadow','0 4px 16px rgba(0,0,0,.35)','important');
+          } else {
+            p.classList.remove('vp-bg-real');
+            p.style.setProperty('display','none','important');
+          }
+        }
+        function applyAll(){
+          var want = window.__vpBgWanted === true;
+          var panels = document.querySelectorAll('.bg-panel');
+          for (var i = 0; i < panels.length; i++){
+            var p = panels[i];
+            if (!p.querySelector('#bg-upload') && !p.querySelector('#bg-reset') && !p.querySelector('#bg-close')) continue;
+            applyPanel(p, want);
+          }
+        }
+        function bind(){
+          var btnShow = document.getElementById('btn-bg');
+          if (btnShow && !btnShow.__vpBgBound){
+            btnShow.__vpBgBound = true;
+            btnShow.addEventListener('click', function(e){
+              e.preventDefault();
+              window.__vpBgWanted = !window.__vpBgWanted;
+              applyAll();
+            }, true);
+          }
+          var btnClose = document.getElementById('bg-close');
+          if (btnClose && !btnClose.__vpBgCloseBound){
+            btnClose.__vpBgCloseBound = true;
+            btnClose.addEventListener('click', function(e){
+              e.preventDefault();
+              window.__vpBgWanted = false;
+              applyAll();
+            }, true);
+          }
+        }
+        applyAll(); bind();
+        setInterval(function(){ applyAll(); bind(); }, 600);
+        console.log('[vp-bg-rescue] armed v2 (want-flag + toggle)');
+      })();
+
+      /* vp-cm-force v10: БЕЗ interval, self-correct overflow, observer только по style */
+      (function(){
+        if (window.__vpCmForceOn === 'v10') return;
+        window.__vpCmForceOn = 'v10';
+        var pending = false;
+
+        function setH(el, prop, val){
+          if (!el || !el.style) return;
+          if (el.style.getPropertyValue(prop) !== val){
+            el.style.setProperty(prop, val, 'important');
+          }
+        }
+        function isHtml(){
+          var p = document.querySelector('.vp-html-panel');
+          return p && p.offsetParent !== null;
+        }
+        function lockRoot(){
+          try {
+            var de = document.documentElement, bd = document.body;
+            ['overflow','overflow-x','overflow-y'].forEach(function(p){
+              de.style.setProperty(p, 'hidden', 'important');
+              bd.style.setProperty(p, 'hidden', 'important');
+            });
+          } catch(e){}
+        }
+        function apply(){
+          pending = false;
+          lockRoot();
+          if (!isHtml()) return;
+          var panel = document.querySelector('.vp-html-panel');
+          if (!panel || panel.getBoundingClientRect().width === 0) return;
+
+          setH(panel, 'display', 'flex');
+          setH(panel, 'flex-direction', 'column');
+          setH(panel, 'height', 'calc(100vh - 45px)');
+          setH(panel, 'max-height', 'calc(100vh - 45px)');
+          setH(panel, 'min-height', '0');
+          setH(panel, 'overflow', 'hidden');
+          setH(panel, 'box-sizing', 'border-box');
+
+          var kids = panel.children;
+          var taWrap = null, cmWrap = null, ta = null;
+          for (var i = 0; i < kids.length; i++){
+            var ch = kids[i];
+            var isCmW = ch.classList && ch.classList.contains('vp-cm-wrap');
+            var taIn = ch.querySelector && ch.querySelector('textarea');
+            if (isCmW){
+              cmWrap = ch;
+              setH(ch, 'flex', '1 1 0');
+              setH(ch, 'display', 'flex');
+              setH(ch, 'flex-direction', 'column');
+              setH(ch, 'flex-shrink', '1');
+              setH(ch, 'overflow', 'hidden');
+            } else if (taIn){
+              taWrap = ch; ta = taIn;
+              setH(ch, 'flex', '0 0 auto');
+              setH(ch, 'display', 'flex');
+              setH(ch, 'flex-direction', 'column');
+              setH(ch, 'height', 'auto');
+              setH(ch, 'min-height', '0');
+              setH(ch, 'overflow', 'visible');
+              if (ta.hasAttribute('placeholder')) ta.removeAttribute('placeholder');
+              setH(ta, 'flex', '0 0 auto');
+              setH(ta, 'resize', 'none');
+              setH(ta, 'box-sizing', 'border-box');
+              setH(ta, 'padding', '4px 6px');
+              setH(ta, 'line-height', '1.3');
+              setH(ta, 'overflow-x', 'hidden');
+              var acts = ch.querySelectorAll('.vp-field-actions');
+              for (var j = 0; j < acts.length; j++) setH(acts[j], 'flex-shrink', '0');
+            } else {
+              setH(ch, 'flex-shrink', '0');
+              setH(ch, 'min-height', '0');
+            }
+          }
+
+          var panelCS = getComputedStyle(panel);
+          var padY = (parseFloat(panelCS.paddingTop) || 0) + (parseFloat(panelCS.paddingBottom) || 0);
+          var rowGap = parseFloat(panelCS.rowGap) || 0;
+          var gaps = rowGap * Math.max(0, kids.length - 1);
+
+          var fixed = 0;
+          for (var k = 0; k < kids.length; k++){
+            var c2 = kids[k];
+            if (c2 === cmWrap) continue;
+            if (c2 === taWrap){
+              var wrapR = c2.getBoundingClientRect();
+              var taR = ta.getBoundingClientRect();
+              var wcs = getComputedStyle(c2);
+              fixed += wrapR.height - taR.height
+                     + (parseFloat(wcs.marginTop) || 0)
+                     + (parseFloat(wcs.marginBottom) || 0);
+              continue;
+            }
+            var r = c2.getBoundingClientRect();
+            var cs = getComputedStyle(c2);
+            fixed += r.height
+                   + (parseFloat(cs.marginTop) || 0)
+                   + (parseFloat(cs.marginBottom) || 0);
+          }
+
+          var avail = panel.clientHeight - fixed - padY - gaps;
+          if (avail < 64) avail = 64;
+
+          var taH, cmH;
+          if (taWrap) setH(taWrap, 'flex', '0 0 auto');
+          var _manualSrcH = window.__vpCmManualSrcH || 0;
+          if (!_manualSrcH){
+            try {
+              var _ss = JSON.parse(localStorage.getItem('vp-ed-split') || 'null');
+              if (_ss && _ss.srcH >= 32) _manualSrcH = _ss.srcH;
+            } catch(e){}
+          }
+          if (_manualSrcH >= 32){
+            taH = Math.min(_manualSrcH, avail - 64);
+            cmH = Math.max(32, avail - taH);
+          } else if (avail >= 210){
+            taH = 110; cmH = avail - 110;
+          } else if (avail >= 130){
+            taH = 70;  cmH = avail - 70;
+          } else {
+            taH = Math.max(32, Math.round(avail * 0.45));
+            cmH = Math.max(32, avail - taH);
+          }
+
+          if (ta){
+            setH(ta, 'height', taH + 'px');
+            setH(ta, 'min-height', taH + 'px');
+            setH(ta, 'max-height', taH + 'px');
+            var hasVal = ta.value && ta.value.length > 0;
+            var hasOv  = hasVal && ta.scrollHeight > ta.clientHeight + 2;
+            setH(ta, 'overflow-y', hasOv ? 'auto' : 'hidden');
+          }
+          if (cmWrap){
+            setH(cmWrap, 'flex', '1 1 0');
+            setH(cmWrap, 'min-height', '32px');
+          }
+
+          var out = document.getElementById('vp-html-out');
+          if (out){
+            setH(out, 'flex', '1 1 0');
+            setH(out, 'min-height', '40px');
+            setH(out, 'height', 'auto');
+            setH(out, 'max-height', 'none');
+            setH(out, 'display', 'flex');
+            setH(out, 'flex-direction', 'column');
+            setH(out, 'overflow', 'hidden');
+          }
+          var cm = out && out.querySelector('.CodeMirror');
+          if (cm){
+            try {
+              cm.style.setProperty('flex', '1 1 0', 'important');
+              cm.style.setProperty('min-height', '0', 'important');
+              cm.style.setProperty('height', '100%', 'important');
+              if (cm.CodeMirror && cm.CodeMirror.setSize) cm.CodeMirror.setSize('100%', '100%');
+              if (cm.CodeMirror && cm.CodeMirror.refresh) cm.CodeMirror.refresh();
+            } catch(e){}
+          }
+          if (cm){
+            setH(cm, 'flex', '1 1 0');
+            setH(cm, 'min-height', '0');
+            setH(cm, 'max-height', 'none');
+            setH(cm, 'clip-path', 'none');
+          }
+
+          /* Self-correct overflow: ужимаем cmH на остаток (один проход) */
+          var over = panel.scrollHeight - panel.clientHeight;
+          if (over > 2 && cmWrap){
+            var corrected = Math.max(32, cmH - over);
+            setH(cmWrap, 'min-height', corrected + 'px');
+            over = panel.scrollHeight - panel.clientHeight;
+          }
+
+        }
+        function schedule(){
+          if (pending) return;
+          pending = true;
+          requestAnimationFrame(apply);
+        }
+        window.addEventListener('resize', schedule);
+        document.addEventListener('input', function(e){
+          if (e.target && e.target.id === 'vp-html-src') schedule();
+        });
+        if (typeof MutationObserver !== 'undefined'){
+          var attachTimer = null;
+          function attach(){
+            var panel = document.querySelector('.vp-html-panel');
+            var ta = document.querySelector('#vp-html-src');
+            var observerReady = false;
+            if (panel && !panel._vpObsP){
+              try {
+                var moP = new MutationObserver(function(){ schedule(); });
+                moP.observe(panel, { attributes: true, attributeFilter: ['style','class'] });
+                panel._vpObsP = 1; observerReady = true;
+              } catch(e){}
+            }
+            if (ta && !ta._vpObsT){
+              try {
+                var moT = new MutationObserver(function(){ schedule(); });
+                moT.observe(ta, { attributes: true, attributeFilter: ['style'] });
+                ta._vpObsT = 1; observerReady = true;
+              } catch(e){}
+            }
+            if (observerReady) schedule();
+          }
+          var moBody = new MutationObserver(function(){
+            if (attachTimer) clearTimeout(attachTimer);
+            attachTimer = setTimeout(attach, 100);
+          });
+          moBody.observe(document.body, { childList: true, subtree: true });
+          attach();
+        }
+        setTimeout(schedule, 100);
+        setTimeout(schedule, 400);
+        setTimeout(schedule, 1000);
+        setTimeout(schedule, 2000);
+        setTimeout(schedule, 5000);
+        console.log('[vp-cm-force] armed v10 (no interval, self-correct overflow, style observer)');
+      })();
+      // API для возврата (если вдруг понадобится)
+      window.__vpShowBgPanel = function(){
+        var s = document.getElementById('vp-hide-bg-panel-v21');
+        if (s && s.parentNode) s.parentNode.removeChild(s);
+        console.log('[V21] CSS удалён — .bg-panel снова видна');
+      };
+    } catch(e){ console.warn('[V21] CSS inject err:', e); }
+    function isReal(v){ return v && v !== 'rgba(0, 0, 0, 0)' && v !== 'transparent' && v !== 'none'; }
+
+    // ── читаем цвета VK ──
+    var probeEl = document.querySelector('.bg-panel') || document.querySelector('.hdr') || body;
+    var pcs = getComputedStyle(probeEl);
+    var bodyCs = getComputedStyle(body);
+    var PANEL_BG = isReal(pcs.backgroundColor) ? pcs.backgroundColor : (isReal(bodyCs.backgroundColor) ? bodyCs.backgroundColor : '#1a1a24');
+    var PANEL_FG = isReal(pcs.color) ? pcs.color : '#e5e5ee';
+    var FONT     = pcs.fontFamily || 'system-ui,sans-serif';
+
+    var vkBtn = null, allBtns = body.querySelectorAll('button');
+    for (var i = 0; i < allBtns.length; i++){
+      var t = (allBtns[i].textContent || '').trim();
+      if (t.indexOf('Фон') !== -1 || t.indexOf('📝 ВК') !== -1 || t.indexOf('📄 HTML') !== -1 || t.indexOf('Сверстать') !== -1 || t.indexOf('Скачать') !== -1) continue;
+      if (t.length > 0){ vkBtn = allBtns[i]; break; }
+    }
+    if (!vkBtn && allBtns.length) vkBtn = allBtns[0];
+
+    var S = { btnBg: PANEL_BG, btnFg: PANEL_FG, btnBorder: 'rgba(255,255,255,0.12)', btnRadius:'6px', btnPadV:'5px', btnPadH:'10px', btnFontSize:'12px', btnFontWeight:'500' };
+    if (vkBtn){ var bcs = getComputedStyle(vkBtn);
+      if (isReal(bcs.backgroundColor)) S.btnBg = bcs.backgroundColor;
+      if (isReal(bcs.color)) S.btnFg = bcs.color;
+      if (isReal(bcs.borderTopColor) && parseFloat(bcs.borderTopWidth) > 0) S.btnBorder = bcs.borderTopColor;
+      if (bcs.borderTopLeftRadius) S.btnRadius = bcs.borderTopLeftRadius;
+      if (bcs.fontSize) S.btnFontSize = bcs.fontSize;
+      if (bcs.fontWeight) S.btnFontWeight = bcs.fontWeight;
+    }
+    var vkInput = body.querySelector('.field-wrap textarea') || body.querySelector('textarea');
+    var IN = { bg: S.btnBg, fg: S.btnFg, border: S.btnBorder, radius: S.btnRadius };
+    if (vkInput){ var ics = getComputedStyle(vkInput);
+      if (isReal(ics.backgroundColor)) IN.bg = ics.backgroundColor;
+      if (isReal(ics.color)) IN.fg = ics.color;
+      if (isReal(ics.borderTopColor)) IN.border = ics.borderTopColor;
+      if (ics.borderTopLeftRadius) IN.radius = ics.borderTopLeftRadius;
+    }
+    var ACCENT = '#c97a1d';
+    for (var k = 0; k < allBtns.length; k++){
+      var acs = getComputedStyle(allBtns[k]), abg = acs.backgroundColor;
+      if (!isReal(abg)) continue;
+      var m = abg.match(/\d+/g); if (!m || m.length < 3) continue;
+      var r = +m[0], g = +m[1], b = +m[2];
+      if (r > 180 && g > 80 && g < 180 && b < 100){ ACCENT = abg; break; }
+    }
+    console.log('[V13 colors]', JSON.stringify({ PANEL_BG:PANEL_BG, PANEL_FG:PANEL_FG, BTN_BG:S.btnBg, IN_BG:IN.bg, ACCENT:ACCENT }));
+
+    // ── helpers ──
+    function mkEl(tag, css, props){
+      var e = document.createElement(tag);
+      if (css) e.style.cssText = css;
+      if (props) for (var p in props){
+        if (p === 'text') e.textContent = props[p];
+        else if (p === 'cls') e.className = props[p];
+        else e.setAttribute(p, props[p]);
+      }
+      return e;
+    }
+    function toastMsg(m){
+      var t = document.getElementById('toast') || document.querySelector('.toast'); if (!t) return;
+      t.textContent = m; t.classList.add('show');
+      clearTimeout(t._timer);
+      t._timer = setTimeout(function(){ t.classList.remove('show'); }, 2200);
+    }
+    function copyText(txt){
+      var tmp = document.createElement('textarea');
+      tmp.value = txt; tmp.style.cssText='position:fixed;opacity:0;left:-9999px';
+      body.appendChild(tmp); tmp.focus(); tmp.select();
+      var ok = false; try { ok = document.execCommand('copy'); } catch(e){}
+      body.removeChild(tmp);
+      if (!ok && navigator.clipboard){ try { navigator.clipboard.writeText(txt); ok=true; } catch(e){} }
+      toastMsg(ok ? '✓ Скопировано' : '❌ Не удалось');
+    }
+
+    // ── маленькая иконка-кнопка ──
+    function iconBtn(icon, title, onClick){
+      var b = mkEl('button', null, {type:'button', text:icon});
+      b.title = title;
+      b.style.cssText =
+        'display:inline-flex !important;align-items:center !important;justify-content:center !important;'
+        + 'width:28px !important;height:28px !important;padding:0 !important;margin:0 !important;'
+        + 'background:' + S.btnBg + ' !important;color:' + S.btnFg + ' !important;'
+        + 'border:1px solid ' + S.btnBorder + ' !important;border-radius:4px !important;'
+        + 'font-size:14px !important;line-height:1 !important;cursor:pointer !important;'
+        + 'opacity:0.9 !important;transition:background .15s,color .15s,opacity .15s !important;'
+        + 'box-sizing:border-box !important';
+      b.addEventListener('mouseenter', function(){
+        b.style.setProperty('opacity','1','important');
+        b.style.setProperty('color', ACCENT, 'important');
+      });
+      b.addEventListener('mouseleave', function(){
+        b.style.setProperty('opacity','0.9','important');
+        b.style.setProperty('color', S.btnFg, 'important');
+      });
+      if (onClick) b.addEventListener('click', onClick);
+      return b;
+    }
+
+    // ═══ V23: 🗑 + галочка «подтверждать» + кнопка [?] ═══
+    var CONFIRM_KEY = 'vp_confirm_clear';
+    function getConfirmClearPref(){
+      try { return localStorage.getItem(CONFIRM_KEY) === '1'; } catch(e){ return false; }
+    }
+    function setConfirmClearPref(v){
+      try { localStorage.setItem(CONFIRM_KEY, v ? '1' : '0'); } catch(e){}
+    }
+    function clearAndUndo(el, wrapper, lsKey){
+      if (!el.value || !el.value.trim()){ toastMsg('Поле уже пустое'); return; }
+      try { wrapper.querySelectorAll('.vp-undo-bar').forEach(function(b){ if (b.parentNode) b.parentNode.removeChild(b); }); } catch(e){}
+      if (!getConfirmClearPref()){
+        el.value = '';
+        if (lsKey){ try { localStorage.removeItem(lsKey); } catch(e){} }
+        toastMsg('✓ Удалено');
+        return;
+      }
+      var bar = document.createElement('div');
+      bar.className = 'vp-undo-bar';
+      bar.style.cssText =
+        'display:flex !important;align-items:center !important;gap:10px !important;flex-wrap:wrap !important;'
+        + 'margin:8px 0 0 !important;padding:10px 14px !important;'
+        + 'background:rgba(239,68,68,0.10) !important;border:1px solid rgba(239,68,68,0.45) !important;'
+        + 'border-radius:6px !important;font-size:12px !important;color:#e5e5ee !important;'
+        + 'font-family:inherit !important;line-height:1.4 !important;box-sizing:border-box !important';
+      var txt = document.createElement('span');
+      txt.innerHTML = '🗑 <b>Очистить текст?</b> <small style="opacity:0.7">— необратимо</small>';
+      txt.style.cssText = 'flex:1 1 180px !important';
+      bar.appendChild(txt);
+      var no = document.createElement('button');
+      no.type = 'button'; no.textContent = '✗ Отмена';
+      no.style.cssText =
+        'padding:6px 14px !important;margin:0 !important;background:transparent !important;'
+        + 'border:1px solid currentColor !important;border-radius:4px !important;color:inherit !important;'
+        + 'font-family:inherit !important;font-size:12px !important;font-weight:500 !important;cursor:pointer !important';
+      bar.appendChild(no);
+      var yes = document.createElement('button');
+      yes.type = 'button'; yes.textContent = '✓ Подтвердить';
+      yes.style.cssText =
+        'padding:6px 16px !important;margin:0 !important;background:#ef4444 !important;'
+        + 'color:#fff !important;border:1px solid #ef4444 !important;border-radius:4px !important;'
+        + 'font-family:inherit !important;font-size:12px !important;font-weight:600 !important;cursor:pointer !important';
+      bar.appendChild(yes);
+      wrapper.appendChild(bar);
+      function closeBar(){ if (bar.parentNode) bar.parentNode.removeChild(bar); }
+      no.addEventListener('click', function(e){ e.preventDefault(); closeBar(); toastMsg('✗ Отменено'); });
+      yes.addEventListener('click', function(e){
+        e.preventDefault();
+        el.value = '';
+        if (lsKey){ try { localStorage.removeItem(lsKey); } catch(e){} }
+        closeBar();
+        toastMsg('✓ Удалено');
+      });
+    }
+    function showEditorHelp(){
+      var ex = document.getElementById('vp-editor-help');
+      if (ex){ ex.remove(); return; }
+      var ov = document.createElement('div');
+      ov.id = 'vp-editor-help';
+      ov.style.cssText =
+        'position:fixed !important;inset:0 !important;background:rgba(0,0,0,0.65) !important;'
+        + 'z-index:2147483647 !important;display:flex !important;align-items:center !important;justify-content:center !important;'
+        + 'padding:20px !important;box-sizing:border-box !important;font-family:system-ui,sans-serif !important';
+      ov.innerHTML = ''
+        + '<div style="background:#1e1e2e;color:#e5e5ee;border-radius:10px;max-width:600px;width:100%;max-height:85vh;overflow:auto;padding:24px;box-shadow:0 12px 40px rgba(0,0,0,0.7);box-sizing:border-box;font-size:13px;line-height:1.6">'
+        + '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px">'
+        + '<h2 style="margin:0;font-size:18px">📄 Редактор кода — справка</h2>'
+        + '<button id="vp-help-x" style="width:32px;height:32px;padding:0;border-radius:50%;background:#2a2a3e;color:#e5e5ee;border:none;cursor:pointer;font-size:16px;font-weight:700">✕</button>'
+        + '</div>'
+        + '<h3 style="margin:16px 0 8px;font-size:14px;color:#c97a1d">Кнопки</h3>'
+        + '<ul style="margin:0 0 12px;padding-left:20px">'
+        + '<li><b>📋</b> — скопировать весь код в буфер обмена (правый верхний угол поля)</li>'
+        + '<li><b>🗑</b> — очистить поле (правый верхний угол). Если стоит ☑ «Подтверждать очистку» — сначала спросит</li>'
+        + '<li><b>☑ Подтверждать очистку</b> — ОДНА общая галочка внизу панели (сохраняется)</li>'
+        + '<li><b>?</b> — эта справка</li>'
+        + '</ul>'
+        + '<h3 style="margin:16px 0 8px;font-size:14px;color:#c97a1d">Галочка «Подтверждать очистку»</h3>'
+        + '<p style="margin:0 0 8px"><b>☑ стоит</b> → клик 🗑 показывает плашку «Очистить? [✗ Отмена] [✓ Подтвердить]» — текст удаляется только после ✓. Одна общая галочка внизу панели — действует для всех полей сразу</p>'
+        + '<p style="margin:0 0 12px"><b>☐ не стоит</b> → клик 🗑 удаляет сразу, без вопросов</p>'
+        + '<h3 style="margin:16px 0 8px;font-size:14px;color:#c97a1d">Автосохранение</h3>'
+        + '<p style="margin:0 0 12px">Всё, что вводишь — сохраняется автоматически. Текст не потеряется при закрытии попапа.</p>'
+        + '<h3 style="margin:16px 0 8px;font-size:14px;color:#c97a1d">Совет</h3>'
+        + '<p style="margin:0 0 12px">Перед крупными правками нажми 📋 — скопируй текущий код в буфер. Если сломаешь — вставишь обратно.</p>'
+        + '<p style="margin:16px 0 0;font-size:11px;color:#7a7a8e">Код хранится в localStorage.vp_editor_html</p>'
+        + '</div>';
+      document.body.appendChild(ov);
+      ov.addEventListener('click', function(e){ if (e.target === ov) ov.remove(); });
+      var xx = ov.querySelector('#vp-help-x');
+      if (xx) xx.addEventListener('click', function(){ ov.remove(); });
+    }
+
+    // ── поле (textarea/input) + кнопки 📋/🗑 в правом верхнем углу ──
+
+
+    // ── runtime CSS для .vp-hl-code (не зависит от <style> в HTML) ──
+    (function vpHlInject(){
+      try {
+        if (document.getElementById('vp-hl-css')) return;
+        var css = ''
+          + '.vp-hl-code{font-family:Consolas,Menlo,monospace!important;font-size:12px!important;'
+          + 'line-height:1.5!important;tab-size:2!important;white-space:pre-wrap!important;'
+          + 'word-break:break-word!important;overflow-wrap:anywhere!important;'
+          + 'max-height:40vh!important;overflow-y:auto!important;overflow-x:hidden!important;'
+          + 'resize:none!important}'
+          + '.vp-hl-code::-webkit-scrollbar{width:10px;height:10px}'
+          + '.vp-hl-code::-webkit-scrollbar-track{background:rgba(255,255,255,0.04)}'
+          + '.vp-hl-code::-webkit-scrollbar-thumb{background:rgba(255,255,255,0.18);border-radius:5px}'
+          + '.vp-hl-code::-webkit-scrollbar-thumb:hover{background:rgba(255,255,255,0.30)}'
+          + '#vp-html-src::-webkit-scrollbar{width:10px;height:10px}'
+          + '#vp-html-src::-webkit-scrollbar-track{background:rgba(255,255,255,0.04)}'
+          + '#vp-html-src::-webkit-scrollbar-thumb{background:rgba(255,255,255,0.18);border-radius:5px}'
+          + '#vp-html-src::-webkit-scrollbar-thumb:hover{background:rgba(255,255,255,0.30)}'
+          + '.vp-hl-code .t-p{color:#abb2bf!important}'
+          + '.vp-hl-code .t-tag{color:#61afef!important}'
+          + '.vp-hl-code .t-attr{color:#e5c07b!important}'
+          + '.vp-hl-code .t-str{color:#98c379!important}'
+          + '.vp-hl-code .t-doc{color:#c678dd!important}'
+          + '.vp-hl-code .t-com{color:#5c6370!important;font-style:italic!important}'
+          + '.vp-hl-code .t-ent{color:#d19a66!important}'
+          + '.vp-hl-code[data-empty]::before{content:attr(data-ph);color:#5c6370!important;'
+          + 'pointer-events:none!important;user-select:none!important}';
+        var st = document.createElement('style');
+        st.id = 'vp-hl-css';
+        st.textContent = css;
+        (document.head || document.documentElement).appendChild(st);
+      } catch(e){
+        try { console.warn('[vp-hl] CSS inject failed:', e && e.message); } catch(_){}
+      }
+    })();
+
+    // ── vpHlFit v10.0: CSS calc + overflow-feedback ──────────
+    (function vpHlFitSetup(){
+      var V = 10.0;
+      var prevV = window.__vpHlFitV || 0;
+      if (prevV >= V) { console.log('[vpfit v' + V + '] bail=' + prevV); return; }
+      window.__vpHlFitV = V;
+      try { delete window.__vpHlFitBound; } catch(_){}
+      console.log('[vpfit v' + V + '] loaded (calc + overflow-feedback)');
+
+      var CHROME_BASE = 290;
+      var applying    = false;
+
+      function measureOverflow(){
+        try {
+          var vh = window.innerHeight || document.documentElement.clientHeight;
+          var dh = document.documentElement.scrollHeight || 0;
+          var bh = document.body ? document.body.scrollHeight : 0;
+          return Math.max(0, Math.max(dh, bh) - vh);
+        } catch(_){ return 0; }
+      }
+
+      function setFields(chrome){
+        var src = document.getElementById('vp-html-src');
+        if (!src) return false;
+        var base = '(100vh - ' + chrome + 'px)';
+        var sH   = 'max(60px, calc(' + base + ' * 0.35))';
+
+        src.style.setProperty('height',     sH, 'important');
+        src.style.setProperty('min-height', sH, 'important');
+        src.style.setProperty('max-height', sH, 'important');
+        src.style.setProperty('overflow-y', 'auto', 'important');
+        src.style.setProperty('resize',     'none', 'important');
+        // #vp-html-out = CodeMirror — он сам рулит своей высотой через CSS
+        return true;
+      }
+
+      function apply(reason){
+        if (applying) return;
+        var src = document.getElementById('vp-html-src');
+        var out = document.getElementById('vp-html-out');
+        if (!src || !out) return;
+        if (!src.offsetParent || !out.offsetParent) return;
+
+        applying = true;
+        try {
+          setFields(CHROME_BASE);   // чистое состояние — дрейфа не может быть
+
+          requestAnimationFrame(function(){
+            try {
+              var vh   = window.innerHeight || document.documentElement.clientHeight;
+              var over = measureOverflow();
+              if (over > 4) {
+                var maxChrome = Math.round(vh * 0.72);
+                var adjusted  = Math.min(CHROME_BASE + over + 4, maxChrome);
+                setFields(adjusted);
+                console.log('[vpfit v' + V + '] shrink(' + reason + ') over=' + over +
+                            ' chrome=' + adjusted + ' max=' + maxChrome + ' vh=' + vh);
+              } else {
+                console.log('[vpfit v' + V + '] apply(' + reason + ') chrome=' + CHROME_BASE +
+                            ' over=' + over + ' vh=' + (window.innerHeight || 0));
+              }
+            } finally {
+              applying = false;
+            }
+          });
+        } catch(e){
+          applying = false;
+          console.warn('[vpfit err]', e && e.message);
+        }
+      }
+
+      window.vpfit = function(){ apply('manual'); };
+
+      apply('init');
+      [100, 300, 700, 1500, 3000, 5000].forEach(function(t){
+        setTimeout(function(){ apply('t' + t); }, t);
+      });
+
+      if (window.__vpHlT) clearTimeout(window.__vpHlT);
+      window.addEventListener('resize', function(){
+        if (window.__vpHlT) clearTimeout(window.__vpHlT);
+        window.__vpHlT = setTimeout(function(){ apply('resize'); }, 120);
+      });
+
+      document.addEventListener('click', function(){
+        setTimeout(function(){ apply('click'); }, 30);
+      }, true);
+
+      try {
+        if (window.__vpHlMO) window.__vpHlMO.disconnect();
+        var moT = null;
+        var mo = new MutationObserver(function(){
+          if (moT) clearTimeout(moT);
+          moT = setTimeout(function(){ apply('mutation'); }, 250);
+        });
+        mo.observe(document.body, { childList: true, subtree: true });
+        window.__vpHlMO = mo;
+        console.log('[vpfit v' + V + '] MO body (banner detect)');
+      } catch(e){ console.warn('[vpfit MO err]', e && e.message); }
+    })();
+
+    // ── подсветка HTML в поле «Готовый HTML» ────────────────────
+    function escAttr(v){
+      return esc(v).replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+    }
+    function hlText(t){
+      if (!t) return '';
+      // разделяем entity (&amp;, &#123;, &#x1F;) и обычный текст
+      var parts = t.split(/(&(?:[a-zA-Z]+|#\d+|#x[0-9a-fA-F]+);)/);
+      var out = '';
+      for (var i = 0; i < parts.length; i++){
+        if (!parts[i]) continue;
+        if (i % 2 === 1) out += '<span class="t-ent">' + esc(parts[i]) + '</span>';
+        else out += esc(parts[i]);
+      }
+      return out;
+    }
+    function hlAttrs(t){
+      if (!t) return '';
+      var re = /(\s*)([a-zA-Z_:][a-zA-Z0-9_.:-]*)(\s*=\s*)("[^"]*"|'[^']*'|[^\s>]+)?|(\s+)(\/?)/g;
+      var out = '', last = 0, m;
+      while ((m = re.exec(t)) !== null){
+        if (m[0].length === 0){ re.lastIndex++; continue; }
+        if (m[2]){
+          out += '<span class="t-p">' + esc(m[1] || ' ') + '</span>';
+          out += '<span class="t-attr">' + esc(m[2]) + '</span>';
+          if (m[3] && m[4]){
+            out += '<span class="t-p">' + esc(m[3]) + '</span>';
+            out += '<span class="t-str">' + esc(m[4]) + '</span>';
+          } else if (m[3]){
+            out += '<span class="t-p">' + esc(m[3]) + '</span>';
+          }
+        }
+        last = re.lastIndex;
+      }
+      if (last < t.length) out += esc(t.slice(last));
+      return out;
+    }
+    function hlHtml(html){
+      if (!html) return '';
+      var re = /(<!--[\s\S]*?-->)|(<!DOCTYPE\b[^>]*>)|(<\/?)([a-zA-Z][a-zA-Z0-9-]*)((?:\s+[^<>]*?)?)(\/?>)/gi;
+      var out = '', last = 0, m;
+      while ((m = re.exec(html)) !== null){
+        if (m.index > last) out += hlText(html.slice(last, m.index));
+        if (m[1]) out += '<span class="t-com">' + esc(m[1]) + '</span>';
+        else if (m[2]) out += '<span class="t-doc">' + esc(m[2]) + '</span>';
+        else {
+          out += '<span class="t-p">' + esc(m[3]) + '</span>';
+          out += '<span class="t-tag">' + esc(m[4]) + '</span>';
+          out += hlAttrs(m[5] || '');
+          out += '<span class="t-p">' + esc(m[6]) + '</span>';
+        }
+        last = m.index + m[0].length;
+      }
+      if (last < html.length) out += hlText(html.slice(last));
+      return out;
+    }
+    function makeHlOut(ph, minH, onCopy, onClear){
+      var wrap = mkEl('div');
+      wrap.className = 'vp-cm-wrap';
+      wrap.style.cssText = 'margin:0 !important;position:relative !important;display:flex !important;flex-direction:column !important;flex:1 1 0 !important;min-height:40px !important';
+
+      var div = document.createElement('div');
+      div.id = 'vp-html-out';
+      div.style.setProperty('height',     'auto', 'important');
+      div.style.setProperty('min-height', '40px', 'important');
+      div.style.setProperty('flex',       '1 1 0', 'important');
+      div.style.setProperty('width',      '100%',  'important');
+      div.style.setProperty('position',   'relative', 'important');
+      wrap.appendChild(div);
+
+      // fallback textarea (виден если CDM не загрузится)
+      var ta = document.createElement('textarea');
+      ta.placeholder = ph || '';
+      ta.style.cssText =
+        'width:100% !important;box-sizing:border-box !important;'
+        + 'padding:36px 14px 10px !important;margin:0 !important;'
+        + 'background:#282a36 !important;color:#f8f8f2 !important;'
+        + 'border:1px solid #3a3a4a !important;border-radius:6px !important;'
+        + 'font-family:Consolas,Menlo,monospace !important;font-size:12px !important;'
+        + 'line-height:1.5 !important;min-height:' + (minH || '240px') + ' !important;'
+        + 'max-height:40vh !important;resize:vertical !important;outline:none !important';
+      div.appendChild(ta);
+
+      var raw = '';
+      Object.defineProperty(div, 'value', {
+        configurable: true,
+        get: function(){ return div.__cm ? div.__cm.getValue() : ta.value; },
+        set: function(v){
+          raw = (v == null ? '' : String(v));
+          if (div.__cm) div.__cm.setValue(raw);
+          else ta.value = raw;
+        }
+      });
+
+      var row = mkEl('div');
+      row.className = 'vp-field-actions';
+      row.style.cssText =
+        'position:absolute !important;top:6px !important;right:6px !important;z-index:10 !important;'
+        + 'display:flex !important;align-items:center !important;gap:4px !important';
+      if (onCopy) row.appendChild(iconBtn('\u{1F4CB}', 'Копировать', onCopy));
+      if (onClear) row.appendChild(iconBtn('\u{1F5D1}', 'Очистить', function(e){ e.preventDefault(); onClear(); }));
+      wrap.appendChild(row);
+
+      div.__initCM = function(){
+        if (div.__cm) return div.__cm;
+        if (!window.CodeMirror){
+          if ((div.__cm_retry = (div.__cm_retry || 0) + 1) <= 10){
+            setTimeout(function(){ div.__initCM(); }, 300);
+          } else {
+            console.warn('[vp-cm] CodeMirror не загрузился за 3с — оставляю textarea');
+          }
+          return;
+        }
+        try {
+          var cm = window.CodeMirror(div, {
+            value: raw || ta.value || '',
+            mode: 'htmlmixed',
+            theme: 'dracula',
+            lineNumbers: true,
+            lineWrapping: true,
+            indentUnit: 2,
+            tabSize: 2,
+            indentWithTabs: false,
+            autoCloseBrackets: true,
+            autoCloseTags: true,
+            highlightActiveLine: true,
+            extraKeys: {
+              'Ctrl-S': function(){ var b=document.querySelector('button[data-vp-save]'); if(b){b.click();} return false; },
+              'Cmd-S':  function(){ var b=document.querySelector('button[data-vp-save]'); if(b){b.click();} return false; },
+              'Ctrl-F': 'findPersistent',
+              'Cmd-F':  'findPersistent'
+            }
+          });
+          div.__cm = cm;
+          ta.style.display = 'none';
+          var cmWrap = cm.getWrapperElement();
+
+          cm.on('change', function(){ raw = cm.getValue(); });
+          [0, 100, 300, 800].forEach(function(ms){
+            setTimeout(function(){ try { cm.refresh(); } catch(_){} }, ms);
+          });
+          console.log('[vp-cm] init OK, rect:', cmWrap.getBoundingClientRect());
+          return cm;
+        } catch(e) {
+          console.error('[vp-cm] init FAIL:', e && e.message);
+          console.error('[vp-cm] stack:', e && e.stack);
+          ta.style.display = '';   // вернул textarea
+          console.warn('[vp-cm] fallback → textarea (CM не сработал)');
+          return null;
+        }
+      };
+
+      return { wrap: wrap, el: div };
+    }
+    function mkField(tag, id, ph, mono, withCopy, withClear, onCopy, onClearConfirmed, minH){
+      var hasActions = withCopy || withClear;
+      var wrap = mkEl('div');
+      wrap.style.cssText = 'margin:0 0 14px !important' + (hasActions ? ';position:relative !important' : '');
+      var el = document.createElement(tag);
+      if (id) el.id = id;
+      if (ph) el.placeholder = ph;
+      var padTop = hasActions ? '36px' : '10px';
+      el.style.cssText =
+        'width:100% !important;box-sizing:border-box !important;'
+        + 'padding:' + padTop + ' 14px 10px !important;margin:0 !important;'
+        + 'background:' + IN.bg + ' !important;color:' + IN.fg + ' !important;'
+        + 'border:1px solid ' + IN.border + ' !important;border-radius:' + IN.radius + ' !important;'
+        + 'font-family:' + (mono ? 'Consolas,Menlo,monospace' : FONT) + ' !important;'
+        + 'font-size:' + (mono ? '12px' : '13px') + ' !important;'
+        + 'line-height:1.5 !important;resize:none !important;display:block !important;'
+        + 'outline:none !important;min-height:' + (minH || '240px') + ' !important';
+      wrap.appendChild(el);
+      if (hasActions){
+        var iconRow = mkEl('div');
+        iconRow.className = 'vp-field-actions';
+        iconRow.style.cssText =
+          'position:absolute !important;top:6px !important;right:6px !important;z-index:10 !important;'
+          + 'display:flex !important;align-items:center !important;gap:4px !important';
+        if (withCopy) iconRow.appendChild(iconBtn('📋', 'Копировать', onCopy));
+        if (withClear) iconRow.appendChild(iconBtn('🗑', 'Очистить', function(e){ e.preventDefault(); onClearConfirmed(); }));
+        wrap.appendChild(iconRow);
+      }
+      return { wrap: wrap, el: el };
+    }
+
+    // ═══ TAB BAR ═══
+    var tabsRow = mkEl('div', null, {cls:'vp-tabs-row'});
+    tabsRow.style.cssText =
+      'position:sticky !important;top:0 !important;z-index:99999 !important;'
+      + 'display:flex !important;align-items:stretch !important;gap:0 !important;'
+      + 'padding:0 14px !important;margin:0 !important;'
+      + 'background:' + PANEL_BG + ' !important;'
+      + 'border-bottom:1px solid ' + S.btnBorder + ' !important;'
+      + 'box-sizing:border-box !important;font-family:' + FONT + ' !important';
+
+    function mkTab(text){
+      var t = mkEl('button', null, {type:'button', text:text});
+      t.style.cssText =
+        'padding:10px 16px !important;margin:0 !important;background:transparent !important;'
+        + 'border:none !important;border-bottom:2px solid transparent !important;'
+        + 'font-family:' + FONT + ' !important;font-size:' + S.btnFontSize + ' !important;font-weight:' + S.btnFontWeight + ' !important;'
+        + 'line-height:1 !important;height:auto !important;width:auto !important;min-width:0 !important;'
+        + 'cursor:pointer !important;color:' + S.btnFg + ' !important;'
+        + 'outline:none !important;border-radius:0 !important;box-sizing:border-box !important;'
+        + 'text-transform:none !important;letter-spacing:normal !important;'
+        + 'text-shadow:none !important;box-shadow:none !important;'
+        + 'transition:color .15s,border-color .15s !important';
+      return t;
+    }
+    var btnVk = mkTab('📝 ВК-редактор'); btnVk.setAttribute('data-vp-tab','vk');
+    var btnHtml = mkTab('📄 HTML-редактор'); btnHtml.setAttribute('data-vp-tab','html');
+    tabsRow.appendChild(btnVk); tabsRow.appendChild(btnHtml);
+
+    // ═══ PANEL ═══
+    var panel = mkEl('div', null, {cls:'vp-html-panel'});
+    panel.style.cssText =
+      'display:none !important;padding:16px 20px 32px !important;margin:0 !important;'
+      + 'background:' + PANEL_BG + ' !important;color:' + PANEL_FG + ' !important;'
+      + 'font-family:' + FONT + ' !important;font-size:13px !important;line-height:1.5 !important;'
+      + 'box-sizing:border-box !important';
+
+
+    // ═══ Global control bar: ☑ Подтверждать очистку + ? help ═══
+    var globalBar = mkEl('div');
+    globalBar.style.cssText = 'display:flex !important;align-items:center !important;gap:12px !important;margin:12px 0 0 !important;flex-wrap:wrap !important';
+    var confirmLbl = document.createElement('label');
+    confirmLbl.title = 'Требовать подтверждение перед очисткой любого поля';
+    confirmLbl.style.cssText = 'display:inline-flex !important;align-items:center !important;gap:6px !important;font-size:12px !important;color:' + PANEL_FG + ' !important;cursor:pointer !important;user-select:none !important;margin:0 !important';
+    var confirmCb = document.createElement('input');
+    confirmCb.type = 'checkbox';
+    confirmCb.checked = getConfirmClearPref();
+    confirmCb.style.cssText = 'margin:0 !important;cursor:pointer !important;accent-color:' + ACCENT + ' !important;width:14px !important;height:14px !important';
+    confirmCb.addEventListener('change', function(){
+      setConfirmClearPref(confirmCb.checked);
+      toastMsg(confirmCb.checked ? '☑ Спрашивать перед очисткой' : '☐ Удалять сразу');
+    });
+    confirmLbl.appendChild(confirmCb);
+    confirmLbl.setAttribute('data-vp-tip', 'Подтверждать очистку — спрашивать перед удалением');
+    confirmLbl.removeAttribute('title');
+    globalBar.appendChild(confirmLbl);
+
+    // V25.6: кнопка «?» удалена; showEditorHelp() остаётся определённой на будущее
+
+
+    function addLabel(text){
+      var l = mkEl('label', null, {text:text});
+      l.style.cssText = 'display:block !important;margin:0 0 6px !important;font-size:12px !important;font-weight:500 !important;color:' + PANEL_FG + ' !important;opacity:0.75 !important';
+      return l;
+    }
+
+    // ── chip «есть сохранённый текст» ──
+    var savedSrc = null;
+    try { savedSrc = localStorage.getItem('vp-html-src'); } catch(e){}
+    if (savedSrc && savedSrc.trim()){
+      var chip = mkEl('div', null, {cls:'vp-ls-chip'});
+      chip.style.cssText = 'display:flex !important;align-items:center !important;gap:8px !important;padding:8px 12px !important;margin:0 0 12px !important;background:rgba(201,122,29,0.12) !important;border:1px solid ' + ACCENT + ' !important;border-radius:5px !important;font-size:12px !important;color:' + PANEL_FG + ' !important';
+      chip.appendChild(mkEl('span', 'flex:1 !important', {text:'📥 Есть сохранённый текст (' + savedSrc.length + ' симв.)'}));
+      var btnRestore = mkEl('button', null, {type:'button', text:'Вставить'});
+      btnRestore.style.cssText = 'padding:5px 10px !important;margin:0 !important;background:' + ACCENT + ' !important;color:#fff !important;border:1px solid ' + ACCENT + ' !important;border-radius:4px !important;font-size:11px !important;font-weight:500 !important;cursor:pointer !important;font-family:inherit !important';
+      btnRestore.addEventListener('click', function(){
+        if (f1 && f1.el) f1.el.value = savedSrc;
+        chip.parentNode && chip.parentNode.removeChild(chip);
+        toastMsg('✓ Вставлен прошлый текст');
+      });
+      var btnForget = mkEl('button', null, {type:'button', text:'Забыть'});
+      btnForget.style.cssText = 'padding:5px 10px !important;margin:0 !important;background:transparent !important;color:' + PANEL_FG + ' !important;border:1px solid ' + S.btnBorder + ' !important;border-radius:4px !important;font-size:11px !important;font-weight:500 !important;cursor:pointer !important;font-family:inherit !important';
+      btnForget.addEventListener('click', function(){
+        try { localStorage.removeItem('vp-html-src'); localStorage.removeItem('vp-page-source'); } catch(e){}
+        chip.parentNode && chip.parentNode.removeChild(chip);
+        toastMsg('🗑 Сохранённый текст забыт');
+      });
+      chip.appendChild(btnRestore); chip.appendChild(btnForget);
+      panel.appendChild(chip);
+    }
+
+    // ── поле «Текст» + 📋🗑 ──
+    panel.appendChild(addLabel('Введи или вставь текст:'));
+    var f1 = mkField('textarea', 'vp-html-src', '# Заголовок\n\nАбзац.\n\n![Кот](https://example.com/cat.jpg)', false, true, true,
+      function(){ if (!f1.el.value.trim()) return toastMsg('Поле пусто'); copyText(f1.el.value); },
+      function(){ clearAndUndo(f1.el, f1.wrap, 'vp-html-src'); });
+    panel.appendChild(f1.wrap);
+    // ── V25.1: 🧹 в верхнее поле, между 📋 и 🗑 ──
+    var btnStrip = iconBtn('🧹', 'Очистить от HTML-кода (toggle)', function(){});
+    btnStrip.setAttribute('data-vp-strip', '1');
+    (function(){
+      var copyBtn = f1.wrap.querySelector('button[title="Копировать"]');
+      var clearBtn = f1.wrap.querySelector('button[title="Очистить"]');
+      if (copyBtn && clearBtn && copyBtn.parentNode && copyBtn.parentNode === clearBtn.parentNode){
+        copyBtn.parentNode.insertBefore(btnStrip, clearBtn);
+      }
+    })();
+
+    // ── кнопки действий ──
+    function mkActionBtn(text, primary){
+      var b = mkEl('button', null, {type:'button', text:text});
+      b.style.cssText =
+        'display:inline-flex !important;align-items:center !important;justify-content:center !important;'
+        + 'padding:' + S.btnPadV + ' ' + S.btnPadH + ' !important;margin:0 !important;'
+        + 'background:' + (primary ? ACCENT : S.btnBg) + ' !important;'
+        + 'color:' + (primary ? '#ffffff' : S.btnFg) + ' !important;'
+        + 'border:1px solid ' + (primary ? ACCENT : S.btnBorder) + ' !important;'
+        + 'border-radius:' + S.btnRadius + ' !important;font-family:' + FONT + ' !important;'
+        + 'font-size:' + S.btnFontSize + ' !important;font-weight:' + S.btnFontWeight + ' !important;'
+        + 'line-height:1 !important;cursor:pointer !important;outline:none !important;'
+        + 'box-sizing:border-box !important;white-space:nowrap !important;'
+        + 'width:auto !important;min-width:0 !important;flex:0 0 auto !important;'
+        + 'text-transform:none !important;letter-spacing:normal !important;'
+        + 'box-shadow:none !important;text-shadow:none !important';
+      return b;
+    }
+    var actRow = mkEl('div');
+    actRow.style.cssText = 'display:flex !important;gap:6px !important;flex-wrap:wrap !important;align-items:center !important;margin:0 0 10px !important';
+    var btnFormat = mkActionBtn('📄', true);
+    var btnSave = mkActionBtn('💾', false);
+    btnSave.setAttribute('data-vp-save', '1');
+    btnFormat.setAttribute('data-vp-tip', 'Сверстать HTML');
+    btnFormat.removeAttribute('title');
+    btnSave.setAttribute('data-vp-tip', 'Скачать HTML-файл');
+    btnSave.removeAttribute('title');
+    btnFormat.style.setProperty('min-width', '34px', 'important');
+    btnFormat.style.setProperty('font-size', '15px', 'important');
+    btnSave.style.setProperty('min-width', '34px', 'important');
+    btnSave.style.setProperty('font-size', '15px', 'important');
+    actRow.appendChild(btnFormat); actRow.appendChild(btnSave);
+    panel.appendChild(actRow);
+
+    // ── источник: inline с кнопками (V25.3) ──
+    var f2 = mkField('input', 'vp-html-source', 'URL источника (необязательно)', true, false, false, null, null, '36px');
+    f2.el.type = 'url';
+    try { f2.wrap.style.setProperty('margin', '0', 'important'); } catch(e){}
+    try { f2.wrap.style.setProperty('flex', '1 1 200px', 'important'); } catch(e){}
+    try { f2.wrap.style.setProperty('min-width', '160px', 'important'); } catch(e){}
+    actRow.appendChild(f2.wrap);
+
+    // ── V25: сплиттер между верхней и нижней зоной (только вертикаль) ──
+    var splitter = mkEl('div', null, {cls:'vp-splitter', title:'Потяни вверх/вниз · двойной клик — сброс'});
+    splitter.style.cssText = 'height:8px !important;margin:4px 0 10px !important;cursor:ns-resize !important;'
+      + 'background:linear-gradient(to bottom, transparent, rgba(255,255,255,0.12), transparent) !important;'
+      + 'border-radius:4px !important;user-select:none !important;position:relative !important;'
+      + 'display:flex !important;align-items:center !important;justify-content:center !important';
+    var splitterGrip = document.createElement('div');
+    splitterGrip.style.cssText = 'width:32px !important;height:2px !important;background:rgba(255,255,255,0.30) !important;border-radius:1px !important;pointer-events:none !important';
+    splitter.appendChild(splitterGrip);
+    panel.appendChild(splitter);
+
+    // ── готовый HTML + 📋🗑 ──
+    panel.appendChild(addLabel('Готовый HTML:'));
+    var f3 = makeHlOut('Готовый HTML появится здесь…', '240px',
+      function(){ if (!f3.el.value.trim()) return toastMsg('Сначала сверстай'); copyText(f3.el.value); },
+      function(){ clearAndUndo(f3.el, f3.wrap, null); });
+    panel.appendChild(f3.wrap);
+
+    // CodeMirror инициализируется в setView('html') — только при первом показе
+    // (иначе CM при display:none измеряет размеры как 0×0 и «не рисуется»).
+    panel.appendChild(globalBar);
+
+    // ── V25: ☑ Подтверждать + ? → в actRow ──
+    try {
+      if (globalBar && actRow && globalBar.firstChild){
+        while (globalBar.firstChild) actRow.appendChild(globalBar.firstChild);
+        globalBar.style.setProperty('display', 'none', 'important');
+      }
+    } catch(e){}
+
+    // ── V25.7: custom tooltip (нативные title мерцают) ──
+    (function(){
+      if (window.__vpTipsEngineInstalled){
+        if (window.__vpMigrateTitles) window.__vpMigrateTitles(panel);
+        return;
+      }
+      window.__vpTipsEngineInstalled = true;
+
+      var st = document.createElement('style');
+      st.id = 'vp-tip-css';
+      st.textContent = '.vp-tip{position:fixed !important;z-index:2147483647 !important;'
+        + 'background:rgba(20,20,30,0.96) !important;color:#f8f8f2 !important;'
+        + 'border:1px solid rgba(201,122,29,0.6) !important;border-radius:5px !important;'
+        + 'padding:5px 9px !important;font:12px/1.4 system-ui,-apple-system,Segoe UI,sans-serif !important;'
+        + 'box-shadow:0 4px 14px rgba(0,0,0,0.5) !important;'
+        + 'pointer-events:none !important;opacity:0 !important;transition:opacity .12s !important;'
+        + 'white-space:nowrap !important;max-width:340px !important;'
+        + 'transform:translate(-50%,-100%) !important;top:0 !important;left:0 !important}'
+        + '.vp-tip.vp-tip--show{opacity:1 !important}'
+        + '.vp-tip::after{content:"" !important;position:absolute !important;'
+        + 'top:100% !important;left:50% !important;transform:translateX(-50%) !important;'
+        + 'border:5px solid transparent !important;border-top-color:rgba(20,20,30,0.96) !important;'
+        + 'margin-top:-1px !important}';
+      document.head.appendChild(st);
+
+      var tip = null, active = null, showTimer = null;
+
+      function getTip(){
+        if (tip && tip.parentNode) return tip;
+        tip = document.createElement('div');
+        tip.className = 'vp-tip';
+        tip.setAttribute('aria-hidden', 'true');
+        document.body.appendChild(tip);
+        return tip;
+      }
+      function place(x, y){
+        var el = getTip();
+        var w = el.offsetWidth || 100, h = el.offsetHeight || 22;
+        var vw = window.innerWidth;
+        var left = Math.max(w/2 + 6, Math.min(vw - w/2 - 6, x));
+        var top = Math.max(h + 6, y - 10);
+        el.style.left = left + 'px';
+        el.style.top = top + 'px';
+      }
+      function show(text, x, y){
+        var el = getTip();
+        if (el.textContent !== text) el.textContent = text;
+        place(x, y);
+        el.classList.add('vp-tip--show');
+      }
+      function hide(){
+        if (showTimer){ clearTimeout(showTimer); showTimer = null; }
+        if (tip) tip.classList.remove('vp-tip--show');
+        active = null;
+      }
+      function findTarget(el){
+        while (el && el !== document.body && el.nodeType === 1){
+          if (el.getAttribute('data-vp-tip') || el.getAttribute('title')) return el;
+          el = el.parentElement;
+        }
+        return null;
+      }
+      function textOf(el){
+        return el.getAttribute('data-vp-tip') || el.getAttribute('title') || '';
+      }
+
+      document.addEventListener('mouseover', function(e){
+        if (tip && e.target === tip) return;
+        var t = findTarget(e.target);
+        if (t !== active){
+          hide();
+          active = t;
+          if (t){
+            if (t.hasAttribute('title') && !t.hasAttribute('data-vp-tip')){
+              t.setAttribute('data-vp-tip', t.getAttribute('title'));
+              t.removeAttribute('title');
+            }
+            var x = e.clientX, y = e.clientY, txt = textOf(t);
+            showTimer = setTimeout(function(){ show(txt, x, y); showTimer = null; }, 180);
+          }
+        }
+      }, true);
+
+      document.addEventListener('mousemove', function(e){
+        if (active && tip && tip.classList.contains('vp-tip--show')){
+          place(e.clientX, e.clientY);
+        }
+      }, true);
+
+      document.addEventListener('mouseout', function(e){
+        if (!active) return;
+        if (e.relatedTarget && active.contains(e.relatedTarget)) return;
+        hide();
+      }, true);
+
+      document.addEventListener('mousedown', hide, true);
+      window.addEventListener('scroll', hide, true);
+      window.addEventListener('blur', hide);
+
+      window.__vpMigrateTitles = function(root){
+        if (!root) return;
+        try {
+          root.querySelectorAll('[title]').forEach(function(el){
+            if (el.hasAttribute('data-vp-tip')) return;
+            var t = el.getAttribute('title');
+            if (t){ el.setAttribute('data-vp-tip', t); el.removeAttribute('title'); }
+          });
+        } catch(e){}
+      };
+      window.__vpMigrateTitles(panel);
+    })();
+
+    var $src = f1.el, $source = f2.el, $out = f3.el;
+
+    // ── вставка в DOM ──
+    var first = body.firstElementChild;
+    if (first){ body.insertBefore(panel, first); body.insertBefore(tabsRow, panel); }
+    else { body.appendChild(tabsRow); body.appendChild(panel); }
+
+    var vkToHide = [];
+    Array.prototype.slice.call(body.children).forEach(function(el){
+      if (el === tabsRow || el === panel) return;
+      if (el.tagName === 'SCRIPT') return;
+      var cls = (el.className || '').toString();
+      if (cls.indexOf('toast') !== -1 || el.id === 'toast') return;
+      vkToHide.push(el);
+    });
+
+    function paintTab(el, active){
+      if (active){
+        el.style.setProperty('color', ACCENT, 'important');
+        el.style.setProperty('border-bottom-color', ACCENT, 'important');
+      } else {
+        el.style.setProperty('color', S.btnFg, 'important');
+        el.style.setProperty('border-bottom-color', 'transparent', 'important');
+      }
+    }
+    function setView(name){
+      var isHtml = name === 'html';
+      for (var i = 0; i < vkToHide.length; i++) vkToHide[i].style.display = isHtml ? 'none' : '';
+      panel.style.setProperty('display', isHtml ? 'block' : 'none', 'important');
+      paintTab(btnVk, !isHtml); paintTab(btnHtml, isHtml);
+      try { window.scrollTo(0,0); } catch(e){}
+      if (isHtml) [30, 100, 250, 600].forEach(function(ms){
+        setTimeout(function(){
+          try {
+            if (typeof f3 !== 'undefined' && f3 && f3.el){
+              if (f3.el.__initCM && !f3.el.__cm) f3.el.__initCM();
+              if (f3.el.__cm) f3.el.__cm.refresh();
+            }
+          } catch(e){}
+        }, ms);
+      });
+    }
+    btnVk.addEventListener('click', function(){ setView('vk'); });
+    btnHtml.addEventListener('click', function(){ setView('html'); });
+
+    // ── buildHtml ──
+    function esc(s){ return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;'); }
+    var IMG_STYLE='max-width:100%;height:auto;display:block;margin:14px 0;border-radius:6px';
+    function parseMd(text){
+      var raw=String(text).replace(/\r\n/g,'\n'), lines=raw.split('\n'), firstIdx=-1;
+      for (var i=0;i<lines.length;i++){ if (lines[i].trim()){ firstIdx=i; break; } }
+      if (firstIdx===-1) return {title:'Без названия', body:'<p>Пустой текст</p>'};
+      var firstLine=lines[firstIdx], title, m1=firstLine.match(/^#\s+(.+)$/);
+      if (m1) title=m1[1].trim(); else title=firstLine.trim();
+      lines[firstIdx]='';
+      var rest=lines.slice(firstIdx).join('\n').trim(), blocks=rest.split(/\n\s*\n+/), parts=[];
+      for (var bi=0;bi<blocks.length;bi++){
+        var b=blocks[bi].trim(); if (!b) continue;
+        var m2=b.match(/^##\s+(.+)$/); if (m2){ parts.push('<h2>'+esc(m2[1].trim())+'</h2>'); continue; }
+        var mImg=b.match(/^!\[([^\]]*)\]\(([^)\s]+)(?:\s+"[^"]*")?\)$/);
+        if (mImg){ parts.push('<img src="'+esc(mImg[2])+'" alt="'+esc(mImg[1])+'" loading="lazy" style="'+IMG_STYLE+'">'); continue; }
+        var bl=b.split('\n'), proc=[];
+        for (var li=0;li<bl.length;li++){
+          var line=bl[li].trim(); if (!line) continue;
+          var e2=esc(line);
+          e2=e2.replace(/!\[([^\]]*)\]\(([^)\s]+)(?:\s+&quot;[^&]*?&quot;)?\)/g, function(mm,alt,url){
+            return '<img src="'+url+'" alt="'+alt+'" loading="lazy" style="max-width:100%;height:auto;display:inline-block;vertical-align:middle;margin:6px 6px 6px 0;border-radius:4px">';
+          });
+          proc.push(e2);
+        }
+        if (proc.length) parts.push('<p>'+proc.join('<br>\n')+'</p>');
+      }
+      return {title:title, body:parts.join('\n\n')};
+    }
+    function buildHtml(text, source){
+      var p=parseMd(text), title=p.title||'Без названия', s=String(source||'').trim(), N='\n', slot='';
+      if (s) slot='  <a class="action-btn source" href="'+esc(s)+'" target="_blank" rel="noopener noreferrer">Источник <span class="icon">→</span></a>'+N;
+      return '<!DOCTYPE html>'+N+'<html lang="ru">'+N+'<head>'+N
+        +'  <meta charset="UTF-8">'+N
+        +'  <meta name="viewport" content="width=device-width, initial-scale=1.0">'+N
+        +'  <title>'+esc(title)+'</title>'+N
+        +'  <link rel="stylesheet" href="../css/pages.css">'+N
+        +'  <script src="../js/article.js"><\/script>'+N
+        +'</head>'+N+'<body>'+N+N
+        +'<h1>'+esc(title)+'</h1>'+N+N
+        +p.body+N+N
+        +'<footer class="article-footer">'+N
+        +'  <button class="action-btn" type="button" onclick="goBackFromArticle()"><span class="icon">←</span> Назад</button>'+N
+        +slot+'</footer>'+N+'</body>'+N+'</html>'+N;
+    }
+    function render(h){ $out.value = h; }
+
+    btnFormat.addEventListener('click', function(){
+      if (!$src.value.trim()) return toastMsg('Введи текст');
+      try { localStorage.setItem('vp-html-src', $src.value); localStorage.setItem('vp-page-source', $source.value); } catch(e){}
+      render(buildHtml($src.value, $source.value));
+      toastMsg('✓ Сверстано');
+    });
+    btnSave.addEventListener('click', function(){
+      if (!$src.value.trim()) return toastMsg('Введи текст');
+      var html = buildHtml($src.value, $source.value); render(html);
+      try { localStorage.setItem('vp-html-src', $src.value); localStorage.setItem('vp-page-source', $source.value); } catch(e){}
+      var first='page', arr=$src.value.split('\n');
+      for (var i=0;i<arr.length;i++){ if (arr[i].trim()){ first=arr[i]; break; } }
+      var base = first.replace(/^#+\s*/,'').trim().replace(/[^a-zA-Zа-яА-Я0-9_-]+/g,'-').replace(/^-+|-+$/g,'').slice(0,40)||'page';
+      var sug = prompt('Имя файла:', base+'.html');
+      if (!sug) return;
+      var fn = /\.html?$/i.test(sug)?sug:sug+'.html';
+      var blob = new Blob([html],{type:'text/html;charset=utf-8'});
+      var url = URL.createObjectURL(blob);
+      var a = document.createElement('a'); a.href=url; a.download=fn;
+      body.appendChild(a); a.click(); body.removeChild(a);
+      setTimeout(function(){ URL.revokeObjectURL(url); }, 2000);
+      toastMsg('✓ '+fn);
+    });
+
+    // 🧹 V25: очистка от HTML-кода (toggle, in-memory)
+    var _stripActive = false, _stripBackup = null;
+    function _stripHtmlTags(html){
+      try {
+        var tmp = document.createElement('div');
+        tmp.innerHTML = String(html)
+          .replace(/<br\s*\/?>/gi, '\n')
+          .replace(/<\/(p|div|li|h[1-6]|tr|blockquote|section|article|figure|figcaption|ul|ol|table)>/gi, '\n')
+          .replace(/<li[^>]*>/gi, '• ')
+          .replace(/<!--[\s\S]*?-->/g, '');
+        var txt = tmp.textContent || tmp.innerText || '';
+        return txt.replace(/\n{3,}/g,'\n\n').replace(/[ \t]+\n/g,'\n').replace(/\n[ \t]+/g,'\n').trim();
+      } catch(e){ return String(html); }
+    }
+    function _applySrc(v){
+      try {
+        var _w = $src.parentNode && $src.parentNode.querySelector && $src.parentNode.querySelector('.CodeMirror');
+        if (_w && _w.CodeMirror && typeof _w.CodeMirror.setValue === 'function') _w.CodeMirror.setValue(v);
+      } catch(e){}
+      $src.value = v;
+      try { $src.dispatchEvent(new Event('input', { bubbles: true })); } catch(e){}
+    }
+    btnStrip.addEventListener('click', function(){
+      if (!_stripActive){
+        if (!$src.value.trim()) return toastMsg('Поле пусто');
+        _stripBackup = $src.value;
+        _applySrc(_stripHtmlTags($src.value));
+        _stripActive = true;
+        btnStrip.textContent = '↶';
+        btnStrip.title = 'Вернуть HTML-код';
+        toastMsg('🧹 Код убран');
+      } else {
+        if (_stripBackup !== null) _applySrc(_stripBackup);
+        _stripBackup = null;
+        _stripActive = false;
+        btnStrip.textContent = '🧹';
+        btnStrip.title = 'Очистить от HTML-кода';
+        toastMsg('↶ Код восстановлен');
+      }
+    });
+    $src.addEventListener('input', function(){
+      if (_stripActive){
+        _stripActive = false; _stripBackup = null;
+        btnStrip.textContent = '🧹';
+        btnStrip.title = 'Очистить от HTML-кода';
+      }
+    });
+
+    // ❌ НЕ восстанавливаем текст из localStorage автоматически
+    // (только сохраняем на Сверстать; восстановление — через chip «Вставить»)
+
+    // ── V25: splitter drag ──
+    (function(){
+      var dragData = null;
+      function onDrag(e){
+        if (!dragData) return;
+        var dy = e.clientY - dragData.startY;
+        var srcH = Math.max(32, Math.round(dragData.startSrcH + dy));
+        window.__vpCmManualSrcH = srcH;
+        try { localStorage.setItem('vp-ed-split', JSON.stringify({srcH: srcH})); } catch(e2){}
+        $src.style.setProperty('height', srcH + 'px', 'important');
+        $src.style.setProperty('min-height', srcH + 'px', 'important');
+        $src.style.setProperty('max-height', srcH + 'px', 'important');
+      }
+      function offDrag(){
+        dragData = null;
+        document.body.style.cursor = '';
+        document.removeEventListener('mousemove', onDrag);
+        document.removeEventListener('mouseup', offDrag);
+      }
+      splitter.addEventListener('mousedown', function(e){
+        if (e.button !== 0) return;
+        e.preventDefault();
+        var r = $src.getBoundingClientRect();
+        dragData = {startY: e.clientY, startSrcH: r.height};
+        document.body.style.cursor = 'ns-resize';
+        document.addEventListener('mousemove', onDrag);
+        document.addEventListener('mouseup', offDrag);
+      });
+      splitter.addEventListener('dblclick', function(){
+        try { localStorage.removeItem('vp-ed-split'); } catch(e){}
+        window.__vpCmManualSrcH = 0;
+        $src.style.removeProperty('height');
+        $src.style.removeProperty('min-height');
+        $src.style.removeProperty('max-height');
+        $src.style.setProperty('--vp-split-tick', String(Date.now()), 'important');
+        toastMsg('↺ Размер сброшен');
+      });
+    })();
+
+    // ── старт на ВК ──
+    setView('vk');
+    setTimeout(function(){ try { if (document.activeElement) document.activeElement.blur(); } catch(e){} }, 100);
+
+    // ═══ V22 resize-memory: сохраняем размер, который выбрал пользователь ═══
+    try {
+      if (!window.__vpSizeMemorySetup){
+        window.__vpSizeMemorySetup = true;
+        var _SIZE_KEY = 'vp_popup_size_v22';
+        var _SZ_prog = false, _SZ_saveTmr = null;
+        window.addEventListener('resize', function(){
+          if (_SZ_prog) return;
+          clearTimeout(_SZ_saveTmr);
+          _SZ_saveTmr = setTimeout(function(){
+            try {
+              var w = window.outerWidth, h = window.outerHeight;
+              if (w > 400 && w < 2000 && h > 400 && h < 2000){
+                localStorage.setItem(_SIZE_KEY, w + 'x' + h);
+                console.log('[V22 size] saved:', w + 'x' + h);
+              }
+            } catch(e){}
+          }, 400);
+        });
+        setTimeout(function(){
+          try {
+            var saved = localStorage.getItem(_SIZE_KEY);
+            var cw = window.outerWidth, ch = window.outerHeight;
+            if (saved){
+              var parts = saved.split('x');
+              var sw = parseInt(parts[0], 10), sh = parseInt(parts[1], 10);
+              if (sw > 400 && sh > 400 && (Math.abs(cw - sw) > 20 || Math.abs(ch - sh) > 20)){
+                _SZ_prog = true;
+                window.resizeTo(sw, sh);
+                console.log('[V22 size] restored:', sw + 'x' + sh, '(was', cw + 'x' + ch + ')');
+                setTimeout(function(){ _SZ_prog = false; }, 800);
+              } else {
+                console.log('[V22 size] already', cw + 'x' + ch, 'saved=' + saved);
+              }
+            } else {
+              if (cw >= 400 && cw <= 1100 && ch > 850){
+                _SZ_prog = true;
+                window.resizeTo(cw, 750);
+                console.log('[V22 size] no saved, default 750 (was', cw + 'x' + ch + ')');
+                setTimeout(function(){ _SZ_prog = false; }, 800);
+              } else {
+                console.log('[V22 size] no saved, current', cw + 'x' + ch, 'kept');
+              }
+            }
+          } catch(e){ console.warn('[V22 size] apply err:', e); }
+        }, 500);
+      }
+    } catch(e){ console.warn('[V22 size] setup err:', e); }
+
+    // ═══════════════════════════════════════════════════════════
+    // findBtn / isActive / superClick
+    // ═══════════════════════════════════════════════════════════
+    function findBtn(name){
+      var nodes = document.querySelectorAll('button, [role="tab"], [role="radio"]');
+      for (var i = 0; i < nodes.length; i++){
+        var b = nodes[i];
+        if (b.closest && (b.closest('.vp-tabs-row') || b.closest('.vp-html-panel'))) continue;
+        var t = (b.textContent || '').replace(/\s+/g, ' ').trim();
+        if (t === name || t === '✏ ' + name || t === '🎨 ' + name || t === '📝 ' + name) return b;
+      }
+      return null;
+    }
+    function isActive(el){
+      if (!el) return false;
+      return !!(el.classList.contains('active') || el.classList.contains('is-active') ||
+                el.classList.contains('is-selected') || el.classList.contains('selected') ||
+                el.getAttribute('aria-selected') === 'true' ||
+                el.getAttribute('aria-pressed') === 'true' ||
+                el.getAttribute('data-active') === 'true' ||
+                el.getAttribute('data-selected') === 'true');
+    }
+    function superClick(el){
+      try { el.scrollIntoView({block:'center'}); } catch(e){}
+      var r = el.getBoundingClientRect();
+      var x = r.left + r.width/2, y = r.top + r.height/2;
+      console.log('[V16 superClick] rect=', Math.round(x)+','+Math.round(y),
+                  'size=', Math.round(r.width)+'x'+Math.round(r.height),
+                  'disabled=', el.disabled);
+      // если disabled — принудительно снимаем
+      if (el.disabled){
+        try { el.disabled = false; el.removeAttribute('disabled'); } catch(e){}
+        console.log('[V16 superClick] was disabled → removed');
+      }
+      // проверка overlay
+      try {
+        var top = document.elementFromPoint(x, y);
+        if (top && top !== el && !el.contains(top)){
+          console.log('[V16 superClick] OVERLAY:', top.tagName + '.' + (top.className||'').slice(0,40));
+          top.style.setProperty('pointer-events', 'none', 'important');
+        }
+      } catch(e){}
+      // события
+      try { el.focus(); } catch(e){}
+      var events = [
+        ['pointerover', true], ['pointerenter', true],
+        ['pointerdown', true], ['mousedown', true],
+        ['pointerup', true], ['mouseup', true],
+        ['click', false]
+      ];
+      events.forEach(function(pair){
+        var name = pair[0], isPtr = pair[1];
+        try {
+          var opts = {bubbles:true, cancelable:true, view: window, button:0, buttons: (name.indexOf('down') !== -1 || name.indexOf('over') !== -1 || name.indexOf('enter') !== -1) ? 1 : 0, clientX:x, clientY:y, screenX:x, screenY:y};
+          if (isPtr && window.PointerEvent) {
+            opts.pointerType = 'mouse'; opts.pointerId = 1; opts.isPrimary = true; opts.width = 1; opts.height = 1;
+            el.dispatchEvent(new PointerEvent(name, opts));
+          } else {
+            el.dispatchEvent(new MouseEvent(name, opts));
+          }
+        } catch(e){}
+      });
+      // keyboard Enter/Space
+      try {
+        el.dispatchEvent(new KeyboardEvent('keydown', {key:'Enter', code:'Enter', keyCode:13, which:13, bubbles:true}));
+        el.dispatchEvent(new KeyboardEvent('keyup', {key:'Enter', code:'Enter', keyCode:13, which:13, bubbles:true}));
+      } catch(e){}
+      try { el.click(); } catch(e){}
+      try { if (window.jQuery) window.jQuery(el).trigger('click'); } catch(e){}
+      // Vue
+      try {
+        var vk = Object.keys(el).find(function(k){ return k.startsWith('__vue__'); });
+        if (vk && el[vk] && el[vk].$emit) el[vk].$emit('click');
+      } catch(e){}
+      // React
+      try {
+        var rk = Object.keys(el).find(function(k){ return k.startsWith('__reactProps') || k.startsWith('__reactEventHandlers'); });
+        if (rk && el[rk] && typeof el[rk].onClick === 'function'){
+          var noop = function(){};
+          el[rk].onClick({currentTarget: el, target: el, preventDefault: noop, stopPropagation: noop, nativeEvent: {button:0}});
+          console.log('[V16 superClick] React onClick called');
+        }
+      } catch(e){}
+    }
+
+    // ═══════════════════════════════════════════════════════════
+    // switch-to-Text с retry
+    // ═══════════════════════════════════════════════════════════
+    var _attempts = 0, _maxAttempts = 6, _success = false;
+    function switchToText(why){
+      if (_success) return;
+      _attempts++;
+      var textBtn = findBtn('Текст');
+      var fondBtn = findBtn('Фон');
+      if (!textBtn){
+        if (_attempts < _maxAttempts) return setTimeout(function(){ switchToText(why); }, 500);
+        /* V21: silent — .bg-panel скрыт CSS, «Текст» не нужен */
+        return;
+      }
+      if (isActive(textBtn)){
+        _success = true;
+        console.log('[V16] ✓ «Текст» активен (' + why + ', attempt ' + _attempts + ')');
+        try { localStorage.setItem('vk_tab', 'текст'); } catch(e){}
+        return;
+      }
+      var fa = isActive(fondBtn);
+      console.log('[V16 ' + why + ' #' + _attempts + '] fond=' + fa + ', click «Текст»');
+      superClick(textBtn);
+      setTimeout(function(){
+        if (isActive(textBtn)){
+          _success = true;
+          console.log('[V16] ✓ ПЕРЕКЛЮЧЕНО (' + why + ', attempt ' + _attempts + ')');
+          try { window.__vp_restoreSetItem && window.__vp_restoreSetItem(); } catch(e){}
+          try { localStorage.setItem('vk_tab', 'текст'); } catch(e){}
+        } else if (_attempts < _maxAttempts){
+          switchToText(why);
+        } else {
+          console.warn('[V16] ⚠ не удалось за ' + _maxAttempts + ' попыток');
+          var toast = document.getElementById('toast') || document.querySelector('.toast');
+          if (toast){
+            toast.textContent = '⚠ Кликни «Текст» вручную — запомнится';
+            toast.classList.add('show');
+            setTimeout(function(){ toast.classList.remove('show'); }, 5000);
+          }
+          console.warn('[V16] ПОМОГИ: кликни «Текст» руками, потом в консоли:');
+          console.warn('  localStorage.getItem("vk_tab")  // пришли мне');
+        }
+      }, 500);
+    }
+
+    // старт несколько раз в разное время (VK может тормозить)
+    /* V22: switchToText disabled — .bg-panel скрыт CSS, «Фон» больше не нужно трогать */
+
+    // MutationObserver — если «Фон» снова получает active
+    setTimeout(function(){
+      var fondBtn = findBtn('Фон');
+      if (!fondBtn || !fondBtn.classList) return;
+      var obs = new MutationObserver(function(){
+        if (_success) return;
+        if (isActive(fondBtn)){
+          var textBtn = findBtn('Текст');
+          if (textBtn && !isActive(textBtn)){
+            console.log('[V16 observer] «Фон» снова active → переключаю');
+            _attempts = 0;
+            switchToText('observer');
+          }
+        }
+      });
+      try { obs.observe(fondBtn, {attributes:true, attributeFilter:['class']}); } catch(e){}
+      console.log('[V16] MutationObserver on «Фон» active');
+    }, 2000);
+
+    // ═══════════════════════════════════════════════════════════
+    // V19: УНИВЕРСАЛЬНЫЙ ГАРД — ищет «Фон»/«Текст» в ЛЮБОМ теге
+    // (не только button/[role=tab]) — на случай если VK меняет тег
+    // ═══════════════════════════════════════════════════════════
+    function _skipForFind(el){
+      try {
+        if (el.closest && (el.closest('.vp-tabs-row') || el.closest('.vp-html-panel'))) return true;
+        var cl = (el.className || '').toString();
+        if (/bg-panel|bg-preview|bg-panel-title/.test(cl)) return true;
+        if (getComputedStyle(el).display === 'none') return true;
+        if (el.offsetParent === null && el.tagName !== 'BODY') return true;
+      } catch(e){}
+      return false;
+    }
+    function findAnyByText(txt){
+      var btnCand = document.querySelectorAll('button, [role="tab"], [role="radio"], [role="button"]');
+      for (var i = 0; i < btnCand.length; i++){
+        var el = btnCand[i];
+        if (_skipForFind(el)) continue;
+        var t='',a='',ti='';
+        try { t = (el.textContent || '').trim(); } catch(e){}
+        try { a = (el.getAttribute('aria-label') || '').trim(); } catch(e){}
+        try { ti = (el.getAttribute('title') || '').trim(); } catch(e){}
+        if (t === txt || (t.length < 20 && t.indexOf(txt) !== -1)) return el;
+        if (a === txt || ti === txt) return el;
+      }
+      var all = document.querySelectorAll('*');
+      for (var j = 0; j < all.length; j++){
+        var el2 = all[j];
+        if (_skipForFind(el2)) continue;
+        var kids = 0; try { kids = el2.children.length; } catch(e){}
+        if (kids > 3) continue;
+        var t2='',a2='',ti2='';
+        try { t2 = (el2.textContent || '').trim(); } catch(e){}
+        try { a2 = (el2.getAttribute('aria-label') || '').trim(); } catch(e){}
+        try { ti2 = (el2.getAttribute('title') || '').trim(); } catch(e){}
+        if (t2 === txt || (t2.length < 20 && t2.indexOf(txt) !== -1)) return el2;
+        if (a2 === txt || ti2 === txt) return el2;
+      }
+      return null;
+    }
+    function looksActive(el){
+      if (!el) return false;
+      if (el.classList.contains('active') || el.classList.contains('is-active') ||
+          el.classList.contains('is-selected') || el.classList.contains('selected')) return true;
+      if (el.getAttribute('aria-selected') === 'true' || el.getAttribute('aria-pressed') === 'true' ||
+          el.getAttribute('data-active') === 'true' || el.getAttribute('data-selected') === 'true') return true;
+      return false;
+    }
+    function stripActive(el){
+      if (!el) return;
+      ['active','is-active','is-selected','selected'].forEach(function(c){ try { el.classList.remove(c); } catch(e){} });
+      ['aria-selected','aria-pressed','data-active','data-selected'].forEach(function(a){ try { el.removeAttribute(a); } catch(e){} });
+    }
+
+    var _guardTicks=0, _diagOnce=false, _hideAfter=8;
+    setInterval(function(){
+      try {
+        var fond = findAnyByText('Фон');
+        var text = findAnyByText('Текст');
+        if (!_diagOnce){
+          _diagOnce = true;
+          console.log('[V19 guard] «Фон» =', fond ? fond.tagName + '.' + (fond.className||'').toString().slice(0,50) : 'NOT FOUND');
+          console.log('[V19 guard] «Текст» =', text ? text.tagName + '.' + (text.className||'').toString().slice(0,50) : 'NOT FOUND');
+          if (fond) console.log('[V19 guard] FOND HTML:', fond.outerHTML.slice(0, 250));
+          if (text) console.log('[V19 guard] TEXT HTML:', text.outerHTML.slice(0, 250));
+        }
+        _guardTicks++;
+        if (!fond || !text) return;
+        var fAct = looksActive(fond), tAct = looksActive(text);
+        if (fAct && !tAct){
+          console.log('[V19 guard #' + _guardTicks + '] strip «Фон» + click «Текст»');
+          stripActive(fond);
+          try { superClick(text); } catch(e){}
+          if (_guardTicks > _hideAfter){
+            fond.style.setProperty('display', 'none', 'important');
+            console.log('[V19 guard] «Фон» скрыт навсегда (display:none)');
+          }
+        }
+      } catch(e){}
+    }, 700);
+
+    console.log('[V19] universal guard started (700ms, hide after 8 ticks)');
+
+    // ═══ V20: скрыть пустые панели «🖼 Фон редактора» ═══
+    setTimeout(function(){
+      try {
+        var bgs = document.querySelectorAll('.bg-panel');
+        var hidden = 0;
+        for (var i = 0; i < bgs.length; i++){
+          var prev = bgs[i].querySelector('.bg-preview');
+          var prevTxt = prev ? (prev.textContent || '').trim() : '';
+          if (!prevTxt || /не выбран/i.test(prevTxt)){
+            bgs[i].style.setProperty('display', 'none', 'important');
+            hidden++;
+          }
+        }
+        /* v1-cleanup: log removed (hot path) */
+      } catch(e){ console.warn('[V20] bg-panel hide err:', e); }
+    }, 100);
+    // повтор на случай поздней подгрузки VK
+    setTimeout(function(){
+      try {
+        var bgs = document.querySelectorAll('.bg-panel');
+        for (var i = 0; i < bgs.length; i++){
+          if (getComputedStyle(bgs[i]).display !== 'none'){
+            var prev = bgs[i].querySelector('.bg-preview');
+            if (prev && /не выбран/i.test(prev.textContent || '')){
+              bgs[i].style.setProperty('display', 'none', 'important');
+              /* v1-cleanup: log removed (hot path) */
+            }
+          }
+        }
+      } catch(e){}
+    }, 1200);
+
+    console.log('[V19] OK — trash 1-click+undo, «Фон» universal-guard');
+    console.log('[V20] OK — bg-panel скрыта, trash fixed-bottom ✓/✗, resize если h>850');
+    console.log('[V21] OK — «Фон редактора» скрыт CSS-ом навсегда, re-render бессилен');
+    console.log('[V22] OK — popup size remembered, trash inline ✓/↶, switchToText disabled');
+    console.log('[V23] OK — confirm-checkbox + help-modal ([?])');
+  } catch(e){ console.error('[V13] FAILED:', e); }
+};
+</script>
+
+<div class="vp-boot-msg" id="vp-boot">⏳ Загрузка редактора…</div>
+<script>
+(function(){
+  var slot = document.getElementById('vp-boot');
+  var html = '';
+  try { html = localStorage.getItem('vp_editor_html') || ''; } catch(e) { console.error('[vp-boot] LS:', e); }
+  console.log('[vp-boot] html.length=', html.length);
+  if (!html || html.length < 200) {
+    slot.innerHTML = '⚠ <b>Редактор ещё не открыт.</b><br>Закройте это окно и нажмите <b>✍</b> на главной.';
+    return;
+  }
+  // Defer — document.open() mid-parse в Firefox/Chrome не сбрасывает док.
+  setTimeout(function(){
+    try {
+      try {
+        var _T0 = Date.now();
+        var _BLOCK_MS = 5000;   // первые 5 сек после старта VK
+        // spoof isTrusted — VK может проверять «настоящий ли клик»
+        try {
+          Object.defineProperty(Event.prototype, 'isTrusted', {
+            get: function(){ return true; },
+            configurable: true
+          });
+          console.log('[V16 boot] isTrusted → true (spoofed)');
+        } catch(e){ console.warn('[V16 boot] isTrusted spoof fail:', e); }
+        // перехватить setItem — блокируем запись 'фон' на 5 сек
+        try {
+          var _origSetItem = Storage.prototype.setItem;
+          Storage.prototype.setItem = function(k, v) {
+            var elapsed = Date.now() - _T0;
+            if (elapsed < _BLOCK_MS && k === 'vk_tab' &&
+                /^(фон|Фон|FON|fon|fon_?t)$/i.test(String(v))) {
+              console.log('[V16 boot] 🚫 BLOCKED setItem(vk_tab=' + v + ')');
+              return;
+            }
+            return _origSetItem.call(this, k, v);
+          };
+          window.__vp_restoreSetItem = function(){
+            try { Storage.prototype.setItem = _origSetItem; } catch(e){}
+          };
+          console.log('[V16 boot] setItem monkey-patched (5s block)');
+        } catch(e){ console.warn('[V16 boot] setItem patch fail:', e); }
+        // принудительно установить vk_tab='текст' (в обход нашего же patch)
+        try {
+          Storage.prototype.setItem = window.__vp_restoreSetItem ? (function(){
+            // временно восстанавливаем, чтобы записать
+            var orig = Storage.prototype.setItem;
+            try {
+              console.log('[V16 boot] vk_tab before:', localStorage.getItem('vk_tab'));
+              // прямой доступ — через orig из closure невозможен, используем свойство
+              Object.getOwnPropertyDescriptor(Storage.prototype, 'setItem');
+            } catch(e){}
+            return orig;
+          })() : Storage.prototype.setItem;
+        } catch(e){}
+        // теперь напрямую (после блокировки — не блокирует 'текст')
+        try {
+          localStorage.setItem('vk_tab', 'текст');
+          console.log('[V16 boot] vk_tab forced → «текст», current =', localStorage.getItem('vk_tab'));
+        } catch(e){ console.warn('[V16 boot] force set err:', e); }
+        // сразу же восстанавливаем перехватчик (setItem был перезаписан выше)
+        try {
+          var _origSetItem2 = Storage.prototype.setItem;
+          var _origSetItemReal = (function(){
+            // если перезаписали нативным — уже не перехвачено, перехватываем заново
+            return _origSetItem2;
+          })();
+          // перехватываем заново
+          if (_origSetItemReal.toString().indexOf('BLOCKED') === -1 && _origSetItemReal.toString().indexOf('elapsed') === -1) {
+            // перезаписан нативным — ставим патч снова
+            Storage.prototype.setItem = function(k, v) {
+              var elapsed = Date.now() - _T0;
+              if (elapsed < _BLOCK_MS && k === 'vk_tab' &&
+                  /^(фон|Фон|FON|fon|fon_?t)$/i.test(String(v))) {
+                console.log('[V16 boot] 🚫 BLOCKED (re) setItem(vk_tab=' + v + ')');
+                return;
+              }
+              return _origSetItemReal.call(this, k, v);
+            };
+            console.log('[V16 boot] setItem re-patched');
+          } else {
+            console.log('[V16 boot] setItem patch still active');
+          }
+        } catch(e){}
+      } catch(e){ console.warn('[V16 boot] LS err:', e); }
+      // ═══ FIX: инжект vp-cm-css + vp-cm-fit-script в перезаписываемый HTML ═══
+      try {
+        var _wantIds = ['vp-cm-css', 'vp-cm-fit-script', 'vp-img-script', 'vp-lock-body-css'];
+        var _injectParts = [];
+        _wantIds.forEach(function(id){
+          var el = document.getElementById(id);
+          if (el && html.indexOf('id="' + id + '"') < 0) _injectParts.push(el.outerHTML);
+        });
+        if (_injectParts.length) {
+          var _ex = _injectParts.join('\n');
+          if (html.indexOf('</head>') >= 0) html = html.replace('</head>', _ex + '\n</head>');
+          else if (/<body[^>]*>/i.test(html)) html = html.replace(/<body[^>]*>/i, function(m){ return m + _ex; });
+          else html = _ex + html;
+          console.log('[vp-boot] ✓ injected ' + _injectParts.length + ' parts (' + _ex.length + ' bytes) — CSS+fit в новом DOM');
+        } else {
+          console.log('[vp-boot] inject: всё уже в html (localStorage) или нет исходных элементов');
+        }
+      } catch(e) { console.warn('[vp-boot] inject err:', e); }
+      console.log('[vp-boot] document.open + write + close...');
+      document.open();
+      document.write(html);
+      document.close();
+      console.log('[vp-boot] OK');
+
+      // ═══ FIX: пересчёт CodeMirror ПОСЛЕ document.close (если стили применились позже) ═══
+      try {
+        setTimeout(function(){
+          try {
+            if (typeof window.__vpFitCM === 'function') {
+              window.__vpFitCM();
+              console.log('[vp-boot] ✓ __vpFitCM() после close');
+            } else {
+              var _out = document.getElementById('vp-html-out');
+              var _dom = _out && _out.querySelector('.CodeMirror');
+              var _cm  = _dom && _dom.CodeMirror;
+              if (_cm && typeof _cm.refresh === 'function') _cm.refresh();
+            }
+          } catch(e){ console.warn('[vp-boot] cm.refresh:', e); }
+        }, 60);
+      } catch(e) {}
+      try { window.__vpSetupTabs && window.__vpSetupTabs(); } catch(e) { console.error("[vp-setup-call]", e); }
+      /* ═══ vp-strip popup: кнопка 🚫 + handler после document.write ═══ */
+      (function(){
+        var RE = /[\u{1F000}-\u{1FAFF}\u{2600}-\u{27BF}\u{2B00}-\u{2BFF}\u{FE00}-\u{FE0F}\u{200D}\u{20E3}\u{E0020}-\u{E007F}]/gu;
+        function install(){
+          var s = document.getElementById('src');
+          if (!s) return false;
+          if (document.querySelector('[data-act="vp-strip"]')) {
+            console.log('%c\u25BA vp-strip: app.js уже установил кнопку \u25C4', 'color:lime');
+            return true;
+          }
+          var anchor = document.querySelector('[data-act="clear-src"]');
+          if (!anchor) {
+            var bts = document.querySelectorAll('button');
+            for (var i = 0; i < bts.length; i++) {
+              var t = bts[i].textContent || '';
+              if (t.indexOf('\uD83D\uDCCB') !== -1 || t.indexOf('\uD83D\uDDD1') !== -1) { anchor = bts[i]; }
+            }
+          }
+          if (!anchor || !anchor.parentNode) return false;
+          var btn = document.createElement('button');
+          btn.type = 'button';
+          btn.setAttribute('data-act', 'vp-strip');
+          btn.textContent = '\uD83D\uDEAB';
+          btn.title = 'Убрать все эмодзи';
+          btn.style.cssText = 'font-size:13px;padding:2px 6px;margin-left:4px;border:1px solid #d4d4d8;background:#fff;border-radius:4px;cursor:pointer;font-family:inherit;';
+          anchor.parentNode.insertBefore(btn, anchor.nextSibling);
+          function paint(){
+            var st = s.dataset.vpStrip;
+            if (st !== undefined && s.value !== st) {
+              delete s.dataset.vpOrig; delete s.dataset.vpStrip; st = undefined;
+            }
+            var active = st !== undefined;
+            btn.textContent = active ? '\u21A9' : '\uD83D\uDEAB';
+            btn.title = active ? 'Вернуть эмодзи' : 'Убрать все эмодзи';
+            btn.style.background  = active ? '#10b981' : '#fff';
+            btn.style.color       = active ? '#fff' : '';
+            btn.style.borderColor = active ? '#10b981' : '#d4d4d8';
+          }
+          btn.addEventListener('click', function(e){
+            e.preventDefault();
+            var o = s.dataset.vpOrig, st = s.dataset.vpStrip;
+            if (o !== undefined && s.value === st) {
+              s.value = o;
+              delete s.dataset.vpOrig; delete s.dataset.vpStrip;
+              paint();
+              s.dispatchEvent(new Event('input', {bubbles:true}));
+              console.log('[vp-strip] RESTORED len=' + s.value.length);
+              return;
+            }
+            delete s.dataset.vpOrig; delete s.dataset.vpStrip;
+            if (!s.value || !s.value.trim()) { paint(); return; }
+            var m = s.value.match(RE), count = m ? m.length : 0;
+            if (!count) { paint(); return; }
+            var cleaned = s.value.replace(RE,'')
+              .replace(/[ \t]{2,}/g,' ')
+              .replace(/[ \t]+$/gm,'').replace(/^[ \t]+/gm,'')
+              .replace(/\n{3,}/g,'\n\n').replace(/^\n+|\n+$/g,'');
+            s.dataset.vpOrig = s.value;
+            s.value = cleaned;
+            s.dataset.vpStrip = cleaned;
+            paint();
+            s.dispatchEvent(new Event('input', {bubbles:true}));
+            console.log('[vp-strip] STRIPPED count=' + count + ' len=' + s.value.length);
+          });
+          s.addEventListener('input', paint);
+          paint();
+          console.log('%c\u25BA vp-strip handler READY (popup) \u25C4', 'color:lime;font-weight:bold;font-size:14px');
+          return true;
+        }
+        if (install()) return;
+        [100, 300, 800, 1500, 3000].forEach(function(d){ setTimeout(install, d); });
+      })();
+    } catch(e) {
+      console.error('[vp-boot] write failed:', e);
+      try {
+        var b = new Blob([html], { type: 'text/html;charset=utf-8' });
+        location.replace(URL.createObjectURL(b));
+        console.log('[vp-boot] fallback → blob URL');
+      } catch(e2) {
+        console.error('[vp-boot] blob fallback failed:', e2);
+        try { document.documentElement.innerHTML = '<pre style="padding:24px;color:#c00;font:13px monospace">Boot failed: ' + ((e && e.message) || e) + '</pre>'; } catch(_){}
+      }
+    }
+  }, 0);
+})();
+</script>
+
+
+
+</body>
+</html>
