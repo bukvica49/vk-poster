@@ -422,10 +422,6 @@ def main(dry_run=False, test=False, force=False, republish=False, override_date=
         # ── шапка ──
         _tm = h.get('text_md') if h else None
         _tm_vk = md_to_vk(_tm) if _tm else ""
-        if _tm_vk:
-            body = (text.strip() + "\n\n" + _tm_vk) if (text and text.strip()) else _tm_vk
-        else:
-            body = text
         head = []
         if today_d:
             _block, _range_to = (None, None)
@@ -440,7 +436,12 @@ def main(dry_run=False, test=False, force=False, republish=False, override_date=
                 range_to=_range_to, chertog_block=_block,
             )
             head.append(_hl)
-        parts = list(head) + [body]
+        parts = []
+        if text and text.strip():
+            parts.append(text.strip())
+        parts.extend(head)
+        if _tm_vk:
+            parts.append(_tm_vk)
         if info:
             parts.append("\n".join(info))
         message = "\n\n".join(parts)
