@@ -364,12 +364,15 @@ def main(dry_run=False, test=False, force=False, republish=False, override_date=
             print(f"  ⚠  h не найден для «{text[:40]}» — post_time/чертог дефолтные")
 
         # ── пересчёт info с учётом chertog ──
+        info_auto, info_manual = list(info or []), []
         if h:
             try:
                 from slavic_auto import build_info as _build_info
                 _flag = bool(h.get('chertog'))
                 _auto = _build_info(today_d + timedelta(days=1), chertog=_flag)
-                info = _auto + _resolve_manual_info(h)
+                _manual = _resolve_manual_info(h)
+                info = _auto + _manual
+                info_auto, info_manual = _auto, _manual
             except Exception:
                 pass
 
@@ -440,10 +443,12 @@ def main(dry_run=False, test=False, force=False, republish=False, override_date=
         if text and text.strip():
             parts.append(text.strip())
         parts.extend(head)
+        if info_auto:
+            parts.append("\n".join(info_auto))
         if _tm_vk:
             parts.append(_tm_vk)
-        if info:
-            parts.append("\n".join(info))
+        if info_manual:
+            parts.append("\n".join(info_manual))
         message = "\n\n".join(parts)
 
         if dry_run:
