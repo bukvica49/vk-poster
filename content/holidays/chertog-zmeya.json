@@ -1,17 +1,17 @@
 {
   "slug": "chertog-zmeya",
   "date": "11-24",
+  "date_to": "12-15",
+  "chertog": "Змей",
   "slavic": {
     "month": "Айлѣтъ",
     "day": 25
   },
-  "text": "⚡ Входъ въ Чертогъ Змея ⚡",
-  "image": "/images/Змей.jpg",
-  "post_time": "18:00",
-  "date_to": "12-15",
-  "chertog": "Змей",
   "slavic_to": {
     "month": "Бейлѣтъ",
     "day": 6
-  }
+  },
+  "text": "⚡ Входъ въ Чертогъ Змея ⚡",
+  "image": "/images/Змей.jpg",
+  "post_time": "18:00"
 }
