@@ -5,6 +5,7 @@ on:
     - cron: '0 * * * *'      # основной тик (11:00 UTC = 18:00 KRAT)
     - cron: '15 * * * *'     # страховка №1
     - cron: '45 * * * *'     # страховка №2
+    - cron: '30 * * * *'
   workflow_dispatch:
     inputs:
       force:
