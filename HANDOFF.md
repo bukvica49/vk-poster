@@ -1,13 +1,14 @@
 # HANDOFF — контекст для AI
 
-Обновлено: 2026-11-04
+Обновлено: 2026-11-10
 Владелец: pokep (pokep-All-Series)
 Репо: ~/site/vk-poster (git: bukvica49/vk-poster)
 VK-группа: 200796423, «Родная Традиция»
 
 ## Что это
-Автопостер ВК на славянском календаре (9-дневная неделя, Коляды Дар).
-Автозапуск: GitHub Actions, cron `0 11 * * *` UTC = 18:00 KRAT.
+Автопостер ВК на **Коляды Даръ** (9-дневная неделя).
+Автозапуск: GitHub Actions, `cron: 0/15/30/45 * * * *` UTC (4 тика/час, страховка от GH-throttle).
+Preview пересобирается 2×/сут: `pages.yml: 5 11 * * *` + `5 17 * * *` (без push).
 Каждый день: slavic_now() = datetime.now(KRAT).date() -> найти праздник
 с `date = сегодня` в content/holidays/*.json -> пост в VK -> git push state
 через DEPLOY_KEY. ПК может быть выключен.
@@ -32,6 +33,12 @@ VK-группа: 200796423, «Родная Традиция»
 6. Праздники правятся через app.pagescms.org/bukvica49/vk-poster
 7. Источник данных = `content/holidays/*.json` (PagesCMS collection,
    1 файл = 1). Старый `holidays.json` (массив) удалён в c3e1b60.
+8. Расписание GH Actions — двойное:
+   - `post.yml`: `:00/:15/:30/:45 * * * *` (4 тика/час, от GH-throttle).
+   - `pages.yml: schedule`: `5 17 * * *` (00:05 KRAT) + `5 11 * * *` (18:05 KRAT)
+     — пересборка preview **без push**.
+   Зачем: 08–10.11.2026 preview висел на 09.11 — поста нет → state не менялся →
+   push нет → Pages собирался только `on: push`. Патч `efd1368`.
 
 ## Что починено
 - **`4b50da0` (2026-11-05): verify НЕ фейлит на VK index lag.** Симптом: 2671–2673 все с фото (проверено в VK), но CI красный — `wall.getById` не отдаёт пост 55с. Причина: `wall.post` синхронный (создал → id), `wall.getById` асинхронный (5+ мин). Фикс: verify = warning; `PHOTO_MISSING=1` печатается **только** при реальном upload fail (`image_path` есть, `attach is None` после 3 retry). Доказано: `4b50da0` / `d6d9607` — success.
@@ -110,6 +117,11 @@ cd ~/site/vk-poster && python3 poster.py --dry-run   # что будет зап�
 - **`PHOTO_MISSING=1`** -> единственный реальный photo-upload fail (3 retry). Смотреть `image` в JSON, размер (у VK лимит ~50 МБ), MIME.
 - **`⚠ verify: <id> ещё не проиндексирован`** -> **не ошибка.** VK `wall.getById` кэширует 5+ мин. Пост **с фото** уже создан. Действий не требуется.
 - **`OK post_id=… attach=none`** -> пост без фото. Проверить, откуда `attach` пришёл `None` при `image_path` задан — регрессия в `poster.py::post()`.
+- **preview показывает вчерашнюю дату** -> НЕ «пост не вышел», а стейл-сборка.
+  Дата в шапке = `slavic_now` на момент последней сборки `_site/`.
+  Проверка: `curl -s https://bukvica49.github.io/vk-poster/ | grep -o 'праздников · [0-9.]*'`.
+  Ручной триггер: `workflow_dispatch` на `pages.yml`. С 11.11 пересборка 2×/сут (`efd1368`).
+  **Надёжный признак «пост ушёл» — последняя запись в `state-200796423.json`, не статус CI.**
 
 ## Формат шапки поста (2026-11-05: 3 строки, по два пробела вокруг ѿ)
 
