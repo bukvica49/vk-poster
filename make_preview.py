@@ -101,14 +101,24 @@ def build():
 
     rows = []
     for h in data['holidays']:
-        m, dd = map(int, h['date'].split('-'))
-        occ = next_occurrence(m, dd, today_civil)
-        # fix: если выпуск уже опубликован (в state) — показываем след. год
+        # Perpetual: постоянный день по slavic, fallback на frozen MM-DD
+        occ = slavic_calendar.holiday_date(h, today_civil.year)
+        if occ is None or occ < today_civil:
+            occ_next = slavic_calendar.holiday_date(h, today_civil.year + 1)
+            if occ_next is not None:
+                occ = occ_next
+        if occ is None:
+            m, dd = map(int, h['date'].split('-'))
+            occ = next_occurrence(m, dd, today_civil)
+        # fix: если выпуск уже опубликован — переключаемся на след. год
         if f"{occ.isoformat()}|{h['text']}" in posted:
-            try:
-                occ = date(occ.year + 1, m, dd)
-            except ValueError:  # 29 фев
-                occ = date(occ.year + 1, m, dd - 1)
+            nxt = slavic_calendar.holiday_date(h, occ.year + 1)
+            if nxt is None:
+                try:
+                    nxt = date(occ.year + 1, occ.month, occ.day)
+                except ValueError:  # 29 фев
+                    nxt = date(occ.year + 1, occ.month, occ.day - 1)
+            occ = nxt
         _is_ch = bool(h.get('chertog'))
         _block, _range_to = (None, None)
         if _is_ch:

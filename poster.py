@@ -67,46 +67,9 @@ def _load_holidays_dicts():
     return data["holidays"]
 
 
-def _slavic_parse(gr_date):
-    """'ВТОРНИКЪ · 40 Рамхатъ · Лѣто 7535' -> (40, 'Рамхатъ', 7535)"""
-    try:
-        h = slavic_calendar.header(gr_date)
-    except Exception:
-        return None
-    parts = h.split(" · ")
-    if len(parts) < 3:
-        return None
-    try:
-        dm = parts[1].split(" ")
-        leto = int(parts[2].replace("Лѣто ", "").replace("Лето ", "").strip())
-        return (int(dm[0]), dm[1] if len(dm) > 1 else "", leto)
-    except (ValueError, IndexError):
-        return None
-
-
-def slavic_to_gregorian(year, slavic_month, slavic_day):
-    """Gregorian-дата в указанном году, где Slavic = (месяц, день)."""
-    cur, end = date(year, 1, 1), date(year, 12, 31)
-    while cur <= end:
-        p = _slavic_parse(cur)
-        if p and p[0] == slavic_day and p[1] == slavic_month:
-            return cur
-        cur += timedelta(days=1)
-    return None
-
-
 def _holiday_date(h, year):
-    """Дата праздника в году: slavic -> reverse, иначе date."""
-    sl = h.get("slavic")
-    if sl and sl.get("month") and sl.get("day"):
-        d = slavic_to_gregorian(year, sl["month"], sl["day"])
-        if d is not None:
-            return d
-    try:
-        mm, dd = h["date"].split("-")
-        return date(year, int(mm), int(dd))
-    except (KeyError, ValueError, AttributeError):
-        return None
+    """Дата праздника в году (см. slavic_calendar.holiday_date)."""
+    return slavic_calendar.holiday_date(h, year)
 
 
 def _build_info_safe(d, chertog=False):

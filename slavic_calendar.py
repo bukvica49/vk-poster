@@ -83,6 +83,30 @@ def to_gregorian(month_name, day, start=None):
     return None
 
 
+def holiday_date(h, year):
+    """Дата праздника (canon day, civil) в году по slavic, fallback на MM-DD.
+
+    Perpetual: обратный поиск слав.дня через to_gregorian.
+    - Обычный праздник: canon day = день эмиссии поста (18:00 старт).
+    - Чертог: canon day = первый день Чертога (в header_full range-ветке
+      рендерим старт БЕЗ сдвига +1 — см. header_full Fix A).
+    """
+    sl = h.get("slavic") or {}
+    m, d = sl.get("month"), sl.get("day")
+    if m and d:
+        g = to_gregorian(m, d, start=date(year, 1, 1))
+        if g is not None:
+            return g
+    ds = h.get("date")
+    if ds:
+        try:
+            mm, dd = map(int, ds.split("-"))
+            return date(year, mm, dd)
+        except (ValueError, TypeError):
+            pass
+    return None
+
+
 def krugолет(dt: date):
     return _shift(ANCHOR_LETO, ANCHOR_MONTH, ANCHOR_DAY, ANCHOR_WIDX,
                   (dt - ANCHOR_DATE).days)
@@ -144,6 +168,10 @@ def header_full(dt=None, add_smzh: bool = True, range_to=None, chertog_block=Non
                  f"{CIVIL_MONTHS_GEN[nd.month]}, {nd.year} г. местн.вр.)")
         lines = [line1, line2, line3]
     else:
+        # Fix A: для Чертогов `slavic` в JSON = первый день Чертога.
+        # Берём krugолет(dt_date) — БЕЗ +1 (обычная ветка +1 не трогается).
+        _, mi_s, d_s, wi_s = krugолет(dt_date)
+        d, mn, desc, wi = d_s, SLAVIC_MONTHS[mi_s], MONTH_DESC[mi_s + 1], wi_s
         slav_end = range_to
         _, mi2, d2, _ = krugолет(slav_end)
         mn2 = SLAVIC_MONTHS[mi2]
@@ -169,7 +197,6 @@ def header_full(dt=None, add_smzh: bool = True, range_to=None, chertog_block=Non
             title = 'Богъ-Покровитель'
         else:
             title = 'Богиня-Покровительница'
-        lines.append(chertog_block.get('title_line') or '⚡ Входъ въ Чертогъ ⚡')
         lines.append(f"👤 {title}: {patron}")
         lines.append(f"🌳 Священное Древо: {chertog_block.get('tree') or '?'}")
         lines.append(f"🐾 Тотемъ: {chertog_block.get('totem') or '?'}")

@@ -156,7 +156,6 @@ def chertog_block_for(h: dict, fire_date):
     if not ch:
         return None, None
     block = {
-        'title_line': h.get('text', '⚡ Входъ въ Чертогъ ⚡'),
         'patron': ch.get('patron', '?'),
         'pol':    ch.get('pol', 'ж'),
         'tree':   ch.get('tree', '?'),
