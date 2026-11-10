@@ -1,16 +1,16 @@
 {
   "slug": "chertog-vorona",
   "date": "12-16",
+  "date_to": "01-06",
+  "chertog": "Ворон",
   "slavic": {
     "month": "Бейлѣтъ",
     "day": 7
   },
-  "date_to": "01-06",
-  "text": "⚡ Входъ въ Чертогъ Ворона ⚡",
-  "chertog": "Ворон",
-  "post_time": "18:00",
   "slavic_to": {
     "month": "Бейлѣтъ",
     "day": 28
-  }
+  },
+  "text": "⚡ Входъ въ Чертогъ Ворона ⚡",
+  "post_time": "18:00"
 }
