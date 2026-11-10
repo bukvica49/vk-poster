@@ -1,5 +1,9 @@
 {
   "date": "11-30",
+  "slavic": {
+    "month": "Айлѣтъ",
+    "day": 31
+  },
   "text": "День Хорива Мудрого",
   "slug": "den-khoriva-mudrogo",
   "post_time": "18:00"

@@ -1,6 +1,10 @@
 {
   "slug": "Den' Svetozara Vechnogo",
   "date": "01-30",
+  "slavic": {
+    "month": "Гэйлѣтъ",
+    "day": 11
+  },
   "text": "День Светозара Вечного",
   "image": "/images/День Светозара Вечного.jpg",
   "post_time": "18:00"

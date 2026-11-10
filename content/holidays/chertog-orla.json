@@ -1,9 +1,17 @@
 {
   "slug": "chertog-orla",
-  "date": "07-12",
+  "date": "07-13",
+  "slavic": {
+    "month": "Хэйлѣтъ",
+    "day": 13
+  },
   "date_to": "08-03",
   "chertog": "Орёл",
   "text": "⚡ Входъ въ Чертогъ Орла ⚡",
   "image": "/images/Орел.jpg",
-  "post_time": "18:00"
+  "post_time": "18:00",
+  "slavic_to": {
+    "month": "Хэйлѣтъ",
+    "day": 34
+  }
 }

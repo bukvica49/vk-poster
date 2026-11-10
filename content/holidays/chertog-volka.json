@@ -1,9 +1,17 @@
 {
   "slug": "chertog-volka",
-  "date": "02-24",
+  "date": "02-25",
+  "slavic": {
+    "month": "Гэйлѣтъ",
+    "day": 37
+  },
   "post_time": "18:00",
   "text": "⚡ Входъ въ Чертогъ Волка ⚡",
   "image": "/images/Волк.jpg",
   "date_to": "03-21",
-  "chertog": "Волк"
+  "chertog": "Волк",
+  "slavic_to": {
+    "month": "Дайлѣтъ",
+    "day": 21
+  }
 }

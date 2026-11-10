@@ -1,9 +1,17 @@
 {
   "slug": "chertog-losya",
-  "date": "05-05",
+  "date": "05-06",
+  "slavic": {
+    "month": "Элѣтъ",
+    "day": 26
+  },
   "date_to": "05-28",
   "chertog": "Лось",
   "text": "⚡ Входъ въ Чертогъ Лося ⚡",
   "image": "/images/Лось.jpg",
-  "post_time": "18:00"
+  "post_time": "18:00",
+  "slavic_to": {
+    "month": "Вэйлѣтъ",
+    "day": 8
+  }
 }

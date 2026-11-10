@@ -1,5 +1,9 @@
 {
   "date": "12-04",
+  "slavic": {
+    "month": "Айлѣтъ",
+    "day": 35
+  },
   "text": "День Олега Праведного",
   "slug": "den-olega-pravednogo",
   "post_time": "18:00"

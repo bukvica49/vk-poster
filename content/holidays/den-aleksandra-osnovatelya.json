@@ -1,5 +1,9 @@
 {
   "date": "01-15",
+  "slavic": {
+    "month": "Бейлѣтъ",
+    "day": 37
+  },
   "text": "День Александра Основателя",
   "slug": "den-aleksandra-osnovatelya",
   "post_time": "18:00"

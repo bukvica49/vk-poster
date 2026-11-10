@@ -1,9 +1,17 @@
 {
   "slug": "chertog-busla",
-  "date": "01-30",
+  "date": "01-31",
+  "slavic": {
+    "month": "Гэйлѣтъ",
+    "day": 12
+  },
   "date_to": "02-24",
   "text": "⚡ Входъ въ Чертогъ Бусла ⚡",
   "image": "/images/Бусл.jpg",
   "chertog": "Бусл",
-  "post_time": "18:00"
+  "post_time": "18:00",
+  "slavic_to": {
+    "month": "Гэйлѣтъ",
+    "day": 36
+  }
 }

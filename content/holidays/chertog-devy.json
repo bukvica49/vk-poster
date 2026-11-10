@@ -1,9 +1,17 @@
 {
   "slug": "chertog-devy",
   "date": "08-27",
-  "date_to": "09-18",
+  "slavic": {
+    "month": "Тайлѣтъ",
+    "day": 18
+  },
+  "date_to": "09-19",
   "chertog": "Дева",
   "text": "⚡ Входъ въ Чертогъ Девы ⚡",
   "image": "/images/Дева.jpg",
-  "post_time": "18:00"
+  "post_time": "18:00",
+  "slavic_to": {
+    "month": "Тайлѣтъ",
+    "day": 41
+  }
 }

@@ -1,5 +1,9 @@
 {
   "date": "12-30",
+  "slavic": {
+    "month": "Бейлѣтъ",
+    "day": 21
+  },
   "text": "День Великого Покоя",
   "slug": "den-velikogo-pokoya",
   "post_time": "18:00"

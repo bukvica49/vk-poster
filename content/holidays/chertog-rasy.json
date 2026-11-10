@@ -1,8 +1,16 @@
 {
   "slug": "chertog-rasy",
-  "date": "08-03",
-  "date_to": "08-27",
+  "date": "08-04",
+  "slavic": {
+    "month": "Хэйлѣтъ",
+    "day": 35
+  },
+  "date_to": "08-26",
   "text": "⚡ Входъ въ Чертогъ Расы ⚡",
   "chertog": "Раса",
-  "post_time": "18:00"
+  "post_time": "18:00",
+  "slavic_to": {
+    "month": "Тайлѣтъ",
+    "day": 17
+  }
 }

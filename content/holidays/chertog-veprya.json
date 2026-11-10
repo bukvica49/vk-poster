@@ -1,9 +1,17 @@
 {
   "slug": "chertog-veprya",
-  "date": "09-19",
-  "date_to": "10-11",
+  "date": "09-20",
+  "slavic": {
+    "month": "Рамхатъ",
+    "day": 1
+  },
+  "date_to": "10-10",
   "text": "⚡ Входъ въ Чертогъ Вепря ⚡",
   "image": "/images/Вепрь.jpg",
   "chertog": "Вепрь",
-  "post_time": "18:00"
+  "post_time": "18:00",
+  "slavic_to": {
+    "month": "Рамхатъ",
+    "day": 21
+  }
 }

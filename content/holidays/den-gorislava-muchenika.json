@@ -1,6 +1,10 @@
 {
   "slug": "Den' Gorislava Muchenika",
   "date": "01-25",
+  "slavic": {
+    "month": "Гэйлѣтъ",
+    "day": 6
+  },
   "text": "День Горислава Мученика",
   "image": "/images/День Горислава Мученика.jpg",
   "post_time": "18:00"

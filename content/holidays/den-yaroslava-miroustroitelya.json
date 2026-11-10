@@ -1,5 +1,9 @@
 {
   "date": "11-27",
+  "slavic": {
+    "month": "Айлѣтъ",
+    "day": 28
+  },
   "text": "День Ярослава Мироустроителя",
   "image": "/images/d_yaroslava_miroustroitely-1.jpeg",
   "slug": "den-yaroslava-miroustroitelya",

@@ -1,8 +1,16 @@
 {
   "slug": "chertog-konya",
-  "date": "06-19",
+  "date": "06-20",
+  "slavic": {
+    "month": "Вэйлѣтъ",
+    "day": 31
+  },
   "date_to": "07-12",
   "text": "⚡ Входъ въ Чертогъ Коня ⚡",
   "chertog": "Конь",
-  "post_time": "18:00"
+  "post_time": "18:00",
+  "slavic_to": {
+    "month": "Хэйлѣтъ",
+    "day": 12
+  }
 }

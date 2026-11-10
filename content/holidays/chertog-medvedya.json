@@ -1,9 +1,17 @@
 {
   "slug": "chertog-medvedya",
-  "date": "01-06",
+  "date": "01-07",
+  "slavic": {
+    "month": "Бейлѣтъ",
+    "day": 29
+  },
   "date_to": "01-30",
   "chertog": "Медведь",
   "text": "⚡ Входъ въ Чертогъ Медведя ⚡",
   "image": "/images/Медведь.jpg",
-  "post_time": "18:00"
+  "post_time": "18:00",
+  "slavic_to": {
+    "month": "Гэйлѣтъ",
+    "day": 11
+  }
 }

@@ -1,5 +1,9 @@
 {
   "date": "01-10",
+  "slavic": {
+    "month": "Бейлѣтъ",
+    "day": 32
+  },
   "text": "День Богав Перуна",
   "slug": "den-bogav-peruna",
   "post_time": "18:00"

@@ -1,9 +1,17 @@
 {
   "slug": "chertog-shchuki",
   "date": "10-11",
+  "slavic": {
+    "month": "Рамхатъ",
+    "day": 22
+  },
   "date_to": "11-02",
   "text": "⚡ Входъ въ Чертогъ Щуки ⚡",
   "image": "/images/Щука.jpg",
   "chertog": "Щука",
-  "post_time": "18:00"
+  "post_time": "18:00",
+  "slavic_to": {
+    "month": "Айлѣтъ",
+    "day": 3
+  }
 }

@@ -109,6 +109,20 @@ def _holiday_date(h, year):
         return None
 
 
+def _holiday_date_to(h, year):
+    """Дата окончания (для Чертогов): slavic_to -> reverse, иначе date_to."""
+    sl = h.get("slavic_to")
+    if sl and sl.get("month") and sl.get("day"):
+        d = slavic_to_gregorian(year, sl["month"], sl["day"])
+        if d is not None:
+            return d
+    try:
+        mm, dd = h["date_to"].split("-")
+        return date(year, int(mm), int(dd))
+    except (KeyError, ValueError, AttributeError):
+        return None
+
+
 def _build_info_safe(d, chertog=False):
     try:
         from slavic_auto import build_info

@@ -1,8 +1,16 @@
 {
   "slug": "chertog-finista",
-  "date": "05-28",
+  "date": "05-29",
+  "slavic": {
+    "month": "Вэйлѣтъ",
+    "day": 9
+  },
   "date_to": "06-19",
   "text": "⚡ Входъ въ Чертогъ Финиста ⚡",
   "chertog": "Финист",
-  "post_time": "18:00"
+  "post_time": "18:00",
+  "slavic_to": {
+    "month": "Вэйлѣтъ",
+    "day": 30
+  }
 }

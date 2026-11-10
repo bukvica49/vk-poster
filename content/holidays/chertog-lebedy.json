@@ -1,9 +1,17 @@
 {
   "slug": "chertog-lebedy",
-  "date": "11-02",
+  "date": "11-03",
+  "slavic": {
+    "month": "Айлѣтъ",
+    "day": 4
+  },
   "date_to": "11-23",
   "text": "⚡ Входъ въ Чертогъ Лебедя ⚡",
   "image": "/images/Лебедь.jpg",
   "chertog": "Лебедь",
-  "post_time": "18:00"
+  "post_time": "18:00",
+  "slavic_to": {
+    "month": "Айлѣтъ",
+    "day": 24
+  }
 }

@@ -1,5 +1,9 @@
 {
   "date": "12-21",
+  "slavic": {
+    "month": "Бейлѣтъ",
+    "day": 12
+  },
   "text": "День Перемен, Коляда",
   "slug": "den-peremen-kolyada",
   "post_time": "18:00"

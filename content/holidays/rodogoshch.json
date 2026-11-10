@@ -1,5 +1,9 @@
 {
   "date": "01-06",
+  "slavic": {
+    "month": "Бейлѣтъ",
+    "day": 28
+  },
   "text": "Родогощ",
   "slug": "rodogoshch",
   "post_time": "18:00"
