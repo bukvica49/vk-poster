@@ -65,6 +65,24 @@ def _shift(leto, mi, d, wi, days):
                 leto += 1
     return leto, mi, d, wi
 
+def to_gregorian(month_name, day, start=None):
+    """Первая gregorian-дата, где слав. = (day, month_name), начиная со start.
+
+    start=None → 1 января текущего года. Горизонт поиска — 400 дней
+    (покрывает священные Лѣта до 369 дней + запас).
+    """
+    if start is None:
+        start = date(date.today().year, 1, 1)
+    cur = start
+    end = start + timedelta(days=400)
+    while cur <= end:
+        leto, mi, d, wi = krugолет(cur)
+        if d == day and SLAVIC_MONTHS[mi] == month_name:
+            return cur
+        cur += timedelta(days=1)
+    return None
+
+
 def krugолет(dt: date):
     return _shift(ANCHOR_LETO, ANCHOR_MONTH, ANCHOR_DAY, ANCHOR_WIDX,
                   (dt - ANCHOR_DATE).days)

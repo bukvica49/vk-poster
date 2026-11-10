@@ -1,7 +1,8 @@
 """Автоматика для постов ВК: славянский календарь."""
 import json
-from datetime import date
+from datetime import date, timedelta
 from pathlib import Path
+from slavic_calendar import to_gregorian
 
 _HERE = Path(__file__).parent
 SUMMER_BASE = 7521
@@ -161,11 +162,18 @@ def chertog_block_for(h: dict, fire_date):
         'tree':   ch.get('tree', '?'),
         'totem':  ch.get('name', '?'),
     }
-    dt_str = h.get('date_to')
     range_to = None
-    if dt_str:
-        mm, dd = map(int, dt_str.split('-'))
-        range_to = date(fire_date.year, mm, dd)
-        if (mm, dd) < (fire_date.month, fire_date.day):
-            range_to = date(fire_date.year + 1, mm, dd)
+    sl_to = h.get('slavic_to')
+    if sl_to and sl_to.get('month') and sl_to.get('day'):
+        # Perpetual: ищем от самого дня старта Чертога (fire_date — канун, +1)
+        range_to = to_gregorian(sl_to['month'], sl_to['day'],
+                                start=fire_date + timedelta(days=1))
+    else:
+        # Fallback для старых JSON без slavic_to
+        dt_str = h.get('date_to')
+        if dt_str:
+            mm, dd = map(int, dt_str.split('-'))
+            range_to = date(fire_date.year, mm, dd)
+            if (mm, dd) <= (fire_date.month, fire_date.day):
+                range_to = date(fire_date.year + 1, mm, dd)
     return block, range_to
