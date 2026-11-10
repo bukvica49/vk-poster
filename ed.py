@@ -49,6 +49,19 @@ def save_item(it, d):
 
 def public(d): return {k: v for k, v in d.items() if not k.startswith('_')}
 
+try:
+    from slavic_calendar import SLAVIC_MONTHS as _SLAVIC_MONTHS
+except Exception:
+    _SLAVIC_MONTHS = ['Рамхатъ', 'Айлѣтъ', 'Бейлѣтъ', 'Гэйлѣтъ', 'Дайлѣтъ',
+                      'Элѣтъ', 'Вэйлѣтъ', 'Хэйлѣтъ', 'Тайлѣтъ']
+
+def _fmt_sl(v):
+    """{'month': 'Айлѣтъ', 'day': 25} → 'Айлїтъ 25'"""
+    if not isinstance(v, dict): return None
+    m, d = v.get('month'), v.get('day')
+    if not (m and d): return None
+    return f"{m} {d}"
+
 def cmd_list(args):
     xs = all_items()
     if args.json:
@@ -84,6 +97,10 @@ def cmd_show(args):
     if it.get('date_to'): d += ' → ' + str(it['date_to'])
     print(f'{cyan("slug:"):<12} {it["_stem"]}')
     print(f'{cyan("дата:"):<12} {d}')
+    _s = _fmt_sl(it.get('slavic'))
+    if _s: print(f'{cyan("слав.:"):<12} {_s}')
+    _s = _fmt_sl(it.get('slavic_to'))
+    if _s: print(f'{cyan("слав. по:"):<12} {_s}')
     if it.get('chertog'):   print(f'{cyan("чертог:"):<12} {it["chertog"]}')
     if it.get('post_time'): print(f'{cyan("время:"):<12} {str(it["post_time"]).replace("-", ":")}')
     if it.get('image'):
@@ -91,7 +108,8 @@ def cmd_show(args):
         mark = '✓' if img.exists() else '✗ НЕТ ФАЙЛА'
         print(f'{cyan("картинка:"):<12} {it["image"]}  {mark}')
     for k in sorted(public(it)):
-        if k in ('slug', 'date', 'date_to', 'text', 'image', 'chertog', 'post_time'):
+        if k in ('slug', 'date', 'date_to', 'text', 'image', 'chertog', 'post_time',
+                 'slavic', 'slavic_to'):
             continue
         print(f'{cyan(k + ":"):<12} {it[k]}')
     return 0
@@ -127,6 +145,18 @@ def cmd_validate(args):
         dt = it.get('date_to')
         if dt and not re.fullmatch(mm_dd, str(dt)):
             hard.append(f'date_to не MM-DD: {dt!r}')
+        for sk in ('slavic', 'slavic_to'):
+            sv = it.get(sk)
+            if sv is None: continue
+            if not isinstance(sv, dict):
+                hard.append(f'{sk} не объект: {sv!r}'); continue
+            m, dd = sv.get('month'), sv.get('day')
+            if not m:
+                hard.append(f'{sk}.month пусто')
+            elif m not in _SLAVIC_MONTHS:
+                hard.append(f'{sk}.month={m!r} неизв. (ожид. из 9 мес.)')
+            if not isinstance(dd, int) or not (1 <= dd <= 41):
+                hard.append(f'{sk}.day={dd!r} (ожид. 1..41)')
         im = it.get('image')
         if im and not (HERE / str(im).lstrip('/')).exists():
             soft.append(f'нет картинки: {im}')
@@ -198,6 +228,11 @@ def cmd_new(args):
     d = {'slug': slug, 'date': date_, 'text': title,
          'image': '', 'chertog': ct, 'post_time': tm}
     if dt: d['date_to'] = dt
+    if ct:
+        print(yellow('\n! chertog без slavic/slavic_to → диапазон по date_to, поплывёт в священное лїто.'))
+        print(dim('  После создания — дозаполни через `ed.py edit <slug>`:'))
+        print(dim('    "slavic":    {"month": "Айлїтъ",  "day": 25}'))
+        print(dim('    "slavic_to": {"month": "Бейлїтъ", "day": 6}'))
     dump(p, d)
     print(green(f'✓ создано {p.relative_to(HERE)}'))
     print(dim(f'  прикрепить картинку: ed.py image {slug} <file.jpg>'))

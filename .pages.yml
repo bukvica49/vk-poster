@@ -37,6 +37,8 @@ content:
         type: string
         required: false
         description: "Название Чертога (напр. Змей, Волк). Включает специальный шаблон поста. Пусто = обычный праздник."
+      - {name: slavic,    type: object, hidden: true, fields: [{name: month, type: string}, {name: day, type: number}]}
+      - {name: slavic_to, type: object, hidden: true, fields: [{name: month, type: string}, {name: day, type: number}]}
       - name: text
         label: Текст поста (заголовок карточки)
         type: string

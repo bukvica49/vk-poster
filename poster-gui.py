@@ -130,7 +130,9 @@ class App(tk.Tk):
         q = self.search_var.get().lower()
         for slug, (_, d) in sorted(self.posts.items(), key=lambda x: x[1][1].get("date","")):
             date = d.get("date",""); to = d.get("date_to","")
-            ds = f"{date}→{to}" if to else date
+            st = d.get("slavic_to")
+            s_to = f" ({st['month']} {st['day']})" if isinstance(st, dict) and st.get("month") and st.get("day") else ""
+            ds = f"{date}→{to}{s_to}" if to else date
             if q and q not in f"{slug} {d.get('text','')} {date}".lower(): continue
             self.tree.insert("", tk.END, iid=slug, values=(ds, slug, d.get("text","")))
 
@@ -160,6 +162,14 @@ class App(tk.Tk):
             else:
                 if v: new[k] = v
                 else: new.pop(k, None)          # пусто = удалить из JSON
+        # 🔴 guard: если civil-дата изменилась, старый slavic(_to) не должен
+        # пережить сохранение — иначе poster возьмёт его и покажет неверное.
+        if new.get("date") != d_old.get("date") and "slavic" in new:
+            new.pop("slavic")
+            self.log_msg("⚠ date изменился → slavic сброшен (fallback)")
+        if new.get("date_to") != d_old.get("date_to") and "slavic_to" in new:
+            new.pop("slavic_to")
+            self.log_msg("⚠ date_to изменился → slavic_to сброшен (fallback)")
         try:
             f.write_text(json.dumps(new, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
             self.log_msg(f"✓ {f.name}"); self.refresh()
@@ -226,6 +236,10 @@ class App(tk.Tk):
             else:
                 if v: base[k] = v
                 else: base.pop(k, None)
+        # тот же guard, без логирования (живой превью вызывает часто)
+        d_old = self.posts[slug][1] if slug in self.posts else {}
+        if base.get("date") != d_old.get("date"): base.pop("slavic", None)
+        if base.get("date_to") != d_old.get("date_to"): base.pop("slavic_to", None)
         return base
 
     # ── 👁 превью VK-поста ─────────────────────────────────
