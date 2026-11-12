@@ -257,6 +257,32 @@ def post(token, group_id, message, attachments=None):
     return pid
 
 
+
+def _daily_weekday(d):
+    """Славянский день недели (0..8) огненного дня d."""
+    from slavic_calendar import krugолет
+    return krugолет(d + timedelta(days=1))[3]
+
+def daily_items(today_d):
+    """Посты с daily:true — матч по славянскому дню недели."""
+    out = []
+    wi = _daily_weekday(today_d)
+    for f in sorted(BASE.glob("content/holidays/*.json")):
+        try:
+            h = json.loads(f.read_text(encoding="utf-8"))
+        except Exception:
+            continue
+        if not h.get("daily"):
+            continue
+        if int(h.get("weekday", -1)) != wi:
+            continue
+        text = h.get("text") or ""
+        img = h.get("image")
+        img_path = _resolve_image(img) if img else None
+        out.append((text, img_path, h.get("info") or []))
+    return out
+
+
 # ─── state ──────────────────────────────────────────────────────
 def load_state():
     return json.loads(STATE_FILE.read_text(encoding="utf-8")) \
@@ -285,12 +311,12 @@ def main(dry_run=False, test=False, force=False, republish=False, override_date=
     elif override_date:
         today_d    = date.fromisoformat(override_date)
         today_iso  = today_d.isoformat()
-        items      = holidays_today(today_d)
+        items      = holidays_today(today_d) + daily_items(today_d)
         print(f"[override] date={today_iso}, найдено: {len(items)}")
     else:
         today_d    = slavic_calendar.slavic_now()
         today_iso  = today_d.isoformat()
-        items      = holidays_today(today_d)
+        items      = holidays_today(today_d) + daily_items(today_d)
 
     if not items:
         print(f"{today_iso}: праздников нет, выходим")
