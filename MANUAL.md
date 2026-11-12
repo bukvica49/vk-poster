@@ -525,3 +525,4 @@ Cron локально **отключён**. Не возвращать.
 **Проверка:**
 cd ~/site/vk-poster && python3 poster.py --dry-run --date 2027-10-28
 # ожидаем: text сверху, шапка, ⚡🌳● info, [фото: did.jpg ✓]
+<сюда вставить содержимое manual_addition.md>
