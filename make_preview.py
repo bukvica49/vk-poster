@@ -108,6 +108,8 @@ def build():
             if occ_next is not None:
                 occ = occ_next
         if occ is None:
+            if h.get('daily'):
+                continue  # daily-посты (дни недели) — не карточки сайта
             m, dd = map(int, h['date'].split('-'))
             occ = next_occurrence(m, dd, today_civil)
         # fix: если выпуск уже опубликован — переключаемся на след. год
