@@ -538,6 +538,7 @@
   .hdr, .hint, .btns, .footer, .tpl-box, .label, .bg-panel, #picker {
     flex-shrink: 0;
   }
+  #picker:not([data-vp-open]) { display: none !important; }
   .hdr            { margin-bottom: 6px; }
   .hint           { margin-bottom: 6px; font-size: 11px; }
   .label          { margin: 6px 0 4px; font-size: 12px; }
@@ -667,6 +668,8 @@
 <div class="field-wrap">
   <textarea id="src" class="field" rows="7" placeholder="Вставь сюда текст поста..."></textarea>
   <div class="field-actions">
+    <button type="button" class="icon-btn-sm" data-act="strip-emoji" id="btn-strip-emoji" title="Убрать эмодзи">🚫</button>
+    <button type="button" class="icon-btn-sm" data-act="strip-links" id="btn-strip-links" title="Убрать ссылки">🔗</button>
     <button type="button" class="icon-btn-sm" data-act="copy-src" title="Копировать">📋</button>
     <button type="button" class="icon-btn-sm" data-act="clear-src" title="Очистить">🗑</button>
   </div>
@@ -676,8 +679,6 @@
   <button class="btn slav-a" data-act="slav-a">🕯 Дореформенный</button>
   <button class="btn slav-b" data-act="slav-b">🏛 Древній</button>
   <button class="btn slav-c" data-act="slav-c">✨ AI старослав</button>
-  <button class="btn" data-act="strip-emoji" id="btn-strip-emoji">🚫 Убрать эмодзи</button>
-  <button class="btn" data-act="strip-links" id="btn-strip-links">🔗 Убрать ссылки</button>
   <button class="btn" data-act="emoji">😊 Эмодзи</button>
   <button class="btn" data-act="symbols">✳ Символы</button>
 </div>
@@ -721,8 +722,10 @@
   function _syncStripButtons() {
     const be = document.getElementById('btn-strip-emoji');
     const bl = document.getElementById('btn-strip-links');
-    if (be) be.textContent = (_undo && _undo.kind === 'emoji') ? '↩️ Вернуть эмодзи' : '🚫 Убрать эмодзи';
-    if (bl) bl.textContent = (_undo && _undo.kind === 'links') ? '↩️ Вернуть ссылки' : '🔗 Убрать ссылки';
+    const ue = _undo && _undo.kind === 'emoji';
+    const ul = _undo && _undo.kind === 'links';
+    if (be) { be.textContent = ue ? '↩️' : '🚫'; be.title = ue ? 'Вернуть эмодзи' : 'Убрать эмодзи'; }
+    if (bl) { bl.textContent = ul ? '↩️' : '🔗'; bl.title = ul ? 'Вернуть ссылки' : 'Убрать ссылки'; }
   }
   src.addEventListener('input', () => { if (_undo) { _undo = null; _syncStripButtons(); } });
 
@@ -787,6 +790,9 @@
   function refreshTpl(){ const tpl=H.getTemplate(); const el=$('tpl-status'); if (!tpl){ el.textContent='не задан'; return; } el.innerHTML = tpl.pattern.map(p=>'<span class="tpl-pattern">'+p+'</span>').join(' '); }
   refreshTpl();
 
+  // гарантированно скрыть палитру при открытии попапа (2-й слой — CSS #picker:not([data-vp-open]))
+  try { if (picker) { picker.removeAttribute('data-vp-open'); picker.style.display = 'none'; } } catch(e){}
+
   // ============ ОСНОВНЫЕ КНОПКИ ============
   const _cc = document.getElementById('confirm-clear');
 if (_cc) {
@@ -850,7 +856,7 @@ document.querySelectorAll('[data-act]').forEach(b => {
           src.value = _r.text; _syncStripButtons();
           toast('Убрано ссылок: ' + _r.count, 'ok');
         }
-        else if (act === 'emoji' || act === 'symbols') { window._vpPickerMode = act; const c = act==='emoji'?H.EMOJI:H.SYMBOLS; picker.style.display=''; renderPickerTabs(c); }
+        else if (act === 'emoji' || act === 'symbols') { window._vpPickerMode = act; const c = act==='emoji'?H.EMOJI:H.SYMBOLS; picker.setAttribute('data-vp-open','1'); picker.style.display=''; renderPickerTabs(c); }
         else if (act === 'copy-src' || act === 'copy-dst') {
           const ta = act === 'copy-src' ? src : dst;
           if (!ta.value) { toast('Пусто','err'); return; }
