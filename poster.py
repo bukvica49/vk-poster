@@ -386,7 +386,7 @@ def main(dry_run=False, test=False, force=False, republish=False, override_date=
             if _now.hour >= 18:
                 _start = datetime.combine(_now.date(), time(18, 0))
             else:
-                _start = datetime.combine(_now.date() - timedelta(days=1), time(18, 0))
+                _start = datetime.combine(_now.date(), time(18, 0))  # FIX: слот всегда от СЕГОДНЯШНИХ 18:00
             _offset_min = (post_hh * 60 + post_mm) - (18 * 60)
             if _offset_min < 0:
                 _offset_min += 24 * 60
