@@ -329,6 +329,26 @@
     return { text: cleaned, count };
   }
 
+  function stripLinks(text) {
+    if (!text) return { text: '', count: 0 };
+    let count = 0;
+    const TLD = 'ru|рф|com|org|net|io|su|uk|de|fr|info|biz|me|tv|co|site|online|store|app|dev|xyz|pro|club|live|news|blog|shop|top';
+    const RE_DOMAIN = new RegExp(
+      '(?<![\\w@])(?:[a-zа-яё0-9][a-zа-яё0-9-]*\\.)+(?:' + TLD + ')(?:\\/[^\\s]*)?\\b',
+      'giu'
+    );
+    const cleaned = text
+      .replace(/\[[^\]]*\]\([^)]+\)/gu, () => { count++; return ''; })
+      .replace(/https?:\/\/[^\s<>"'()[\]{}]+/giu, () => { count++; return ''; })
+      .replace(RE_DOMAIN, () => { count++; return ''; })
+      .replace(/[ \t]{2,}/g, ' ')
+      .replace(/[ \t]+$/gm, '')
+      .replace(/^[ \t]+/gm, '')
+      .replace(/\n{3,}/g, '\n\n')
+      .replace(/^\n+|\n+$/g, '');
+    return { text: cleaned, count };
+  }
+
   function captureTemplate(text) {
     const blocks = text.split(/\n\s*\n/).map(b => b.trim()).filter(Boolean);
     return blocks.map(b => {
@@ -656,8 +676,9 @@
   <button class="btn slav-a" data-act="slav-a">🕯 Дореформенный</button>
   <button class="btn slav-b" data-act="slav-b">🏛 Древній</button>
   <button class="btn slav-c" data-act="slav-c">✨ AI старослав</button>
+  <button class="btn" data-act="strip-emoji" id="btn-strip-emoji">🚫 Убрать эмодзи</button>
+  <button class="btn" data-act="strip-links" id="btn-strip-links">🔗 Убрать ссылки</button>
   <button class="btn" data-act="emoji">😊 Эмодзи</button>
-    
   <button class="btn" data-act="symbols">✳ Символы</button>
 </div>
 <div id="picker" style="display:none"><div class="picker-tabs" id="tabs"></div><div class="picker" id="grid"></div></div>
@@ -696,6 +717,14 @@
   if (!H) { document.body.innerHTML = '<p style="color:#c33;padding:20px;font:16px sans-serif">Ошибка: нет доступа к родителю. Открой редактор с главной страницы.</p>'; return; }
   const $ = id => document.getElementById(id);
   const src=$('src'), dst=$('dst'), picker=$('picker'), tabs=$('tabs'), grid=$('grid');
+  let _undo = null;
+  function _syncStripButtons() {
+    const be = document.getElementById('btn-strip-emoji');
+    const bl = document.getElementById('btn-strip-links');
+    if (be) be.textContent = (_undo && _undo.kind === 'emoji') ? '↩️ Вернуть эмодзи' : '🚫 Убрать эмодзи';
+    if (bl) bl.textContent = (_undo && _undo.kind === 'links') ? '↩️ Вернуть ссылки' : '🔗 Убрать ссылки';
+  }
+  src.addEventListener('input', () => { if (_undo) { _undo = null; _syncStripButtons(); } });
 
   // — vp: последнее активное поле (#src/#dst) для вставки из палитры
   let _vpLastField = src;
@@ -799,10 +828,27 @@ document.querySelectorAll('[data-act]').forEach(b => {
         }
         else if (act === 'strip-emoji') {
           if (!src.value.trim()) { toast('Введи текст','err'); return; }
+          if (_undo && _undo.kind === 'emoji' && src.value === _undo.after) {
+            src.value = _undo.before; _undo = null; _syncStripButtons();
+            toast('Эмодзи возвращены','ok'); return;
+          }
           const _r = H.stripEmoji(src.value);
           if (_r.count === 0) { toast('Эмодзи не найдены',''); return; }
-          src.value = _r.text;
+          _undo = { kind: 'emoji', before: src.value, after: _r.text };
+          src.value = _r.text; _syncStripButtons();
           toast('Убрано эмодзи: ' + _r.count, 'ok');
+        }
+        else if (act === 'strip-links') {
+          if (!src.value.trim()) { toast('Введи текст','err'); return; }
+          if (_undo && _undo.kind === 'links' && src.value === _undo.after) {
+            src.value = _undo.before; _undo = null; _syncStripButtons();
+            toast('Ссылки возвращены','ok'); return;
+          }
+          const _r = H.stripLinks(src.value);
+          if (_r.count === 0) { toast('Ссылки не найдены',''); return; }
+          _undo = { kind: 'links', before: src.value, after: _r.text };
+          src.value = _r.text; _syncStripButtons();
+          toast('Убрано ссылок: ' + _r.count, 'ok');
         }
         else if (act === 'emoji' || act === 'symbols') { window._vpPickerMode = act; const c = act==='emoji'?H.EMOJI:H.SYMBOLS; picker.style.display=''; renderPickerTabs(c); }
         else if (act === 'copy-src' || act === 'copy-dst') {
@@ -1025,7 +1071,7 @@ document.querySelectorAll('[data-act]').forEach(b => {
   }
 
   window._vpHelp = {
-    slavicA, slavicB, slavicC, stripEmoji, formatForVK,
+    slavicA, slavicB, slavicC, stripEmoji, stripLinks, formatForVK,
     captureTemplate, applyTemplate, getTemplate, setTemplate, clearTemplate,
     getAiEndpoint, setAiEndpoint, EMOJI, SYMBOLS, copyText
   };
