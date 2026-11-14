@@ -1,0 +1,31 @@
+name: Check VK Tokens
+on:
+  workflow_dispatch: {}
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - name: Check tokens
+        env:
+          VK_CONFIG: ${{ secrets.VK_CONFIG }}
+        run: |
+          python3 - <<'PYEOF'
+          import json, os, urllib.request, urllib.parse
+          cfg = json.loads(os.environ["VK_CONFIG"])
+          def call(method, token, **params):
+              params.update({"access_token": token, "v": "5.199"})
+              url = "https://api.vk.com/method/" + method + "?" + urllib.parse.urlencode(params)
+              return json.loads(urllib.request.urlopen(url, timeout=15).read().decode())
+          tok = cfg.get("user_token", "")
+          print(f"user_token: …{tok[-6:]} (длина {len(tok)})")
+          r = call("photos.getWallUploadServer", tok, group_id=cfg.get("group_id"))
+          e = r.get("error")
+          if e:
+              print("RESULT: ОШИБКА", e["error_code"], "-", e["error_msg"])
+          else:
+              print("RESULT: OK — upload_url получен, токен жив ✓")
+          PYEOF
