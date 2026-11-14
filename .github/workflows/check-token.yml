@@ -7,9 +7,8 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
-        with:
-          python-version: "3.11"
-      - name: Check tokens
+        with: { python-version: "3.11" }
+      - name: Check tokens from SECRET
         env:
           VK_CONFIG: ${{ secrets.VK_CONFIG }}
         run: |
@@ -20,12 +19,25 @@ jobs:
               params.update({"access_token": token, "v": "5.199"})
               url = "https://api.vk.com/method/" + method + "?" + urllib.parse.urlencode(params)
               return json.loads(urllib.request.urlopen(url, timeout=15).read().decode())
-          tok = cfg.get("user_token", "")
-          print(f"user_token: …{tok[-6:]} (длина {len(tok)})")
-          r = call("photos.getWallUploadServer", tok, group_id=cfg.get("group_id"))
+          for key in ("token", "user_token"):
+              tok = cfg.get(key, "")
+              print(f"--- поле {key}: ...{tok[-6:]} (длина {len(tok)}) ---")
+              r = call("groups.getTokenPermissions", tok)
+              e = r.get("error")
+              if e:
+                  print("  getTokenPermissions: ОШИБКА", e["error_code"], "-", e["error_msg"])
+              else:
+                  perm = r["response"].get("permissions", [])
+                  names = [p.get("name") for p in perm]
+                  print("  права:", ", ".join(names) or "(нет)")
+          r = call("users.get", cfg.get("user_token",""))
           e = r.get("error")
-          if e:
-              print("RESULT: ОШИБКА", e["error_code"], "-", e["error_msg"])
+          if e: print("user_token owner: ОШИБКА", e["error_code"], e["error_msg"])
           else:
-              print("RESULT: OK — upload_url получен, токен жив ✓")
+              resp = r.get("response") or []
+              if resp:
+                  u = resp[0]
+                  print(f"user_token owner: id{u['id']} {u.get('first_name','')} {u.get('last_name','')}")
+              else:
+                  print("user_token owner: пусто (похоже на group-токен)")
           PYEOF
