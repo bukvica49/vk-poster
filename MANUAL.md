@@ -579,3 +579,72 @@ python3 poster.py --dry-run --date 2026-11-15
 | Праздник | JSON с `date` (MM-DD), 18:00 или свой `post_time` |
 | Чертог | Праздник с `chertog`, особый шаблон |
 | Daily / пост дня недели | `den-dnya-0…8.json`, без `date`, 19:00, номер = день недели |
+# Автопостер — шпаргалка
+
+# 🆕 Изменения 14.11.2026
+
+## VK-токены: разбор слёта 14.11 и отказоустойчивость
+
+### Что случилось 14.11.2026
+Посты «Понєдѣльникъ — Азъ» падали с `VK error 5: user revoke access for this token`.
+Причина: **в поле `token` секрета VK_CONFIG лежал user-токен, а не group-токен** — постинг шёл через user-токен, который отозвался при перевыпуске (выдача нового токена Kate Mobile **отзывает предыдущий**).
+
+### Правильное распределение токенов в config.main.json / секрете VK_CONFIG
+
+| Поле | Что лежит | Длина | Для чего |
+|------|-----------|-------|----------|
+| `token` | **group-токен** (создаётся в группе: Управление → Работа с API → Access tokens) | ~85–90 симв. | `wall.post` — постинг. Бессрочный, не зависит от user-сессий |
+| `user_token` | user-токен Kate Mobile (oauth-ссылка) | ~220 симв. | **только загрузка фото** (`photos.getWallUploadServer`) |
+
+⚠️ Проверка по длине: group-токен короткий (~85), Kate Mobile — длинный (~220). Если в поле `token` лежит 220-символьный — это НЕ group-токен.
+
+### Коды ошибок VK — как читать
+
+| Код | Текст | Что значит | Действие |
+|-----|-------|-----------|----------|
+| 5 | `invalid access_token` | токен мёртв | перевыпустить |
+| 5 | `user revoke access for this token` | в поле `token` — user-токен и он отозван | вернуть group-токен в поле `token` |
+| 9 | `Flood control` | лимит запросов (на токене или IP) | молчание 3–24 ч, ничего не дёргать |
+| 15 | `admin 2fa check fail` | гейт 2FA / сбой Kate Mobile | переразрешить, проверить 2FA |
+| 27 | `invalid scope` | user-токен без права photos | перевыпуск с scope wall,photos,groups,offline |
+
+### Отличить flood «на IP» или «на токене»
+Запусти проверку через CI (другой IP): `check-token.yml` → Run workflow → смотри `RESULT:`.
+- OK на CI, ошибка 9 локально → flood на твоём IP (ждать, автопостер не задет — раннеры с других IP);
+- ошибка 9 и на CI → flood на токене (молчание 3–24 ч).
+
+### Правила долгой жизни user-токена
+1. Ровно **один** user-токен в игре: каждый перевыпуск oauth-ссылкой отзывает предыдущий.
+2. Не менять пароль, не выходить из сессий, не отзывать приложение Kate Mobile.
+3. Не дёргать API лишний раз (проверка только при симптоме «пост без картинки»).
+4. Плюс — отдельный бот-аккаунт админом группы: слёты от личных действий исчезают.
+5. oauth-ссылка вместо vkhost (vkhost может не открываться):
+   https://oauth.vk.com/authorize?client_id=2685278&scope=wall,photos,groups,offline,manage&response_type=token&v=5.131
+   Токен — из адресной строки после `access_token=`.
+
+### Отказоустойчивость (пост 14.11: коммит a9be9f6 → 8cff663)
+`post.yml`: `PHOTO_MISSING=1` → **warning, не failure**. При мёртвом user-токене:
+- текстовые посты (daily и праздники) выходят штатно, у праздников без картинки;
+- CI зелёный, авто-Issue не создаётся;
+- в логе: `⚠ фото не загрузилось (...) → пост без фото` + жёлтый warning.
+
+### Восстановление после слёта user-токена — 3 команды
+1. Перевыпустить токен (oauth-ссылка выше) → скопировать из адресной строки.
+2. Обновить config и залить секрет:
+   ```bash
+   cd ~/site/vk-poster && python3 - <<'EOF'
+   import json
+   cfg = json.load(open("config.main.json", encoding="utf-8"))
+   cfg["user_token"] = input("user_token: ").strip()
+   json.dump(cfg, open("config.main.json","w",encoding="utf-8"), ensure_ascii=False, indent=2)
+   EOF
+   gh secret set VK_CONFIG --repo bukvica49/vk-poster < config.main.json
+   ```
+3. Проверка: `check-token.yml` → Run workflow → `RESULT: OK`.
+
+Если слетело поле `token` (постинг): настоящий group-токен из группы (Управление → Работа с API) в поле `token`, тот же порядок. Контроль: тик `gh workflow run post.yml` → success.
+
+### Инструмент: .github/workflows/check-token.yml
+Безопасная проверка обоих токенов из секрета (хвост + права `groups.getTokenPermissions`, владелец user_token). Запуск: Actions → Check VK Tokens → Run workflow. Токены в лог не попадают.
+
+**Пост вышел без картинки** (user_token слетел, PHOTO_MISSING): прикрепить руками — пост → ⋯ → Изменить → фото; файл в `~/site/vk-poster/images/`.
