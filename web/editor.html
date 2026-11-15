@@ -1828,7 +1828,7 @@ window.__vpSetupTabs = function(){
         if (n2){ _sheets[i].name = n2.trim() || _sheets[i].name; _saveTabs(); _renderTabs(); }
       });
 
-      // Патч 17: перетаскивание «как в браузере» — вкладки разъезжаются при наведении
+      // Патч 18: перетаскивание в обе стороны — по середине вкладки (лево/право)
       t.draggable = true;
       t.addEventListener('dragstart', function(ev){
         try { ev.dataTransfer.setData('text/plain', String(i)); } catch(e){}
@@ -1839,24 +1839,41 @@ window.__vpSetupTabs = function(){
       });
       t.addEventListener('dragend', function(){
         t.style.opacity = '';
-        window.__vpDragTab = null;
         tabRow.classList.remove('vp-dragging');
-        _saveTabs(); _renderTabs();
+        Array.prototype.forEach.call(tabRow.querySelectorAll('.vp-ed-tab'), function(x){
+          x.style.boxShadow = ''; x.style.opacity = '';
+        });
+        window.__vpDragTab = null;
       });
       t.addEventListener('dragover', function(ev){
         var from = window.__vpDragTab;
         if (from === null || from === undefined || from === i) return;
         ev.preventDefault();
         ev.dataTransfer.dropEffect = 'move';
-        // живая перестановка: переносим лист с позиции from на позицию i
+        // сторона: левая половина вкладки — встать ПЕРЕД ней, правая — ПОСЛЕ
+        var r = t.getBoundingClientRect();
+        var before = (ev.clientX - r.left) < r.width / 2;
+        // если результат не меняет порядок — не подсвечиваем
+        var same = (before && i === from + 1) || (!before && i === from - 1);
+        t.style.boxShadow = same ? '' : (before ? ('inset 3px 0 0 0 ' + ACCENT) : ('inset -3px 0 0 0 ' + ACCENT));
+        window.__vpDropSide = { i: i, before: before };
+      });
+      t.addEventListener('dragleave', function(){ t.style.boxShadow = ''; });
+      t.addEventListener('drop', function(ev){
+        ev.preventDefault(); ev.stopPropagation();
+        var side = window.__vpDropSide, from = window.__vpDragTab;
+        t.style.boxShadow = '';
+        if (!side || from === null || from === undefined) return;
+        var to = side.before ? side.i : side.i + 1;
+        if (to > from) to--; // после удаления элемента индексы съезжают
+        if (to === from || to < 0 || to > _sheets.length) return;
+        _sheets[_cur].body = _outValue();
         var moved = _sheets.splice(from, 1)[0];
-        var to = i > from ? i - 1 : i;
         _sheets.splice(to, 0, moved);
         if (_cur === from) _cur = to;
         else if (from < _cur && to >= _cur) _cur--;
         else if (from > _cur && to <= _cur) _cur++;
-        window.__vpDragTab = to;
-        _renderTabs();
+        _saveTabs(); _renderTabs();
       });
       if (i === _cur) t.style.setProperty('background', 'rgba(201,122,29,0.35)', 'important');
       return t;
