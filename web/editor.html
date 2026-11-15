@@ -70,6 +70,27 @@
     .vp-cm-wrap .CodeMirror-linenumber{color:#6a6a7e!important}
     .vp-cm-wrap .CodeMirror-cursor{border-left:1px solid #f8f8f2!important}
     .vp-cm-wrap .CodeMirror-focused{border-color:#c97a1d!important}
+
+    /* Патч 9: вкладки-«папочки», аккуратная строка заголовка */
+    .vp-out-head{ }
+    .vp-out-head > label{ font-size:12px !important; }
+    .vp-ed-tab{
+      height:28px !important;
+      padding:0 12px !important;
+      display:inline-flex !important;
+      align-items:center !important;
+      gap:8px !important;
+      border:1px solid #3a3a4a !important;
+      border-bottom:none !important;
+      border-radius:7px 7px 0 0 !important;
+      background:#2a2a33 !important;
+      color:#b9b9c4 !important;
+      font-size:12.5px !important;
+      white-space:nowrap !important;
+    }
+    .vp-ed-tab:hover{ background:#33333d !important; color:#e8e8ee !important; }
+    .vp-ed-tabs-row .action-btn{ height:28px !important; min-width:28px !important; border-radius:7px 7px 0 0 !important; }
+    .vp-ed-tabs-row::-webkit-scrollbar{ height:0 !important; }
 </style>
 <style id="vp-cm-css">
 /* ═══ CodeMirror 5.65.16 core (inlined) ═══ */
@@ -1379,27 +1400,33 @@ window.__vpSetupTabs = function(){
       function(){ clearAndUndo(f3.el, f3.wrap, null); });
     panel.appendChild(f3.wrap);
 
-    // Патч 8c: вкладки «+» — в строку с «Готовый HTML:» справа; с повтором,
-    // т.к. вкладочный блок может выполняться ПОЗЖЕ этого места
+    // Патч 9: аккуратная строка-заголовок «Готовый HTML: [Лист 1][Лист 2][+]»
     (function _placeTabs(n) {
       try {
         if (window.__vpTabRow && f3 && f3.wrap) {
           if (!window.__vpTabRow.isConnected) {
             var _lbl = f3.wrap.previousElementSibling;
+            var _row = mkEl('div');
+            _row.className = 'vp-out-head';
+            _row.style.cssText = 'display:flex !important;align-items:center !important;gap:10px !important;'
+              + 'margin:2px 0 6px 0 !important;flex-wrap:nowrap !important;';
             if (_lbl && _lbl.tagName === 'LABEL') {
-              _lbl.style.setProperty('display', 'inline-block', 'important');
-              _lbl.style.setProperty('vertical-align', 'middle', 'important');
-              _lbl.style.setProperty('margin', '0 10px 6px 0', 'important');
-              panel.insertBefore(window.__vpTabRow, _lbl.nextSibling);
-            } else {
-              panel.insertBefore(window.__vpTabRow, f3.wrap);
+              _lbl.style.setProperty('display', 'inline-flex', 'important');
+              _lbl.style.setProperty('align-items', 'center', 'important');
+              _lbl.style.setProperty('margin', '0 !important', 'important');
+              _lbl.style.setProperty('white-space', 'nowrap', 'important');
+              _row.appendChild(_lbl);
             }
             window.__vpTabRow.style.setProperty('display', 'inline-flex', 'important');
-            window.__vpTabRow.style.setProperty('vertical-align', 'middle', 'important');
-            window.__vpTabRow.style.setProperty('margin', '0 0 6px 0', 'important');
+            window.__vpTabRow.style.setProperty('align-items', 'flex-end', 'important');
+            window.__vpTabRow.style.setProperty('margin', '0 !important', 'important');
             window.__vpTabRow.style.setProperty('flex', '1 1 auto', 'important');
+            window.__vpTabRow.style.setProperty('overflow-x', 'auto', 'important');
+            window.__vpTabRow.style.setProperty('padding', '0 !important', 'important');
+            _row.appendChild(window.__vpTabRow);
+            panel.insertBefore(_row, f3.wrap);
           }
-          return; // готово
+          return;
         }
       } catch (e) { console.warn('[vp-ed-tabs] place:', e && e.message); }
       if (n < 20) setTimeout(function () { _placeTabs(n + 1); }, 50);
