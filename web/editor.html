@@ -1824,6 +1824,42 @@ window.__vpSetupTabs = function(){
         var n2 = prompt('Имя листа:', _sheets[i].name);
         if (n2){ _sheets[i].name = n2.trim() || _sheets[i].name; _saveTabs(); _renderTabs(); }
       });
+
+      // Патч 16: перетаскивание вкладок мышью
+      t.draggable = true;
+      t.classList.add('vp-tab-draggable');
+      t.addEventListener('dragstart', function(ev){
+        ev.dataTransfer.effectAllowed = 'move';
+        try { ev.dataTransfer.setData('text/plain', String(i)); } catch(e){}
+        t.style.opacity = '0.4';
+        window.__vpDragTab = i;
+      });
+      t.addEventListener('dragend', function(){ t.style.opacity = ''; window.__vpDragTab = null; });
+      t.addEventListener('dragover', function(ev){
+        if (window.__vpDragTab === null || window.__vpDragTab === i) return;
+        ev.preventDefault();
+        ev.dataTransfer.dropEffect = 'move';
+        t.style.boxShadow = 'inset 2px 0 0 0 ' + ACCENT;
+      });
+      t.addEventListener('dragleave', function(){ t.style.boxShadow = ''; });
+      t.addEventListener('drop', function(ev){
+        ev.preventDefault(); ev.stopPropagation();
+        t.style.boxShadow = '';
+        var from = window.__vpDragTab;
+        window.__vpDragTab = null;
+        if (from === null || from === i || from < 0 || from >= _sheets.length) return;
+        // сохранить содержимое активного листа перед перестановкой
+        _sheets[_cur].body = _outValue();
+        var moved = _sheets.splice(from, 1)[0];
+        var to = i > from ? i - 1 : i;
+        _sheets.splice(to, 0, moved);
+        // пересчитать индекс активного листа после перестановки
+        if (_cur === from) _cur = to;
+        else if (from < _cur && to >= _cur) _cur--;
+        else if (from > _cur && to <= _cur) _cur++;
+        _saveTabs(); _renderTabs();
+        toastMsg('↔ Лист перемещён');
+      });
       if (i === _cur) t.style.setProperty('background', 'rgba(201,122,29,0.35)', 'important');
       return t;
     }
