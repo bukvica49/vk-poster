@@ -1834,11 +1834,11 @@ window.__vpSetupTabs = function(){
     }
     btnAdd.addEventListener('click', function(){
       _sheets[_cur].body = _outValue();
-      _sheets.push({ name: 'Черновик ' + (_sheets.length + 1), body: '' });
+      _sheets.push({ name: 'Лист ' + (_sheets.length + 1), body: '' });
       _cur = _sheets.length - 1;
       _setOut('');
       _saveTabs(); _renderTabs();
-      toastMsg('✓ Новый черновик');
+      toastMsg('✓ Новый лист');
     });
 
     // синхронизация: при правке нижнего поля сохраняем активный черновик
@@ -1966,19 +1966,41 @@ window.__vpSetupTabs = function(){
       render(buildHtml($src.value, $source.value));
       toastMsg('✓ Сверстано');
     });
+    // Патч 14b: 💾 сохраняет АКТИВНУЮ вкладку (если в ней код), иначе генерирует шаблон;
+    // системное окно сохранения (выбор каталога, имя, тип .html/.txt)
     btnSave.addEventListener('click', function(){
-      if (!$src.value.trim()) return toastMsg('Введи текст');
-      var html = buildHtml($src.value, $source.value); render(html);
-      // Патч 13: если активная вкладка (черновик) не пуста — скачиваем ЕЁ содержимое
-      var _draft = (_cur !== 0 && _sheets[_cur] && _sheets[_cur].body && _sheets[_cur].body.trim()) ? _sheets[_cur].body : null;
-      if (_draft) html = _draft;
+      var html, isDraft = false;
+      var _act = _outValue();
+      if (_act && _act.trim()) { html = _act; isDraft = true; }
+      else {
+        if (!$src.value.trim()) return toastMsg('Введи текст');
+        html = buildHtml($src.value, $source.value); render(html);
+      }
       try { localStorage.setItem('vp-html-src', $src.value); localStorage.setItem('vp-page-source', $source.value); } catch(e){}
-      var first='page', arr=$src.value.split('\n');
+      var first='page', arr=(isDraft?html:$src.value).split('\n');
       for (var i=0;i<arr.length;i++){ if (arr[i].trim()){ first=arr[i]; break; } }
-      var base = first.replace(/^#+\s*/,'').trim().replace(/[^a-zA-Zа-яА-Я0-9_-]+/g,'-').replace(/^-+|-+$/g,'').slice(0,40)||'page';
-      var sug = prompt('Имя файла:', base+'.html');
-      if (!sug) return;
-      var fn = /\.html?$/i.test(sug)?sug:sug+'.html';
+      var base = first.replace(/^#+\s*/,'').trim().replace(/^<!DOCTYPE html>/i,'').replace(/[^a-zA-Zа-яА-Я0-9_-]+/g,'-').replace(/^-+|-+$/g,'').slice(0,40) || (isDraft?'list':'page');
+      var sug = base + '.html';
+
+      if (window.showSaveFilePicker) {
+        window.showSaveFilePicker({
+          suggestedName: sug,
+          types: [
+            { description: 'HTML документ', accept: { 'text/html': ['.html'] } },
+            { description: 'Текстовый файл', accept: { 'text/plain': ['.txt'] } }
+          ]
+        }).then(function(fh){
+          var _name = fh.name;
+          return fh.createWritable().then(function(w){ return w.write(html).then(function(){ w.close(); return _name; }); });
+        }).then(function(_name){ toastMsg('✓ Сохранено: ' + _name); })
+          .catch(function(e){ if (e && e.name !== 'AbortError') {
+            console.warn('[vp] save picker:', e); toastMsg('✗ Не сохранено: ' + (e.message||e));
+          } });
+        return;
+      }
+      var fn2 = prompt('Имя файла:', sug);
+      if (!fn2) return;
+      var fn = /\.html?$/i.test(fn2)?fn2:fn2+'.html';
       var blob = new Blob([html],{type:'text/html;charset=utf-8'});
       var url = URL.createObjectURL(blob);
       var a = document.createElement('a'); a.href=url; a.download=fn;
