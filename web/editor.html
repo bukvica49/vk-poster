@@ -1762,6 +1762,42 @@ window.__vpSetupTabs = function(){
     btnAdd.style.setProperty('font-size', '14px', 'important');
     btnAdd.style.setProperty('flex', '0 0 auto', 'important');
 
+    // Патч 15: кнопка «📁 Открыть из файла» — загружает файл в активную вкладку
+    var btnOpen = mkActionBtn('📁', false);
+    btnOpen.setAttribute('data-vp-tip', 'Открыть из файла (в активную вкладку)');
+    btnOpen.removeAttribute('title');
+    btnOpen.style.setProperty('min-width', '28px', 'important');
+    btnOpen.style.setProperty('font-size', '13px', 'important');
+    btnOpen.style.setProperty('flex', '0 0 auto', 'important');
+    btnOpen.addEventListener('click', function(){
+      var _apply = function(txt, name){
+        _setOut(txt);
+        _sheets[_cur].body = txt;
+        if (name) _sheets[_cur].name = name;
+        _saveTabs(); _renderTabs();
+        toastMsg('✓ Открыто: ' + (name || 'файл'));
+      };
+      if (window.showOpenFilePicker) {
+        window.showOpenFilePicker({
+          types: [
+            { description: 'HTML / текст', accept: { 'text/html': ['.html'], 'text/plain': ['.txt'] } }
+          ]
+        }).then(function(h){ return h[0].getFile(); })
+          .then(function(f){ return f.text().then(function(t){ _apply(t, f.name); }); })
+          .catch(function(e){ if (e && e.name !== 'AbortError') toastMsg('✗ ' + (e.message||e)); });
+      } else {
+        var inp = document.createElement('input');
+        inp.type = 'file'; inp.accept = '.html,.txt,text/html,text/plain';
+        inp.addEventListener('change', function(){
+          var f = inp.files && inp.files[0]; if (!f) return;
+          var r = new FileReader();
+          r.onload = function(){ _apply(String(r.result), f.name); };
+          r.readAsText(f);
+        });
+        inp.click();
+      }
+    });
+
     function _mkTab(i){
       var t = mkEl('button');
       t.type = 'button';
@@ -1795,6 +1831,7 @@ window.__vpSetupTabs = function(){
       while (tabRow.firstChild) tabRow.removeChild(tabRow.firstChild);
       for (var i = 0; i < _sheets.length; i++) tabRow.appendChild(_mkTab(i));
       tabRow.appendChild(btnAdd);
+      tabRow.appendChild(btnOpen);
     }
     // Патч 12: листы — черновики НИЖНЕГО поля («Готовый HTML»); верхнее не трогаем
     function _getOut(){
@@ -1992,7 +2029,10 @@ window.__vpSetupTabs = function(){
         }).then(function(fh){
           var _name = fh.name;
           return fh.createWritable().then(function(w){ return w.write(html).then(function(){ w.close(); return _name; }); });
-        }).then(function(_name){ toastMsg('✓ Сохранено: ' + _name); })
+        }).then(function(_name){
+          if (_name) { _sheets[_cur].name = _name; _saveTabs(); _renderTabs(); }
+          toastMsg('✓ Сохранено: ' + _name);
+        })
           .catch(function(e){ if (e && e.name !== 'AbortError') {
             console.warn('[vp] save picker:', e); toastMsg('✗ Не сохранено: ' + (e.message||e));
           } });
@@ -2006,6 +2046,7 @@ window.__vpSetupTabs = function(){
       var a = document.createElement('a'); a.href=url; a.download=fn;
       body.appendChild(a); a.click(); body.removeChild(a);
       setTimeout(function(){ URL.revokeObjectURL(url); }, 2000);
+      _sheets[_cur].name = fn; _saveTabs(); _renderTabs();
       toastMsg('✓ '+fn);
     });
 
