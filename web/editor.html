@@ -1379,12 +1379,23 @@ window.__vpSetupTabs = function(){
       function(){ clearAndUndo(f3.el, f3.wrap, null); });
     panel.appendChild(f3.wrap);
 
-    // FIX 15.11: панель вкладок «+» — над полем «Готовый HTML»
+    // Патч 8: вкладки «+» — в одну строку с «Готовый HTML:», справа от заголовка
     try {
       if (window.__vpTabRow) {
         var _lbl = f3.wrap.previousElementSibling;
-        if (_lbl && _lbl.tagName === 'LABEL') panel.insertBefore(window.__vpTabRow, _lbl);
-        else panel.insertBefore(window.__vpTabRow, f3.wrap);
+        if (_lbl && _lbl.tagName === 'LABEL') {
+          _lbl.style.setProperty('display', 'inline-block', 'important');
+          _lbl.style.setProperty('vertical-align', 'middle', 'important');
+          _lbl.style.setProperty('margin', '0 10px 6px 0', 'important');
+          panel.insertBefore(window.__vpTabRow, _lbl.nextSibling);
+          window.__vpTabRow.style.setProperty('display', 'inline-flex', 'important');
+          window.__vpTabRow.style.setProperty('vertical-align', 'middle', 'important');
+          window.__vpTabRow.style.setProperty('margin', '0 0 6px 0', 'important');
+          window.__vpTabRow.style.setProperty('flex', '1 1 auto', 'important');
+          window.__vpTabRow.style.setProperty('border-bottom', 'none', 'important');
+        } else {
+          panel.insertBefore(window.__vpTabRow, f3.wrap);
+        }
       }
     } catch (e) { console.warn('[vp-ed-tabs] place:', e && e.message); }
 
