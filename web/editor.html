@@ -1828,7 +1828,7 @@ window.__vpSetupTabs = function(){
       _sheets.splice(i, 1);
       if (_cur >= _sheets.length) _cur = _sheets.length - 1;
       else if (_cur > i) _cur--;
-      _applySrc(_sheets[_cur].body);
+      _setOut(_sheets[_cur].body);
       _saveTabs(); _renderTabs();
       toastMsg('✗ Лист закрыт');
     }
@@ -1952,7 +1952,13 @@ window.__vpSetupTabs = function(){
         +'  <button class="action-btn expand" type="button" onclick="toggleExpandFromArticle()" id="vp-expand-btn"><span class="icon">⤢</span> Развернуть</button>'+N
         +slot+'</footer>'+N+'</body>'+N+'</html>'+N;
     }
-    function render(h){ $out.value = h; }
+    // Патч 13: генерация шаблона всегда в ПЕРВУЮ (левую) вкладку + переключение на неё
+    function render(h){
+      _sheets[0].body = h;
+      _cur = 0;
+      _setOut(h);
+      _saveTabs(); _renderTabs();
+    }
 
     btnFormat.addEventListener('click', function(){
       if (!$src.value.trim()) return toastMsg('Введи текст');
@@ -1963,6 +1969,9 @@ window.__vpSetupTabs = function(){
     btnSave.addEventListener('click', function(){
       if (!$src.value.trim()) return toastMsg('Введи текст');
       var html = buildHtml($src.value, $source.value); render(html);
+      // Патч 13: если активная вкладка (черновик) не пуста — скачиваем ЕЁ содержимое
+      var _draft = (_cur !== 0 && _sheets[_cur] && _sheets[_cur].body && _sheets[_cur].body.trim()) ? _sheets[_cur].body : null;
+      if (_draft) html = _draft;
       try { localStorage.setItem('vp-html-src', $src.value); localStorage.setItem('vp-page-source', $source.value); } catch(e){}
       var first='page', arr=$src.value.split('\n');
       for (var i=0;i<arr.length;i++){ if (arr[i].trim()){ first=arr[i]; break; } }
