@@ -74,6 +74,8 @@ jobs:
 
       - name: Commit & push state → triggers Pages
         run: |
+          # Патч 21-dedupe: подтянуть коммиты параллельных тиков перед коммитом state
+          git pull --rebase origin main || true
           if git diff --quiet -- 'state-*.json'; then
             echo "state не изменился — пропуск"
             exit 0

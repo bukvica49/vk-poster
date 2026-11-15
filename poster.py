@@ -488,6 +488,15 @@ def main(dry_run=False, test=False, force=False, republish=False, override_date=
             # сигналим CI через PHOTO_MISSING, post уйдёт без фото
             if image_path and not attach:
                 print("PHOTO_MISSING=1", file=sys.stderr)
+            # ── Патч 21-dedupe: гонка страховочных cron-тиков ──
+            if key and not dry_run and not test:
+                try:
+                    _st2 = load_state()
+                    if key in _st2.get("posted", []) and not republish:
+                        print(f"  ✂ другой тик уже posted: {key} — выходим")
+                        continue
+                except Exception:
+                    pass
             pid = post(CONFIG["token"], CONFIG["group_id"], message, attach)
             print(f"OK post_id={pid}: «{text[:60]}» attach={attach or 'none'}")
             if key:
