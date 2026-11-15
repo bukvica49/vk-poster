@@ -1425,6 +1425,21 @@ window.__vpSetupTabs = function(){
             window.__vpTabRow.style.setProperty('padding', '0 !important', 'important');
             _row.appendChild(window.__vpTabRow);
             panel.insertBefore(_row, f3.wrap);
+            // Патч 12: синхронизация черновика при правке нижнего поля
+            if (!f3.el.__vpDraftSync) {
+              f3.el.__vpDraftSync = true;
+              var _hook = function(){
+                try { if (f3.el.__cm) _sheets[_cur].body = f3.el.__cm.getValue();
+                      else _sheets[_cur].body = f3.el.value;
+                      _saveTabs(); } catch(e){}
+              };
+              if (f3.el.__cm) f3.el.__cm.on('change', _hook);
+              f3.el.addEventListener('input', _hook);
+            }
+            // восстановить активный черновик, если нижнее поле пусто, а в листе текст есть
+            try {
+              if (!_outValue().trim() && _sheets[_cur] && _sheets[_cur].body) _setOut(_sheets[_cur].body);
+            } catch(e){}
           }
           return;
         }
@@ -1781,11 +1796,31 @@ window.__vpSetupTabs = function(){
       for (var i = 0; i < _sheets.length; i++) tabRow.appendChild(_mkTab(i));
       tabRow.appendChild(btnAdd);
     }
+    // Патч 12: листы — черновики НИЖНЕГО поля («Готовый HTML»); верхнее не трогаем
+    function _getOut(){
+      try {
+        if (typeof f3 !== 'undefined' && f3 && f3.el){
+          if (f3.el.__cm && typeof f3.el.__cm.getValue === 'function') return { cm: f3.el.__cm, el: f3.el };
+          return { cm: null, el: f3.el };
+        }
+      } catch(e){}
+      return null;
+    }
+    function _outValue(){
+      var o = _getOut(); if (!o) return '';
+      try { return o.cm ? o.cm.getValue() : (o.el.value || ''); } catch(e){ return o.el.value || ''; }
+    }
+    function _setOut(v){
+      var o = _getOut(); if (!o) return;
+      try {
+        if (o.cm) o.cm.setValue(v); else o.el.value = v;
+      } catch(e){ o.el.value = v; }
+    }
     function _switchTab(i){
       if (i === _cur) return;
-      _sheets[_cur].body = $src.value;   // сохранить текущий лист
+      _sheets[_cur].body = _outValue();   // сохранить текущий лист
       _cur = i;
-      _applySrc(_sheets[i].body);
+      _setOut(_sheets[i].body);
       _renderTabs();
     }
     function _closeTab(i){
@@ -1798,22 +1833,21 @@ window.__vpSetupTabs = function(){
       toastMsg('✗ Лист закрыт');
     }
     btnAdd.addEventListener('click', function(){
-      _sheets[_cur].body = $src.value;
-      _sheets.push({ name: 'Лист ' + (_sheets.length + 1), body: '' });
+      _sheets[_cur].body = _outValue();
+      _sheets.push({ name: 'Черновик ' + (_sheets.length + 1), body: '' });
       _cur = _sheets.length - 1;
-      _applySrc('');
+      _setOut('');
       _saveTabs(); _renderTabs();
-      toastMsg('✓ Новый лист');
+      toastMsg('✓ Новый черновик');
     });
 
-    // синхронизация тела активного листа при правке поля
-    $src.addEventListener('input', function(){ _sheets[_cur].body = $src.value; });
+    // синхронизация: при правке нижнего поля сохраняем активный черновик
+    // (f3 создаётся позже — вешаем listener в _placeTabs)
 
     // вкладки размещаются внизу, над полем «Готовый HTML» (панель вставится после создания f3)
     window.__vpTabRow = tabRow;
     _renderTabs();
-    // восстановить содержимое активного листа, если поле пусто, а в листе текст есть
-    if (!$src.value.trim() && _sheets[_cur] && _sheets[_cur].body) _applySrc(_sheets[_cur].body);
+    // (восстановление черновика при загрузке — в _placeTabs, когда f3 готов)
 
 
     } catch (e) { console.warn('[vp-ed-tabs] init:', e && e.message); }
