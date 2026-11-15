@@ -91,6 +91,9 @@
     .vp-ed-tab:hover{ background:#33333d !important; color:#e8e8ee !important; }
     .vp-ed-tabs-row .action-btn{ height:28px !important; min-width:28px !important; border-radius:7px 7px 0 0 !important; }
     .vp-ed-tabs-row::-webkit-scrollbar{ height:0 !important; }
+
+    /* Патч 17: стили перетаскивания вкладок */
+    .vp-dragging .vp-ed-tab{ opacity:0.75; }
 </style>
 <style id="vp-cm-css">
 /* ═══ CodeMirror 5.65.16 core (inlined) ═══ */
@@ -1825,40 +1828,35 @@ window.__vpSetupTabs = function(){
         if (n2){ _sheets[i].name = n2.trim() || _sheets[i].name; _saveTabs(); _renderTabs(); }
       });
 
-      // Патч 16: перетаскивание вкладок мышью
+      // Патч 17: перетаскивание «как в браузере» — вкладки разъезжаются при наведении
       t.draggable = true;
-      t.classList.add('vp-tab-draggable');
       t.addEventListener('dragstart', function(ev){
-        ev.dataTransfer.effectAllowed = 'move';
         try { ev.dataTransfer.setData('text/plain', String(i)); } catch(e){}
-        t.style.opacity = '0.4';
+        ev.dataTransfer.effectAllowed = 'move';
         window.__vpDragTab = i;
+        tabRow.classList.add('vp-dragging');
+        setTimeout(function(){ t.style.opacity = '0.35'; }, 0);
       });
-      t.addEventListener('dragend', function(){ t.style.opacity = ''; window.__vpDragTab = null; });
+      t.addEventListener('dragend', function(){
+        t.style.opacity = '';
+        window.__vpDragTab = null;
+        tabRow.classList.remove('vp-dragging');
+        _saveTabs(); _renderTabs();
+      });
       t.addEventListener('dragover', function(ev){
-        if (window.__vpDragTab === null || window.__vpDragTab === i) return;
+        var from = window.__vpDragTab;
+        if (from === null || from === undefined || from === i) return;
         ev.preventDefault();
         ev.dataTransfer.dropEffect = 'move';
-        t.style.boxShadow = 'inset 2px 0 0 0 ' + ACCENT;
-      });
-      t.addEventListener('dragleave', function(){ t.style.boxShadow = ''; });
-      t.addEventListener('drop', function(ev){
-        ev.preventDefault(); ev.stopPropagation();
-        t.style.boxShadow = '';
-        var from = window.__vpDragTab;
-        window.__vpDragTab = null;
-        if (from === null || from === i || from < 0 || from >= _sheets.length) return;
-        // сохранить содержимое активного листа перед перестановкой
-        _sheets[_cur].body = _outValue();
+        // живая перестановка: переносим лист с позиции from на позицию i
         var moved = _sheets.splice(from, 1)[0];
         var to = i > from ? i - 1 : i;
         _sheets.splice(to, 0, moved);
-        // пересчитать индекс активного листа после перестановки
         if (_cur === from) _cur = to;
         else if (from < _cur && to >= _cur) _cur--;
         else if (from > _cur && to <= _cur) _cur++;
-        _saveTabs(); _renderTabs();
-        toastMsg('↔ Лист перемещён');
+        window.__vpDragTab = to;
+        _renderTabs();
       });
       if (i === _cur) t.style.setProperty('background', 'rgba(201,122,29,0.35)', 'important');
       return t;
