@@ -1353,98 +1353,6 @@ window.__vpSetupTabs = function(){
     actRow.appendChild(btnFormat); actRow.appendChild(btnSave);
     panel.appendChild(actRow);
 
-    // ── Вкладки-листы (Notepad++-стиль) ─────────────────────────
-    var LS_KEY = 'vp-ed-tabs';
-    function _loadTabs(){
-      try { var a = JSON.parse(localStorage.getItem(LS_KEY) || 'null');
-        if (a && a.length && a.every(function(t){ return t && typeof t.name === 'string' && typeof t.body === 'string'; })) return a;
-      } catch(e){}
-      return [{ name: 'Лист 1', body: '' }];
-    }
-    function _saveTabs(){ try { localStorage.setItem(LS_KEY, JSON.stringify(_sheets)); } catch(e){} }
-    var _sheets = _loadTabs();
-    var _cur = 0;
-
-    var tabRow = mkEl('div');
-    tabRow.className = 'vp-ed-tabs-row';
-    tabRow.style.cssText = 'display:flex !important;align-items:center !important;gap:4px !important;'
-      + 'flex-wrap:nowrap !important;overflow-x:auto !important;margin:0 0 8px !important;padding:2px !important;';
-
-    var btnAdd = mkActionBtn('+', false);
-    btnAdd.setAttribute('data-vp-tip', 'Новый лист');
-    btnAdd.removeAttribute('title');
-    btnAdd.style.setProperty('min-width', '28px', 'important');
-    btnAdd.style.setProperty('font-size', '14px', 'important');
-    btnAdd.style.setProperty('flex', '0 0 auto', 'important');
-
-    function _mkTab(i){
-      var t = mkEl('button');
-      t.type = 'button';
-      t.className = 'vp-ed-tab';
-      t.style.cssText = 'display:inline-flex !important;align-items:center !important;gap:4px !important;'
-        + 'padding:4px 8px !important;border-radius:6px 6px 0 0 !important;cursor:pointer !important;'
-        + 'border:1px solid rgba(255,255,255,0.12) !important;border-bottom:none !important;'
-        + 'background:rgba(255,255,255,0.06) !important;color:inherit !important;'
-        + 'font-size:12px !important;white-space:nowrap !important;max-width:170px !important;'
-        + 'overflow:hidden !important;text-overflow:ellipsis !important;';
-      var nm = mkEl('span'); nm.textContent = _sheets[i].name;
-      nm.style.cssText = 'overflow:hidden;text-overflow:ellipsis;max-width:110px;';
-      t.appendChild(nm);
-      if (_sheets.length > 1){
-        var x = mkEl('span'); x.textContent = '×';
-        x.style.cssText = 'opacity:.55;font-size:12px;padding:0 2px;';
-        x.title = 'Закрыть лист';
-        x.addEventListener('click', function(ev){ ev.stopPropagation(); _closeTab(i); });
-        t.appendChild(x);
-      }
-      t.addEventListener('click', function(){ _switchTab(i); });
-      t.addEventListener('contextmenu', function(ev){
-        ev.preventDefault();
-        var n2 = prompt('Имя листа:', _sheets[i].name);
-        if (n2){ _sheets[i].name = n2.trim() || _sheets[i].name; _saveTabs(); _renderTabs(); }
-      });
-      if (i === _cur) t.style.setProperty('background', 'rgba(201,122,29,0.35)', 'important');
-      return t;
-    }
-    function _renderTabs(){
-      while (tabRow.firstChild) tabRow.removeChild(tabRow.firstChild);
-      for (var i = 0; i < _sheets.length; i++) tabRow.appendChild(_mkTab(i));
-      tabRow.appendChild(btnAdd);
-    }
-    function _switchTab(i){
-      if (i === _cur) return;
-      _sheets[_cur].body = $src.value;   // сохранить текущий лист
-      _cur = i;
-      _applySrc(_sheets[i].body);
-      _renderTabs();
-    }
-    function _closeTab(i){
-      if (_sheets.length <= 1) return toastMsg('Последний лист не закрыть');
-      _sheets.splice(i, 1);
-      if (_cur >= _sheets.length) _cur = _sheets.length - 1;
-      else if (_cur > i) _cur--;
-      _applySrc(_sheets[_cur].body);
-      _saveTabs(); _renderTabs();
-      toastMsg('✗ Лист закрыт');
-    }
-    btnAdd.addEventListener('click', function(){
-      _sheets[_cur].body = $src.value;
-      _sheets.push({ name: 'Лист ' + (_sheets.length + 1), body: '' });
-      _cur = _sheets.length - 1;
-      _applySrc('');
-      _saveTabs(); _renderTabs();
-      toastMsg('✓ Новый лист');
-    });
-
-    // синхронизация тела активного листа при правке поля
-    $src.addEventListener('input', function(){ _sheets[_cur].body = $src.value; });
-
-    panel.insertBefore(tabRow, panel.firstChild);
-    _renderTabs();
-    // восстановить содержимое активного листа, если поле пусто, а в листе текст есть
-    if (!$src.value.trim() && _sheets[_cur] && _sheets[_cur].body) _applySrc(_sheets[_cur].body);
-
-
     // ── источник: inline с кнопками (V25.3) ──
     var f2 = mkField('input', 'vp-html-source', 'URL источника (необязательно)', true, false, false, null, null, '36px');
     f2.el.type = 'url';
@@ -1760,6 +1668,103 @@ window.__vpSetupTabs = function(){
 
 
     var $src = f1.el, $source = f2.el, $out = f3.el;
+    // ── Вкладки-листы (Notepad++-стиль) — FIX: после объявления $src ──
+    try {
+    // ── Вкладки-листы (Notepad++-стиль) ─────────────────────────
+    var LS_KEY = 'vp-ed-tabs';
+    function _loadTabs(){
+      try { var a = JSON.parse(localStorage.getItem(LS_KEY) || 'null');
+        if (a && a.length && a.every(function(t){ return t && typeof t.name === 'string' && typeof t.body === 'string'; })) return a;
+      } catch(e){}
+      return [{ name: 'Лист 1', body: '' }];
+    }
+    function _saveTabs(){ try { localStorage.setItem(LS_KEY, JSON.stringify(_sheets)); } catch(e){} }
+    var _sheets = _loadTabs();
+    var _cur = 0;
+
+    var tabRow = mkEl('div');
+    tabRow.className = 'vp-ed-tabs-row';
+    tabRow.style.cssText = 'display:flex !important;align-items:center !important;gap:4px !important;'
+      + 'flex-wrap:nowrap !important;overflow-x:auto !important;margin:0 0 8px !important;padding:2px !important;';
+
+    var btnAdd = mkActionBtn('+', false);
+    btnAdd.setAttribute('data-vp-tip', 'Новый лист');
+    btnAdd.removeAttribute('title');
+    btnAdd.style.setProperty('min-width', '28px', 'important');
+    btnAdd.style.setProperty('font-size', '14px', 'important');
+    btnAdd.style.setProperty('flex', '0 0 auto', 'important');
+
+    function _mkTab(i){
+      var t = mkEl('button');
+      t.type = 'button';
+      t.className = 'vp-ed-tab';
+      t.style.cssText = 'display:inline-flex !important;align-items:center !important;gap:4px !important;'
+        + 'padding:4px 8px !important;border-radius:6px 6px 0 0 !important;cursor:pointer !important;'
+        + 'border:1px solid rgba(255,255,255,0.12) !important;border-bottom:none !important;'
+        + 'background:rgba(255,255,255,0.06) !important;color:inherit !important;'
+        + 'font-size:12px !important;white-space:nowrap !important;max-width:170px !important;'
+        + 'overflow:hidden !important;text-overflow:ellipsis !important;';
+      var nm = mkEl('span'); nm.textContent = _sheets[i].name;
+      nm.style.cssText = 'overflow:hidden;text-overflow:ellipsis;max-width:110px;';
+      t.appendChild(nm);
+      if (_sheets.length > 1){
+        var x = mkEl('span'); x.textContent = '×';
+        x.style.cssText = 'opacity:.55;font-size:12px;padding:0 2px;';
+        x.title = 'Закрыть лист';
+        x.addEventListener('click', function(ev){ ev.stopPropagation(); _closeTab(i); });
+        t.appendChild(x);
+      }
+      t.addEventListener('click', function(){ _switchTab(i); });
+      t.addEventListener('contextmenu', function(ev){
+        ev.preventDefault();
+        var n2 = prompt('Имя листа:', _sheets[i].name);
+        if (n2){ _sheets[i].name = n2.trim() || _sheets[i].name; _saveTabs(); _renderTabs(); }
+      });
+      if (i === _cur) t.style.setProperty('background', 'rgba(201,122,29,0.35)', 'important');
+      return t;
+    }
+    function _renderTabs(){
+      while (tabRow.firstChild) tabRow.removeChild(tabRow.firstChild);
+      for (var i = 0; i < _sheets.length; i++) tabRow.appendChild(_mkTab(i));
+      tabRow.appendChild(btnAdd);
+    }
+    function _switchTab(i){
+      if (i === _cur) return;
+      _sheets[_cur].body = $src.value;   // сохранить текущий лист
+      _cur = i;
+      _applySrc(_sheets[i].body);
+      _renderTabs();
+    }
+    function _closeTab(i){
+      if (_sheets.length <= 1) return toastMsg('Последний лист не закрыть');
+      _sheets.splice(i, 1);
+      if (_cur >= _sheets.length) _cur = _sheets.length - 1;
+      else if (_cur > i) _cur--;
+      _applySrc(_sheets[_cur].body);
+      _saveTabs(); _renderTabs();
+      toastMsg('✗ Лист закрыт');
+    }
+    btnAdd.addEventListener('click', function(){
+      _sheets[_cur].body = $src.value;
+      _sheets.push({ name: 'Лист ' + (_sheets.length + 1), body: '' });
+      _cur = _sheets.length - 1;
+      _applySrc('');
+      _saveTabs(); _renderTabs();
+      toastMsg('✓ Новый лист');
+    });
+
+    // синхронизация тела активного листа при правке поля
+    $src.addEventListener('input', function(){ _sheets[_cur].body = $src.value; });
+
+    panel.insertBefore(tabRow, panel.firstChild);
+    _renderTabs();
+    // восстановить содержимое активного листа, если поле пусто, а в листе текст есть
+    if (!$src.value.trim() && _sheets[_cur] && _sheets[_cur].body) _applySrc(_sheets[_cur].body);
+
+
+    } catch (e) { console.warn('[vp-ed-tabs] init:', e && e.message); }
+
+
 
     // ── вставка в DOM ──
     var first = body.firstElementChild;
