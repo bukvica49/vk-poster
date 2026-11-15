@@ -1843,7 +1843,7 @@ window.__vpSetupTabs = function(){
         Array.prototype.forEach.call(tabRow.querySelectorAll('.vp-ed-tab'), function(x){
           x.style.boxShadow = ''; x.style.opacity = '';
         });
-        window.__vpDragTab = null;
+        window.__vpDragTab = null; window.__vpRowDrop = false;
       });
       t.addEventListener('dragover', function(ev){
         var from = window.__vpDragTab;
@@ -1858,7 +1858,8 @@ window.__vpSetupTabs = function(){
         t.style.boxShadow = same ? '' : (before ? ('inset 3px 0 0 0 ' + ACCENT) : ('inset -3px 0 0 0 ' + ACCENT));
         window.__vpDropSide = { i: i, before: before };
       });
-      t.addEventListener('dragleave', function(){ t.style.boxShadow = ''; });
+      t.addEventListener('dragleave', function(ev){ t.style.boxShadow = ''; });
+      t.addEventListener('dragenter', function(ev){ ev.preventDefault(); });
       t.addEventListener('drop', function(ev){
         ev.preventDefault(); ev.stopPropagation();
         var side = window.__vpDropSide, from = window.__vpDragTab;
@@ -1883,6 +1884,34 @@ window.__vpSetupTabs = function(){
       for (var i = 0; i < _sheets.length; i++) tabRow.appendChild(_mkTab(i));
       tabRow.appendChild(btnAdd);
       tabRow.appendChild(btnOpen);
+
+    // Патч 18b: перетаскивание на пустое место строки вкладок = «вставить в конец»
+    tabRow.addEventListener('dragover', function(ev){
+      if (window.__vpDragTab === null || window.__vpDragTab === undefined) return;
+      // только если курсор не над конкретной вкладкой (side не установлен в этот проход)
+      if (!ev.target.classList || !ev.target.classList.contains('vp-ed-tab')) {
+        ev.preventDefault();
+        ev.dataTransfer.dropEffect = 'move';
+        window.__vpRowDrop = true;
+        tabRow.style.boxShadow = 'inset -3px 0 0 0 ' + ACCENT;
+      }
+    });
+    tabRow.addEventListener('dragleave', function(){ tabRow.style.boxShadow = ''; window.__vpRowDrop = false; });
+    tabRow.addEventListener('drop', function(ev){
+      tabRow.style.boxShadow = '';
+      if (!window.__vpRowDrop) return;
+      window.__vpRowDrop = false;
+      var from = window.__vpDragTab;
+      if (from === null || from === undefined || from >= _sheets.length - 1) return; // уже в конце
+      ev.preventDefault(); ev.stopPropagation();
+      _sheets[_cur].body = _outValue();
+      var moved = _sheets.splice(from, 1)[0];
+      _sheets.push(moved);
+      if (_cur === from) _cur = _sheets.length - 1;
+      else if (_cur > from) _cur--;
+      _saveTabs(); _renderTabs();
+    });
+
     }
     // Патч 12: листы — черновики НИЖНЕГО поля («Готовый HTML»); верхнее не трогаем
     function _getOut(){
