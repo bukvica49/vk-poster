@@ -1379,25 +1379,31 @@ window.__vpSetupTabs = function(){
       function(){ clearAndUndo(f3.el, f3.wrap, null); });
     panel.appendChild(f3.wrap);
 
-    // Патч 8: вкладки «+» — в одну строку с «Готовый HTML:», справа от заголовка
-    try {
-      if (window.__vpTabRow) {
-        var _lbl = f3.wrap.previousElementSibling;
-        if (_lbl && _lbl.tagName === 'LABEL') {
-          _lbl.style.setProperty('display', 'inline-block', 'important');
-          _lbl.style.setProperty('vertical-align', 'middle', 'important');
-          _lbl.style.setProperty('margin', '0 10px 6px 0', 'important');
-          panel.insertBefore(window.__vpTabRow, _lbl.nextSibling);
-          window.__vpTabRow.style.setProperty('display', 'inline-flex', 'important');
-          window.__vpTabRow.style.setProperty('vertical-align', 'middle', 'important');
-          window.__vpTabRow.style.setProperty('margin', '0 0 6px 0', 'important');
-          window.__vpTabRow.style.setProperty('flex', '1 1 auto', 'important');
-          window.__vpTabRow.style.setProperty('border-bottom', 'none', 'important');
-        } else {
-          panel.insertBefore(window.__vpTabRow, f3.wrap);
+    // Патч 8c: вкладки «+» — в строку с «Готовый HTML:» справа; с повтором,
+    // т.к. вкладочный блок может выполняться ПОЗЖЕ этого места
+    (function _placeTabs(n) {
+      try {
+        if (window.__vpTabRow && f3 && f3.wrap) {
+          if (!window.__vpTabRow.isConnected) {
+            var _lbl = f3.wrap.previousElementSibling;
+            if (_lbl && _lbl.tagName === 'LABEL') {
+              _lbl.style.setProperty('display', 'inline-block', 'important');
+              _lbl.style.setProperty('vertical-align', 'middle', 'important');
+              _lbl.style.setProperty('margin', '0 10px 6px 0', 'important');
+              panel.insertBefore(window.__vpTabRow, _lbl.nextSibling);
+            } else {
+              panel.insertBefore(window.__vpTabRow, f3.wrap);
+            }
+            window.__vpTabRow.style.setProperty('display', 'inline-flex', 'important');
+            window.__vpTabRow.style.setProperty('vertical-align', 'middle', 'important');
+            window.__vpTabRow.style.setProperty('margin', '0 0 6px 0', 'important');
+            window.__vpTabRow.style.setProperty('flex', '1 1 auto', 'important');
+          }
+          return; // готово
         }
-      }
-    } catch (e) { console.warn('[vp-ed-tabs] place:', e && e.message); }
+      } catch (e) { console.warn('[vp-ed-tabs] place:', e && e.message); }
+      if (n < 20) setTimeout(function () { _placeTabs(n + 1); }, 50);
+    })(0);
 
     // V25.9: 🖼 в dst (вставить картинку) — правим tooltip (был «Копировать» по ошибке)
     try {
