@@ -648,3 +648,51 @@ python3 poster.py --dry-run --date 2026-11-15
 Безопасная проверка обоих токенов из секрета (хвост + права `groups.getTokenPermissions`, владелец user_token). Запуск: Actions → Check VK Tokens → Run workflow. Токены в лог не попадают.
 
 **Пост вышел без картинки** (user_token слетел, PHOTO_MISSING): прикрепить руками — пост → ⋯ → Изменить → фото; файл в `~/site/vk-poster/images/`.
+
+
+# 🆕 Изменения 15.11.2026 — сайт: кнопки Назад/Развернуть/Свернуть + HTML-редактор на сайте
+
+## Кнопки статьи (posts/postN.html, pages/pageN.html)
+
+- **← Назад** — ВСЕГДА ведёт в список статей (nav/posts.html), в модалке — закрывает модалку.
+  Предварительно чистит sessionStorage.vp-modal-reopen, чтобы список не открыл модалку сам.
+- **⤢ Развернуть** (в модалке) — window.open(url,'_blank') БЕЗ 'noopener'! Noopener обнуляет
+  window.opener у дочерней вкладки — и «Свернуть» не сможет её закрыть (было багом 15.11).
+- **⤡ Свернуть** (в развернутой вкладке) — window.close(): вкладка закрывается, ты в родителе
+  с открытой модалкой на той же статье. Fallback (вкладка открыта вручную, opener нет):
+  sessionStorage.vp-modal-reopen = {url, ts} → переход на posts.html → авто-модалка ТОЛЬКО
+  если метка свежая (< 3 сек) — обычный заход на список модалку не открывает.
+- **pages/pageN.html**: «← Назад» убрано (footer = только «⤢ Развернуть» по центру);
+  article.js подключён; footer вставлен перед метрикой; 49+9 файлов (патч all_pages).
+
+## Авто-модалка на nav/posts.html (postscript.js)
+
+- Читает vp-modal-reopen (JSON {url, ts}), принимает только Date.now()-ts < 3000;
+  ищет ссылку среди .article-link.modal-link — если есть, openModalWithLink(link);
+  если нет (pages) — открывает iframe напрямую (iframe.src=url; modal.style.display='flex').
+- Урок: window.open(...,'noopener') наследует КОПИЮ sessionStorage — «Назад» мог
+  сам открывать модалку из-за старого флага. Решение — метка времени.
+
+## HTML-редактор (✍) — теперь живёт НА САЙТЕ
+
+- **Причина «пропавшего +»**: ✍ делает location.replace('editor.html') относительно главной —
+  на сайте 404 — fallback рисовал ВСТРОЕННЫЙ ВК-редактор из app.js (без HTML-редактора).
+- **Деплой**: vk-poster/web/editor.html копируется в корень сайта как editor.html.
+  Меняем editor.html в vk-poster → ОБЯЗАТЕЛЬНО перекопировать на сайт и запушить ОБА репо.
+- **Cache-buster**: app.js открывает editor.html?v=<timestamp> — CDN кэширует и 404 тоже.
+- **Вкладки-листы «+»**: панель [Лист 1 ×][Лист 2 ×][+] В ОДНОЙ СТРОКЕ с заголовком
+  «Готовый HTML:» (flex-строка .vp-out-head), стиль «папочек»: 28px, скругление сверху,
+  активная оранжевая, hover подсветка.
+- **Урок по порядку кода**: блок вкладок выполняется ПОЗЖЕ места вставки → вставка
+  «с повтором» _placeTabs (проверка window.__vpTabRow.isConnected, setTimeout 50мс × 20).
+- **Урок**: блок вкладок должен стоять ПОСЛЕ var $src = f1.el — иначе TypeError убивал
+  ВЕСЬ script-блок попапа (пропадали кнопки, переключение ВК/HTML).
+- Листы хранятся в localStorage 'vp-ed-tabs'; лист сохраняет текст ВЕРХНЕГО поля ($src).
+
+## Команды деплоя после правок editor.html
+
+```bash
+git add web/editor.html && git commit -m "editor: ..." && git push
+cp web/editor.html ../bukvica49.github.io/editor.html
+cd ../bukvica49.github.io && git add editor.html && git commit -m "deploy editor.html" && git push
+```
