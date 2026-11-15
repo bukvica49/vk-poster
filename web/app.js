@@ -1003,7 +1003,8 @@ document.querySelectorAll('[data-act]').forEach(b => {
         try { URL.revokeObjectURL(window._vpEditorBlobPrev); } catch(e){}
         delete window._vpEditorBlobPrev;
       }
-      const _editorUrl = new URL('editor.html', window.location.href).href;
+      const _editorUrl = new URL('editor.html', window.location.href).href
+        + '?v=' + Date.now(); // патч 8b: cache-buster — CDN мог закэшировать 404
       setTimeout(() => {
         try {
           if (!w || w.closed || !w.location) return;
