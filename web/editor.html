@@ -1379,6 +1379,15 @@ window.__vpSetupTabs = function(){
       function(){ clearAndUndo(f3.el, f3.wrap, null); });
     panel.appendChild(f3.wrap);
 
+    // FIX 15.11: панель вкладок «+» — над полем «Готовый HTML»
+    try {
+      if (window.__vpTabRow) {
+        var _lbl = f3.wrap.previousElementSibling;
+        if (_lbl && _lbl.tagName === 'LABEL') panel.insertBefore(window.__vpTabRow, _lbl);
+        else panel.insertBefore(window.__vpTabRow, f3.wrap);
+      }
+    } catch (e) { console.warn('[vp-ed-tabs] place:', e && e.message); }
+
     // V25.9: 🖼 в dst (вставить картинку) — правим tooltip (был «Копировать» по ошибке)
     try {
       Array.prototype.slice.call(f3.wrap.querySelectorAll('button')).forEach(function(b){
@@ -1756,7 +1765,8 @@ window.__vpSetupTabs = function(){
     // синхронизация тела активного листа при правке поля
     $src.addEventListener('input', function(){ _sheets[_cur].body = $src.value; });
 
-    panel.insertBefore(tabRow, panel.firstChild);
+    // вкладки размещаются внизу, над полем «Готовый HTML» (панель вставится после создания f3)
+    window.__vpTabRow = tabRow;
     _renderTabs();
     // восстановить содержимое активного листа, если поле пусто, а в листе текст есть
     if (!$src.value.trim() && _sheets[_cur] && _sheets[_cur].body) _applySrc(_sheets[_cur].body);
