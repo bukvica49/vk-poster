@@ -263,7 +263,6 @@ function copyPost(btn) {
 '''
     js_extra = js_extra.replace('__POSTS_JSON__', posts_json)
 
-    APP_V = globals().get('APP_V', '0')
 
     html = f'''<!doctype html><html lang="ru"><head><meta charset="utf-8">
 <title>VK Poster — превью</title>
