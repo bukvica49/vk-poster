@@ -675,7 +675,7 @@
   </div>
 </div>
 <div class="btns">
-  <button class="btn" data-act="format">🎨 Оформить для ВК</button><button type="button" class="secondary" data-act="html-build" title="Собрать HTML-пост по шаблону сайта">📄 Сверстать HTML</button>
+  <button class="btn" data-act="format">🎨 Оформить для ВК</button>
   <button class="btn slav-a" data-act="slav-a">🕯 Дореформенный</button>
   <button class="btn slav-b" data-act="slav-b">🏛 Древній</button>
   <button class="btn slav-c" data-act="slav-c">✨ AI старослав</button>
@@ -818,8 +818,7 @@ document.querySelectorAll('[data-act]').forEach(b => {
     b.addEventListener('click', async () => {
       const act = b.dataset.act;
       try {
-        if (act === 'html-build') { buildSiteHtml(); return; }
-    if (act === 'format') { applyCurrentPreset(); }
+        if (act === 'format') { applyCurrentPreset(); }
         else if (act === 'slav-a') { if (!src.value.trim()){toast('Введи текст','err');return;} dst.value=H.slavicA(src.value); updateCounter(); toast('А','ok'); }
         else if (act === 'slav-b') { if (!src.value.trim()){toast('Введи текст','err');return;} dst.value=H.slavicB(src.value); updateCounter(); toast('Б','ok'); }
         else if (act === 'slav-c') {
@@ -1168,60 +1167,3 @@ document.querySelectorAll('[data-act]').forEach(b => {
   else makeButton();
 })();
 
-// -- Патч 53: «📄 Сверстать HTML» — сборка HTML-поста сайта по шаблону --
-function escH(t){return t.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
-function buildSiteHtml(){
-  var raw = document.getElementById('src').value.trim();
-  if(!raw){ alert('Верхнее поле пустое'); return; }
-  var lines = raw.replace(/\\r\\n/g,\\n).split(\\n);
-  var title = '';
-  var img = '', imgAlt = '';
-  var src = '';
-  var paras = [];
-  var cur = [];
-  for(var i=0;i<lines.length;i++){
-    var Ln = lines[i].trim();
-    if(i===0){ title = Ln; continue; }
-    var mImg = Ln.match(/^\\[img\\]\\s+(\\S+)(?:\\s+(.*))?$/);
-    if(mImg){ img = mImg[1]; imgAlt = (mImg[2]||title); continue; }
-    var mSrc = Ln.match(/^\\[src\\]\\s+(\\S+)$/);
-    if(mSrc){ src = mSrc[1]; continue; }
-    if(Ln===''){ if(cur.length){ paras.push(cur.join(' ')); cur=[]; } continue; }
-    cur.push(Ln);
-  }
-  if(cur.length) paras.push(cur.join(' '));
-  if(!title){ alert('Первая строка должна быть заголовком'); return; }
-  var out = [];
-  out.push('<!DOCTYPE html>');
-  out.push('<html lang="ru">');
-  out.push('<head>');
-  out.push('  <meta charset="UTF-8">');
-  out.push('  <meta name="viewport" content="width=device-width, initial-scale=1.0">');
-  out.push('  <title>' + escH(title) + '</title>');
-  out.push('  <link rel="stylesheet" href="../css/pages.css">');
-  out.push('  <script src="../js/article.js?v=52"><' + '/script>');
-  out.push('</head>');
-  out.push('<body>');
-  out.push('');
-  out.push('<h1>' + escH(title) + '</h1>');
-  out.push('');
-  if(img){
-    out.push('<figure class="center-image-block">');
-    out.push('  <img src="' + img + '" alt="' + escH(imgAlt) + '">');
-    out.push('  <figcaption style="text-align:center;font-style:italic;font-size:0.9em;color:#666;text-indent:0;padding-top:8px;margin:0;">' + escH(imgAlt) + '</figcaption>');
-    out.push('</figure>');
-    out.push('');
-  }
-  paras.forEach(function(pp){ out.push('<p>' + escH(pp) + '</p>'); out.push(''); });
-  out.push('<footer class="article-footer">');
-  out.push('  <button class="action-btn" type="button" onclick="goBackFromArticle()"><span class="icon">←</span> Назад</button>');
-  out.push('  <button class="action-btn expand" type="button" onclick="toggleExpandFromArticle()" id="vp-expand-btn"><span class="icon">⤢</span> Развернуть</button>');
-  if(src){
-    out.push('  <a class="action-btn source" href="' + src + '" target="_blank" rel="noopener noreferrer">Источник <span class="icon">→</span></a>');
-  }
-  out.push('</footer>');
-  out.push('  <br>');
-  out.push('</body>');
-  out.push('</html>');
-  document.getElementById('dst').value = out.join('\n');
-}
