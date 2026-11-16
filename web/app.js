@@ -869,7 +869,7 @@ if (_cc) {
     out.push('</html>');
     document.getElementById('dst').value = out.join('\\n');
     toast('HTML собран','ok');
-  /* Патч 60: показать поле результата */
+  /* Патч 60v2: показать поле результата */
   var _d = document.getElementById('dst');
   if (_d) {
     var _w = _d.closest('.field-wrap');
@@ -879,9 +879,9 @@ if (_cc) {
     }
     setTimeout(function(){ try { _d.scrollIntoView({block:'center'}); } catch(e){} }, 50);
   }
-}
+  }
 window.escH = escH; window.buildSiteHtml = buildSiteHtml; /* Патч 59 */
-  document.querySelectorAll('[data-act]').forEach(b => {
+document.querySelectorAll('[data-act]').forEach(b => {
     b.addEventListener('click', async () => {
       const act = b.dataset.act;
       try {
