@@ -879,9 +879,9 @@ if (_cc) {
     }
     setTimeout(function(){ try { _d.scrollIntoView({block:'center'}); } catch(e){} }, 50);
   }
-document.querySelectorAll('[data-act]').forEach
-  /* Патч 60: показ результата */ /* Патч 59: экспорт в window — глобальный доступ из консоли и для надёжности */
-  window.escH = escH; window.buildSiteHtml = buildSiteHtml;(b => {
+}
+window.escH = escH; window.buildSiteHtml = buildSiteHtml; /* Патч 59 */
+  document.querySelectorAll('[data-act]').forEach(b => {
     b.addEventListener('click', async () => {
       const act = b.dataset.act;
       try {
