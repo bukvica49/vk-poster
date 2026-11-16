@@ -86,3 +86,29 @@
 - [MANUAL.md](MANUAL.md) — автопостер (cron, state, диагностика)
 - [MANUAL_VK_EDITOR.md](MANUAL_VK_EDITOR.md) — создание постов
 - [MANUAL_CODE_EDITOR.md](MANUAL_CODE_EDITOR.md) — попап `✍` (HTML-редактор)
+
+---
+
+# Кнопочная система постов сайта (финал, 16.11.2026)
+
+База — 14.11 (тег stable-1411) + кнопки статей и буквиц. Эталоны: stable-pages-52 (финал).
+
+## Как работает
+1. Модалка → «⤢ Развернуть» (vp-modal-fab 44px) → вкладка + localStorage vp-expand-mode='expanded'.
+2. Вкладка → закладка «⤡» (article.js) → модалка на той же позиции (postMessage vp-open,
+   fallback index?vp-open=pages/pageN.html).
+3. Глобальная память: expanded → списки открывают вкладками; modal (по умолчанию) — модалками.
+   Крестик модалки сбрасывает в modal (MutationObserver в script.js; closeModal в postscript.js).
+4. Буквицы: двойной клик «Азъ» — выход на главную с первого двойного клика (зум off на /pages/, патч 52).
+
+## Файлы (кэш-версии обязательны!)
+- js/article.js?v=52 — в posts/*.html и pages/pageN.html;
+- js/postscript.js?v=3 — nav/posts.html;
+- js/script.js?v=15 — index.html;
+- posts/_template.html — шаблон нового поста.
+
+## Отладка
+- статьи сразу вкладками, модалки нет → консоль: localStorage.removeItem('vp-expand-mode') → Ctrl+Shift+R;
+- нет закладки на вкладке → проверь подключение article.js?v=52 на странице;
+- «Азъ» с двух двойных кликов → зум перехватывает клик (должен быть off на /pages/);
+- откаты: stable-pages-52 (финал), stable-1411 (база 14.11).
