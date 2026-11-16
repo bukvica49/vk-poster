@@ -1,4 +1,5 @@
 """Генерирует _site/index.html — превью следующих постов."""
+import time
 import json, os, shutil, subprocess
 from datetime import date, timedelta
 from pathlib import Path
@@ -64,6 +65,7 @@ def build():
     _app = HERE / 'web' / 'app.js'
     if _app.is_file():
         shutil.copy2(_app, OUT / 'app.js')
+        APP_V = time.strftime('%Y%m%d%H%M')
         print('✅ _site/app.js скопирован')
     # Собрать _site/config.js из config/editor/*.json
     _cfg_dir = HERE / 'config' / 'editor'
@@ -261,6 +263,8 @@ function copyPost(btn) {
 '''
     js_extra = js_extra.replace('__POSTS_JSON__', posts_json)
 
+    APP_V = globals().get('APP_V', '0')
+
     html = f'''<!doctype html><html lang="ru"><head><meta charset="utf-8">
 <title>VK Poster — превью</title>
 <link rel="icon" href="favicon.svg" type="image/svg+xml"><meta name="viewport" content="width=device-width,initial-scale=1">
@@ -296,7 +300,7 @@ function copyPost(btn) {
 {css_extra}</style></head><body><h1>📅 VK Poster</h1>
 <div class="toolbar"><span>{len(rows)} праздников · {today_civil.strftime('%d.%m.%Y')}</span>
 <div><a href="https://app.pagescms.org/bukvica49/vk-poster/main/collection/holidays" target="_blank" rel="noopener">📅 Праздники</a><a class="secondary" href="https://app.pagescms.org/bukvica49/vk-poster/main/file/chertogs" target="_blank" rel="noopener">🕯 Чертоги</a><a class="secondary" href="https://app.pagescms.org/bukvica49/vk-poster/main/file/krugolyety" target="_blank" rel="noopener">🌀 Круголеты</a><a class="secondary" href="https://app.pagescms.org/bukvica49/vk-poster/main/collection/holidays/new" target="_blank" rel="noopener" title="Добавить новый праздник">➕ Новый</a></div></div>
-{''.join(cards)}{js_extra}<script src="config.js"></script><script src="app.js" defer></script></body></html>'''
+{''.join(cards)}{js_extra}<script src="config.js"></script><script src="app.js?v={APP_V}" defer></script></body></html>'''
     (OUT / 'index.html').write_text(html, encoding='utf-8')
     print(f'✅ _site/index.html — {len(rows)} постов')
 
