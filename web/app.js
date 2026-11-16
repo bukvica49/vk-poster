@@ -818,8 +818,7 @@ document.querySelectorAll('[data-act]').forEach(b => {
     b.addEventListener('click', async () => {
       const act = b.dataset.act;
       try {
-        if (act === 'html-build') { buildSiteHtml(); return; }
-    if (act === 'format') { applyCurrentPreset(); }
+        if (act === 'format') { applyCurrentPreset(); }
         else if (act === 'slav-a') { if (!src.value.trim()){toast('Введи текст','err');return;} dst.value=H.slavicA(src.value); updateCounter(); toast('А','ok'); }
         else if (act === 'slav-b') { if (!src.value.trim()){toast('Введи текст','err');return;} dst.value=H.slavicB(src.value); updateCounter(); toast('Б','ok'); }
         else if (act === 'slav-c') {
@@ -1225,3 +1224,12 @@ function buildSiteHtml(){
   out.push('</html>');
   document.getElementById('dst').value = out.join('\n');
 }
+
+// -- Патч 53c: кнопка «📄 Сверстать HTML» — отдельный делегированный listener
+// (не вмешивается в существующие switch-обработчики — панель поиска/настроек цела)
+document.addEventListener('click', function (ev) {
+  var b = ev.target.closest('[data-act="html-build"]');
+  if (!b) return;
+  ev.preventDefault();
+  if (typeof buildSiteHtml === 'function') buildSiteHtml();
+});
