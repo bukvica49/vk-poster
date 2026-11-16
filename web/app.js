@@ -462,7 +462,7 @@
     if (!w) { toast('Разреши всплывающие окна для этого сайта', 'err'); return; }
     window._vpEditorWin = w;
 
-    const html = `\\ Патч 57: escape удвоены для template literal<!doctype html><html lang="ru" data-theme="light"><head><meta charset="utf-8">
+    const html = `\\ Патч 58: закрывающий </script> восстановлен\\ Патч 57: escape удвоены для template literal<!doctype html><html lang="ru" data-theme="light"><head><meta charset="utf-8">
 <title>✍ Редактор текста для ВК</title>
 <style>
   :root{--bg-main:#f5f5f7;--bg-panel:#f8f8fa;--bg-field:#fff;--fg-main:#111;--fg-muted:#666;--border:#d4d4d8;--overlay:rgba(245,245,247,.85);--accent:#2563eb}
@@ -1050,7 +1050,7 @@ document.querySelectorAll('[data-act]').forEach(b => {
   src.focus();
   try { document.documentElement.setAttribute('data-vp-editor-ready','1'); } catch(e){}
 })();
-<\\/script></body></html>`;
+</script></body></html>`;
 
     // Bulletproof: HTML в LS + статический editor.html (переживает ⟳ после reload главной)
     (function _launch() {
