@@ -870,7 +870,9 @@ if (_cc) {
     document.getElementById('dst').value = out.join('\\n');
     toast('HTML собран','ok');
   }
-document.querySelectorAll('[data-act]').forEach(b => {
+document.querySelectorAll('[data-act]').forEach
+  /* Патч 59: экспорт в window — глобальный доступ из консоли и для надёжности */
+  window.escH = escH; window.buildSiteHtml = buildSiteHtml;(b => {
     b.addEventListener('click', async () => {
       const act = b.dataset.act;
       try {
