@@ -869,16 +869,14 @@ if (_cc) {
     out.push('</html>');
     document.getElementById('dst').value = out.join('\\n');
     toast('HTML собран','ok');
-  /* Патч 60v2: показать поле результата */
-  var _d = document.getElementById('dst');
-  if (_d) {
-    var _w = _d.closest('.field-wrap');
-    if (_w) {
-      _w.style.setProperty('display','block','important');
-      _w.style.setProperty('visibility','visible','important');
-    }
-    setTimeout(function(){ try { _d.scrollIntoView({block:'center'}); } catch(e){} }, 50);
-  }
+  /* Патч 63: показать результат в видимом редакторе листа (CodeMirror) */
+  try {
+    var _out = document.getElementById('vp-html-out');
+    var _dom = _out && _out.querySelector('.CodeMirror');
+    var _cm = _dom && _dom.CodeMirror;
+    if (_cm) { _cm.setValue(document.getElementById('dst').value); }
+    else if (_out) { _out.textContent = document.getElementById('dst').value; }
+  } catch(e) { console.warn('[vp] sync cm:', e); }
   }
 window.escH = escH; window.buildSiteHtml = buildSiteHtml; /* Патч 59 */
 document.querySelectorAll('[data-act]').forEach(b => {
