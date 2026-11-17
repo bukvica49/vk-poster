@@ -870,7 +870,7 @@ if (_cc) {
     out.push('</html>');
     document.getElementById('dst').value = out.join('\\n');
     toast('HTML собран','ok');
-  /* Патч 66 */ /* Патч 64: чтение из видимого поля */ /* Патч 63: показать результат в видимом редакторе листа (CodeMirror) */
+  /* Патч 67 */ /* Патч 66 */ /* Патч 64: чтение из видимого поля */ /* Патч 63: показать результат в видимом редакторе листа (CodeMirror) */
   try {
     var _out = document.getElementById('vp-html-out');
     var _dom = _out && _out.querySelector('.CodeMirror');
@@ -890,6 +890,41 @@ if (_cc) {
     }
     else if (_out) { _out.textContent = document.getElementById('dst').value; }
   } catch(e) { console.warn('[vp] sync cm:', e); }
+  /* Патч 67: надёжная панель результата (textarea, не зависит от CM) */
+  try {
+    var _rp = document.getElementById('vp-result-panel');
+    if (!_rp) {
+      _rp = document.createElement('div');
+      _rp.id = 'vp-result-panel';
+      _rp.style.cssText = 'margin:10px 0 0 0;padding:0;';
+      var _rl = document.createElement('div');
+      _rl.textContent = 'Результат (копия):';
+      _rl.style.cssText = 'font-size:12px;opacity:.7;margin:0 0 4px 2px;';
+      var _ra = document.createElement('textarea');
+      _ra.id = 'vp-result-text';
+      _ra.readOnly = true;
+      _ra.style.cssText = 'width:100%;box-sizing:border-box;height:180px;'
+        + 'background:#12121a;color:#e5e5ee;border:1px solid #3a3a4a;border-radius:8px;'
+        + 'padding:10px;font-family:Consolas,Menlo,monospace;font-size:12px;resize:vertical;';
+      var _rb = document.createElement('button');
+      _rb.type = 'button';
+      _rb.textContent = '📋 Копировать результат';
+      _rb.style.cssText = 'margin:6px 0 0 0;padding:6px 14px;border-radius:8px;'
+        + 'background:#c97a1d;color:#fff;border:none;cursor:pointer;font-size:13px;';
+      _rb.addEventListener('click', function () {
+        _ra.select(); try { document.execCommand('copy'); } catch (e) {}
+        if (navigator.clipboard) navigator.clipboard.writeText(_ra.value);
+        _rb.textContent = '✓ Скопировано';
+        setTimeout(function(){ _rb.textContent = '📋 Копировать результат'; }, 1500);
+      });
+      _rp.appendChild(_rl); _rp.appendChild(_ra); _rp.appendChild(_rb);
+      var _anchor = document.getElementById('vp-html-out');
+      (_anchor && _anchor.parentNode ? _anchor.parentNode : document.body).insertBefore(_rp, _anchor || null);
+    }
+    var _rt = document.getElementById('vp-result-text');
+    if (_rt) _rt.value = document.getElementById('dst').value;
+    _rp.scrollIntoView({ block: 'nearest' });
+  } catch (e) { console.warn('[vp] result panel:', e); }
   }
 window.escH = escH; window.buildSiteHtml = buildSiteHtml; /* Патч 59 */
 document.querySelectorAll('[data-act]').forEach(b => {
