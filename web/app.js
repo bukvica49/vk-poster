@@ -818,7 +818,8 @@ if (_cc) {
   // -- Патч 56: сборка HTML-поста сайта (шаблон v52) — ВНУТРИ попапа --
   function escH(t){return String(t).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
   function buildSiteHtml(){
-    var raw = document.getElementById('src').value.trim();
+    var _srcEl = document.getElementById('vp-html-src') || document.getElementById('src');
+    var raw = (_srcEl && _srcEl.value ? _srcEl.value : '').trim();
     if(!raw){ toast('Верхнее поле пустое','err'); return; }
     var lines = raw.replace(/\\r\\n/g,'\\n').split('\\n');
     var title = '', img = '', imgAlt = '', src = '';
@@ -869,7 +870,7 @@ if (_cc) {
     out.push('</html>');
     document.getElementById('dst').value = out.join('\\n');
     toast('HTML собран','ok');
-  /* Патч 63: показать результат в видимом редакторе листа (CodeMirror) */
+  /* Патч 64: чтение из видимого поля */ /* Патч 63: показать результат в видимом редакторе листа (CodeMirror) */
   try {
     var _out = document.getElementById('vp-html-out');
     var _dom = _out && _out.querySelector('.CodeMirror');
