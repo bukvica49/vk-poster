@@ -462,7 +462,7 @@
     if (!w) { toast('Разреши всплывающие окна для этого сайта', 'err'); return; }
     window._vpEditorWin = w;
 
-    const html = `\\ Патч 58: закрывающий </script> восстановлен\\ Патч 57: escape удвоены для template literal<!doctype html><html lang="ru" data-theme="light"><head><meta charset="utf-8">
+    const html = `<!doctype html><html lang="ru" data-theme="light"><head><meta charset="utf-8">
 <title>✍ Редактор текста для ВК</title>
 <style>
   :root{--bg-main:#f5f5f7;--bg-panel:#f8f8fa;--bg-field:#fff;--fg-main:#111;--fg-muted:#666;--border:#d4d4d8;--overlay:rgba(245,245,247,.85);--accent:#2563eb}
@@ -815,118 +815,6 @@ if (_cc) {
   function cyclePreset(){ _presetIdx = (_presetIdx + 1) % FORMAT_PRESETS.length; try { localStorage.setItem('vp-format-preset', String(_presetIdx)); } catch(e){} applyCurrentPreset(); }
   (function initVariantBtn(){ const btn = document.getElementById('btn-variant'); if (!btn) { console.warn('[variant] кнопка не найдена'); return; } btn.addEventListener('click', cyclePreset); _setVariantBtnLabel(); })();
 
-  // -- Патч 56: сборка HTML-поста сайта (шаблон v52) — ВНУТРИ попапа --
-  function escH(t){return String(t).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
-  function buildSiteHtml(){
-    var _srcEl = document.getElementById('vp-html-src') || document.getElementById('src');
-    var raw = (_srcEl && _srcEl.value ? _srcEl.value : '').trim();
-    if(!raw){ toast('Верхнее поле пустое','err'); return; }
-    var lines = raw.replace(/\\r\\n/g,'\\n').split('\\n');
-    var title = '', img = '', imgAlt = '', src = '';
-    var paras = [], cur = [];
-    for(var i=0;i<lines.length;i++){
-      var Ln = lines[i].trim();
-      if(i===0){ title = Ln; continue; }
-      var mImg = Ln.match(/^\\[img\\]\\s+(\\S+)(?:\\s+(.*))?$/);
-      if(mImg){ img = mImg[1]; imgAlt = (mImg[2]||title); continue; }
-      var mSrc = Ln.match(/^\\[src\\]\\s+(\\S+)$/);
-      if(mSrc){ src = mSrc[1]; continue; }
-      if(Ln===''){ if(cur.length){ paras.push(cur.join(' ')); cur=[]; } continue; }
-      cur.push(Ln);
-    }
-    if(cur.length) paras.push(cur.join(' '));
-    if(!title){ toast('Первая строка должна быть заголовком','err'); return; }
-    var out = [];
-    out.push('<!DOCTYPE html>');
-    out.push('<html lang="ru">');
-    out.push('<head>');
-    out.push('  <meta charset="UTF-8">');
-    out.push('  <meta name="viewport" content="width=device-width, initial-scale=1.0">');
-    out.push('  <title>' + escH(title) + '</title>');
-    out.push('  <link rel="stylesheet" href="../css/pages.css">');
-    out.push('  <script src="../js/article.js?v=52"><' + '/script>');
-    out.push('</head>');
-    out.push('<body>');
-    out.push('');
-    out.push('<h1>' + escH(title) + '</h1>');
-    out.push('');
-    if(img){
-      out.push('<figure class="center-image-block">');
-      out.push('  <img src="' + img + '" alt="' + escH(imgAlt) + '">');
-      out.push('  <figcaption style="text-align:center;font-style:italic;font-size:0.9em;color:#666;text-indent:0;padding-top:8px;margin:0;">' + escH(imgAlt) + '</figcaption>');
-      out.push('</figure>');
-      out.push('');
-    }
-    paras.forEach(function(pp){ out.push('<p>' + escH(pp) + '</p>'); out.push(''); });
-    out.push('<footer class="article-footer">');
-    out.push('  <button class="action-btn" type="button" onclick="goBackFromArticle()"><span class="icon">←</span> Назад</button>');
-    out.push('  <button class="action-btn expand" type="button" onclick="toggleExpandFromArticle()" id="vp-expand-btn"><span class="icon">⤢</span> Развернуть</button>');
-    if(src){
-      out.push('  <a class="action-btn source" href="' + src + '" target="_blank" rel="noopener noreferrer">Источник <span class="icon">→</span></a>');
-    }
-    out.push('</footer>');
-    out.push('  <br>');
-    out.push('</body>');
-    out.push('</html>');
-    document.getElementById('dst').value = out.join('\\n');
-    toast('HTML собран','ok');
-  /* Патч 67 */ /* Патч 66 */ /* Патч 64: чтение из видимого поля */ /* Патч 63: показать результат в видимом редакторе листа (CodeMirror) */
-  try {
-    var _out = document.getElementById('vp-html-out');
-    var _dom = _out && _out.querySelector('.CodeMirror');
-    var _cm = _dom && _dom.CodeMirror;
-    if (_cm) {
-      _cm.setValue(document.getElementById('dst').value);
-      var _fixCM = function () {
-        try {
-          _cm.setSize('100%', '100%');
-          var _sz = _dom.querySelector('.CodeMirror-sizer');
-          if (_sz) _sz.style.minWidth = '100%';
-          _cm.refresh();
-        } catch (e) {}
-      };
-      _fixCM();
-      [300, 1600, 3200, 5200].forEach(function (t) { setTimeout(_fixCM, t); });
-    }
-    else if (_out) { _out.textContent = document.getElementById('dst').value; }
-  } catch(e) { console.warn('[vp] sync cm:', e); }
-  /* Патч 67: надёжная панель результата (textarea, не зависит от CM) */
-  try {
-    var _rp = document.getElementById('vp-result-panel');
-    if (!_rp) {
-      _rp = document.createElement('div');
-      _rp.id = 'vp-result-panel';
-      _rp.style.cssText = 'margin:10px 0 0 0;padding:0;';
-      var _rl = document.createElement('div');
-      _rl.textContent = 'Результат (копия):';
-      _rl.style.cssText = 'font-size:12px;opacity:.7;margin:0 0 4px 2px;';
-      var _ra = document.createElement('textarea');
-      _ra.id = 'vp-result-text';
-      _ra.readOnly = true;
-      _ra.style.cssText = 'width:100%;box-sizing:border-box;height:180px;'
-        + 'background:#12121a;color:#e5e5ee;border:1px solid #3a3a4a;border-radius:8px;'
-        + 'padding:10px;font-family:Consolas,Menlo,monospace;font-size:12px;resize:vertical;';
-      var _rb = document.createElement('button');
-      _rb.type = 'button';
-      _rb.textContent = '📋 Копировать результат';
-      _rb.style.cssText = 'margin:6px 0 0 0;padding:6px 14px;border-radius:8px;'
-        + 'background:#c97a1d;color:#fff;border:none;cursor:pointer;font-size:13px;';
-      _rb.addEventListener('click', function () {
-        _ra.select(); try { document.execCommand('copy'); } catch (e) {}
-        if (navigator.clipboard) navigator.clipboard.writeText(_ra.value);
-        _rb.textContent = '✓ Скопировано';
-        setTimeout(function(){ _rb.textContent = '📋 Копировать результат'; }, 1500);
-      });
-      _rp.appendChild(_rl); _rp.appendChild(_ra); _rp.appendChild(_rb);
-      var _anchor = document.getElementById('vp-html-out');
-      (_anchor && _anchor.parentNode ? _anchor.parentNode : document.body).insertBefore(_rp, _anchor || null);
-    }
-    var _rt = document.getElementById('vp-result-text');
-    if (_rt) _rt.value = document.getElementById('dst').value;
-    _rp.scrollIntoView({ block: 'nearest' });
-  } catch (e) { console.warn('[vp] result panel:', e); }
-  }
-window.escH = escH; window.buildSiteHtml = buildSiteHtml; /* Патч 59 */
 document.querySelectorAll('[data-act]').forEach(b => {
     b.addEventListener('click', async () => {
       const act = b.dataset.act;
@@ -1107,7 +995,7 @@ document.querySelectorAll('[data-act]').forEach(b => {
   src.focus();
   try { document.documentElement.setAttribute('data-vp-editor-ready','1'); } catch(e){}
 })();
-</script></body></html>`;
+<\/script></body></html>`;
 
     // Bulletproof: HTML в LS + статический editor.html (переживает ⟳ после reload главной)
     (function _launch() {
