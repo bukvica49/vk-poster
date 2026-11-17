@@ -1263,6 +1263,11 @@ window.__vpSetupTabs = function(){
     var btnVk = mkTab('📝 ВК-редактор'); btnVk.setAttribute('data-vp-tab','vk');
     var btnHtml = mkTab('📄 HTML-редактор'); btnHtml.setAttribute('data-vp-tab','html');
     tabsRow.appendChild(btnVk); tabsRow.appendChild(btnHtml);
+    var btnResetAll = mkEl('button', null, {type:'button', text:'↻'});
+    btnResetAll.setAttribute('data-vp-reset','1');
+    btnResetAll.title = '⟳ Сброс активного редактора: поля, черновики, листы';
+    btnResetAll.style.cssText = 'margin-left:auto !important;padding:4px 10px !important;border-radius:4px !important;cursor:pointer !important';
+    tabsRow.appendChild(btnResetAll);
 
     // ═══ PANEL ═══
     var panel = mkEl('div', null, {cls:'vp-html-panel'});
@@ -1964,6 +1969,32 @@ window.__vpSetupTabs = function(){
     // вкладки размещаются внизу, над полем «Готовый HTML» (панель вставится после создания f3)
     window.__vpTabRow = tabRow;
     _renderTabs();
+    (function(){
+      var rst = (typeof btnResetAll !== 'undefined' && btnResetAll) ? btnResetAll : null;
+      if (!rst) return;
+      rst.addEventListener('click', function(){
+        var mode = 'html';
+        try { mode = (localStorage.getItem('vk_tab') === 'vk') ? 'vk' : 'html'; } catch(e){}
+        var label = (mode === 'vk') ? '📝 ВК-редактор' : '📄 HTML-редактор';
+        if (!window.confirm('⟳ Полный сброс: ' + label + '?\nПоля, черновики и листы будут очищены.')) return;
+        try {
+          localStorage.removeItem('vp-html-src');
+          localStorage.removeItem('vp-page-source');
+        } catch(e){}
+        document.querySelectorAll('.vp-ls-chip').forEach(function(c){ c.remove(); });
+        document.querySelectorAll('.vp-html-panel textarea, #src, #dst').forEach(function(t){
+          try { t.value = ''; } catch(e){}
+        });
+        try {
+          _sheets.length = 0;
+          _sheets.push({ name: 'Лист 1', body: '' });
+          _cur = 0;
+          if (typeof f3 !== 'undefined' && f3 && f3.el) { _setOut(''); }
+          _saveTabs(); _renderTabs();
+        } catch(e){}
+        if (typeof toastMsg === 'function') toastMsg('⟳ ' + label + ' сброшен — как новенький');
+      });
+    })();
     // (восстановление черновика при загрузке — в _placeTabs, когда f3 готов)
 
 
