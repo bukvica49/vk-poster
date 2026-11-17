@@ -71,6 +71,8 @@ jobs:
           fi
 
       - name: Commit & push state → triggers Pages
+        if: always()   # state пушится даже при PHOTO_MISSING: пост уже на стене,
+                       # без ключа state следующий тик задвоит пост
         run: |
           # Патч 21-dedupe: подтянуть коммиты параллельных тиков перед коммитом state
           git pull --rebase origin main || true
