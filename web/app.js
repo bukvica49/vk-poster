@@ -870,17 +870,23 @@ if (_cc) {
     out.push('</html>');
     document.getElementById('dst').value = out.join('\\n');
     toast('HTML собран','ok');
-  /* Патч 65 */ /* Патч 64: чтение из видимого поля */ /* Патч 63: показать результат в видимом редакторе листа (CodeMirror) */
+  /* Патч 66 */ /* Патч 64: чтение из видимого поля */ /* Патч 63: показать результат в видимом редакторе листа (CodeMirror) */
   try {
     var _out = document.getElementById('vp-html-out');
     var _dom = _out && _out.querySelector('.CodeMirror');
     var _cm = _dom && _dom.CodeMirror;
     if (_cm) {
       _cm.setValue(document.getElementById('dst').value);
-      _cm.setSize('100%', '100%');
-      var _sz = _dom.querySelector('.CodeMirror-sizer');
-      if (_sz) _sz.style.minWidth = '100%';
-      _cm.refresh();
+      var _fixCM = function () {
+        try {
+          _cm.setSize('100%', '100%');
+          var _sz = _dom.querySelector('.CodeMirror-sizer');
+          if (_sz) _sz.style.minWidth = '100%';
+          _cm.refresh();
+        } catch (e) {}
+      };
+      _fixCM();
+      [300, 1600, 3200, 5200].forEach(function (t) { setTimeout(_fixCM, t); });
     }
     else if (_out) { _out.textContent = document.getElementById('dst').value; }
   } catch(e) { console.warn('[vp] sync cm:', e); }
