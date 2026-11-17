@@ -409,30 +409,28 @@ cd ../bukvica49.github.io && git add editor.html && git commit -m "deploy editor
 4. Drop на пустое место строки вкладок — отдельный обработчик, иначе «вправо не работает».
 5. Требование «Введи текст» не должно блокировать сохранение активной вкладки.
 
+
 ---
 
-# Патч 54 — кнопка «📄 Сверстать HTML» (ноябрь 2026)
+# 🆕 Итог 17.11.2026 — редактор восстановлен
 
-Кнопка в тулбаре попапа рядом с «🎨 Оформить для ВК». Собирает из текста в `#src`
-готовый HTML-пост сайта (по шаблону v52) и кладёт результат в `#dst`.
-
-## Формат ввода в #src
-- строка 1 — заголовок (обязательна);
-- `[img] URL Подпись` — картинка (необязательно);
-- `[src] URL` — источник (необязательно);
-- пустая строка = новый абзац.
-
-## Что получается в #dst
-- полный HTML: `pages.css`, `article.js?v=52` (кэш-версия обязательна);
-- `<h1>`, картинка в `figure.center-image-block`, абзацы `<p>`;
-- footer `.article-footer`: «← Назад», «⤢ Развернуть» (`vp-expand-btn`), «Источник».
-
-Сохраняешь `#dst` как `posts/postN.html` → ссылка в `nav/posts.html` → push.
-Кнопочная система (закладка, Развернуть, `vp-expand-mode`) работает сама.
-
-## Грабли 53-серии (не повторять)
-1. Вставки «перед первым вхождением» вслепую — только точные якоря с count==1.
-2. Сломанное экранирование в replace/split убивает ВЕСЬ app.js → пропала панель
-   поиска превью. После каждой правки: `node --check web/app.js`.
-3. Рабочий эталон отката — коммит `9089aaf` (15.11).
-4. Активация: push → пересборка preview (`pages.yml`) → Ctrl+Shift+R → ✍ → новое окно.
+- **Рабочая точка:** ветка патча 54 (`ba8792f`) + замена в шаблоне статьи
+  `article.js?v=52` → `article.js` (эталон `post9.html` / `post10.html`).
+- **Серия 56–67 (`da8af20..71aa682`) — ЗАКРЫТА как неудачная:** перенос buildSiteHtml
+  внутрь попапа ломал рендер результата («Сверстать HTML» не давал результат),
+  12 фиксов подряд не спасли. НЕ реанимировать без крайней необходимости.
+- **Эталон шаблона статьи (buildHtml в app.js, ~строка 1195):**
+  head = pages.css + `../js/article.js` (БЕЗ ?v=N);
+  h1 = первая строка текста; абзацы `<p>`;
+  `[img] URL Подпись` → figure.center-image-block + figcaption;
+  `[src] URL` → кнопка `<a class="action-btn source">Источник →`;
+  footer.article-footer: «← Назад» (goBackFromArticle) + «⤢ Развернуть»
+  (`#vp-expand-btn`, toggleExpandFromArticle); после footer — `<br>`.
+- **Регламент после ЛЮБЫХ правок web/app.js:**
+  1. `node --check web/app.js` → SYNTAX-OK
+  2. `python3 make_preview.py`
+  3. `cd _site && python3 -m http.server 8081` (порт 8080 бывает занят: `fuser -k 8080/tcp`)
+  4. localhost → Ctrl+Shift+R → чистка vp-ключей:
+     `Object.keys(localStorage).filter(k=>k.startsWith('vp')).forEach(k=>localStorage.removeItem(k)); location.reload()`
+  5. проверка «Сверстать HTML» → только потом `git add web/app.js && git commit && git push`
+  6. прод: та же чистка vp-ключей + Ctrl+Shift+R → сверка результата с локалкой.
