@@ -1198,7 +1198,7 @@ function buildSiteHtml(){
   out.push('  <meta name="viewport" content="width=device-width, initial-scale=1.0">');
   out.push('  <title>' + escH(title) + '</title>');
   out.push('  <link rel="stylesheet" href="../css/pages.css">');
-  out.push('  <script src="../js/article.js?v=52"><' + '/script>');
+  out.push('  <script src="../js/article.js"><' + '/script>');
   out.push('</head>');
   out.push('<body>');
   out.push('');
