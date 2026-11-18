@@ -17,7 +17,7 @@ import sys
 from pathlib import Path
 
 REPO = Path(__file__).resolve().parent.parent
-DEFAULT_TARGET = Path.home() / 'site' / 'bukvica49.github.io-main'
+DEFAULT_TARGET = Path.home() / 'site' / 'bukvica49.github.io'
 
 
 def load_chertogs() -> dict:
@@ -74,8 +74,8 @@ def render_js(chertogs: dict, starts: list[int]) -> str:
     return s;
   }}
 
-  const SLAVIC_DAYS = ['ПОНЕДѢЛЬНИКЪ','ВТОРНИКЪ','ТРИТЕЙНИКЪ','ЧЕТВЕРИКЪ','ПѦТНИЦА',
-                       'ШЕСТИЦА','СЕДМИЦА','ОСЬМИЦА','НЕДѢЛѦ'];
+  const SLAVIC_DAYS = ['Понєдѣльнiкъ','Вторнiкъ','Тритєїнiкъ','Чєтвѣрiкъ','Пꙗтнiца',
+                       'Шєстица','Сєдьмiца','Осьмiца','Нєдѣлꙗ'];
   const SLAVIC_MONTHS = ['Рамхатъ','Айлѣтъ','Бейлѣтъ','Гэйлѣтъ','Дайлѣтъ',
                          'Элѣтъ','Вэйлѣтъ','Хэйлѣтъ','Тайлѣтъ'];
   const MONTH_LENS_SIMPLE = [41,40,41,40,41,40,41,40,41];
