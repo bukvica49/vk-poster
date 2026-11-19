@@ -5,6 +5,10 @@ on:
     - cron: '5,35 * * * *'   # 2 раза в час, редкие слоты — их GH не дропает
   workflow_dispatch:
 
+permissions:
+  actions: write
+  contents: read
+
 jobs:
   keep:
     runs-on: ubuntu-latest
