@@ -2,7 +2,7 @@ name: VK Poster Keeper
 
 on:
   schedule:
-    - cron: '5,35 * * * *'   # 2 раза в час, редкие слоты — их GH не дропает
+    - cron: '5,35 * * * *'
   workflow_dispatch:
 
 permissions:
@@ -18,17 +18,25 @@ jobs:
           script: |
             const runs = await github.rest.actions.listWorkflowRuns({
               owner: context.repo.owner, repo: context.repo.repo,
-              workflow_id: 'post.yml', per_page: 1
+              workflow_id: 'post.yml', per_page: 20, status: 'success'
             });
             const last = runs.data.workflow_runs[0];
+            if (!last) {
+              await github.rest.actions.createWorkflowDispatch({
+                owner: context.repo.owner, repo: context.repo.repo,
+                workflow_id: 'post.yml', ref: 'main'
+              });
+              core.info('Успешных тиков нет вообще — разбудил post.yml');
+              return;
+            }
             const ageMin = (Date.now() - new Date(last.created_at)) / 60000;
-            core.info(`Последний тик: ${last.created_at} (${ageMin.toFixed(0)} мин назад)`);
+            core.info(`Последний УСПЕШНЫЙ тик: ${last.created_at} (${ageMin.toFixed(0)} мин назад)`);
             if (ageMin > 30) {
               await github.rest.actions.createWorkflowDispatch({
                 owner: context.repo.owner, repo: context.repo.repo,
                 workflow_id: 'post.yml', ref: 'main'
               });
-              core.info('Тиков нет >30 мин — разбудил post.yml');
+              core.info('Успешных тиков нет >30 мин — разбудил post.yml');
             } else {
               core.info('Тики живы — не трогаю');
             }
