@@ -50,3 +50,4 @@ web/editor.html.v25_*
 patch*.py
 patches/
 savepoint*.sh
+patch_poster*.txt
