@@ -1,0 +1,62 @@
+name: Defer Post (bump to next year)
+on:
+  issues:
+    types: [opened]
+  workflow_dispatch:
+    inputs:
+      slug: {description: 'slug поста', required: true}
+
+permissions:
+  contents: write
+  issues: write
+
+jobs:
+  defer:
+    if: >-
+      github.event_name == 'workflow_dispatch' ||
+      (startsWith(github.event.issue.title, 'bump:') && github.event.issue.user.login == 'bukvica49')
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: {python-version: '3.11'}
+      - name: Install deps
+        run: pip install --quiet requests
+      - name: Defer
+        env:
+          SLUG_IN: ${{ github.event.inputs.slug || github.event.issue.title }}
+          GH_TOKEN: ${{ github.token }}
+          ISSUE_NUM: ${{ github.event.issue.number }}
+        run: |
+          python3 - <<'PY'
+          import json, os, sys
+          from pathlib import Path
+          from datetime import timedelta
+          import slavic_calendar as sc
+          raw = os.environ['SLUG_IN'].strip()
+          slug = raw[5:].strip() if raw.lower().startswith('bump:') else raw.strip()
+          p = next(Path('content/holidays').glob(f'{slug}.json'), None)
+          if p is None: sys.exit(f'нет файла для slug={slug}')
+          h = json.loads(p.read_text(encoding='utf-8'))
+          sl = h.get('slavic') or {}
+          today = sc.today_krat()
+          occ = sc.holiday_date(h, today.year)
+          if occ is None or occ <= today:
+              occ = sc.holiday_date(h, today.year + 1)
+          if occ is None: sys.exit('occurrence не найден')
+          nxt = sc.to_gregorian(sl.get('month'), sl.get('day'), start=occ + timedelta(days=1))
+          if nxt is None: sys.exit('след. occurrence не найден')
+          h['defer_until'] = nxt.isoformat()
+          h.pop('photo_failed', None)   # кнопка отработала — флаг снят
+          p.write_text(json.dumps(h, ensure_ascii=False, indent=2) + '\n', encoding='utf-8')
+          open('/tmp/slug_file.txt','w').write(str(p))
+          print('deferred', slug, 'until', nxt)
+          PY
+          git config user.name "defer-bot"; git config user.email "bot@users.noreply.github.com"
+          git add "$(cat /tmp/slug_file.txt)"
+          git commit -m "defer: $SLUG_IN" || true
+          git pull --rebase origin main && git push
+          if [ -n "$ISSUE_NUM" ]; then
+            gh issue close "$ISSUE_NUM" --repo bukvica49/vk-poster \
+              -c "✅ Отложено — карточка скрыта с сайта до срока, пост выйдет сам в следующем году."
+          fi

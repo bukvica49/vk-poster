@@ -151,8 +151,13 @@ def build():
                      'slavic': slavic_calendar.header_full(occ, add_smzh=add_krug,
                                                           range_to=_range_to, chertog_block=_block),
                      'posted': key in posted, 'slug': h.get('slug') or '',
+                     'photo_failed': bool(h.get('photo_failed')),
+                     'defer_until': h.get('defer_until') or '',
                      'filename': h.get('_filename', ''),
                      'post_time': h.get('post_time') or '18:00'})
+    import datetime as _dtmod
+    _today_iso = _dtmod.date.today().isoformat()
+    rows = [r for r in rows if not (r.get('defer_until') and r['defer_until'] > _today_iso)]
     rows.sort(key=lambda r: r['occ'])
     def card_edit_url(slug):
         """URL редактирования конкретного праздника в PagesCMS."""
@@ -204,10 +209,15 @@ def build():
         desc_md = r.get('info_md') or r.get('text_md')
         if desc_md:
             info_html += f'<div class="info-md">{md_to_html(desc_md)}</div>'
+        defer_btn = ('' if not r.get('photo_failed') else
+            '<a class="btn-defer" href="https://github.com/bukvica49/vk-poster/issues/new?title=bump:'
+            + (r.get('slug') or '') + '&body=auto+defer" target="_blank" rel="noopener" '
+            + 'title="Отложить на след. год">⏭</a>')
         cards.append(f'''
     <div class="card">
       <div class="head"><div>{badge} <span class="when">{when}</span> <span class="in">{delta}</span></div>
         <div class="card-actions card-actions-inline">
+          {defer_btn}
           <a class="btn-edit" href="{card_edit_url(r.get('filename', ''))}" target="_blank" rel="noopener" title="Редактировать">✏️</a>
           <button class="btn-copy" data-slug="{_key}" onclick="copyPost(this)" title="Скопировать текст для VK">📋</button>
         </div>

@@ -80,7 +80,7 @@ jobs:
             echo "state не изменился — пропуск"
             exit 0
           fi
-          git add 'state-*.json'
+          git add 'state-*.json' 'content/holidays/*.json'
           git commit -m "state: auto $(date -u +%Y-%m-%d_%H:%M)"
           GIT_SSH_COMMAND='ssh -i ~/.ssh/deploy_key -o IdentitiesOnly=yes' \
             git push origin main

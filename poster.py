@@ -67,6 +67,26 @@ def _load_holidays_dicts():
     return data["holidays"]
 
 
+def _set_photo_flag(text, failed):
+    """Пометить пост photo_failed=true (вышел без картинки)."""
+    hd = BASE / "content" / "holidays"
+    if not hd.is_dir():
+        return
+    for f in sorted(hd.glob("*.json")):
+        try:
+            d = json.loads(f.read_text(encoding="utf-8"))
+        except Exception:
+            continue
+        if d.get("text") != text:
+            continue
+        if failed:
+            d["photo_failed"] = True
+        else:
+            d.pop("photo_failed", None)
+        f.write_text(json.dumps(d, ensure_ascii=False, indent=2) + "\n",
+                     encoding="utf-8")
+        return
+
 def _holiday_date(h, year):
     """Дата праздника в году (см. slavic_calendar.holiday_date)."""
     return slavic_calendar.holiday_date(h, year)
@@ -499,6 +519,11 @@ def main(dry_run=False, test=False, force=False, republish=False, override_date=
                     pass
             pid = post(CONFIG["token"], CONFIG["group_id"], message, attach)
             print(f"OK post_id={pid}: «{text[:60]}» attach={attach or 'none'}")
+            # флаг для сайта: кнопка только у постов, вышедших БЕЗ картинки
+            if image_path and not attach:
+                _set_photo_flag(text, True)
+            elif attach:
+                _set_photo_flag(text, False)
             if key:
                 state["posted"].append(key)
                 save_state(state)
