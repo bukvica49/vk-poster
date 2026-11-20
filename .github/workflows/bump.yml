@@ -46,11 +46,10 @@ jobs:
           if occ is None: sys.exit('occurrence не найден')
           nxt = sc.to_gregorian(sl.get('month'), sl.get('day'), start=occ + timedelta(days=1))
           if nxt is None: sys.exit('след. occurrence не найден')
-          h['defer_until'] = nxt.isoformat()
-          h.pop('photo_failed', None)   # кнопка отработала — флаг снят
+          h.pop('photo_failed', None)   # кнопка: пометку обработал
           p.write_text(json.dumps(h, ensure_ascii=False, indent=2) + '\n', encoding='utf-8')
           open('/tmp/slug_file.txt','w').write(str(p))
-          print('deferred', slug, 'until', nxt)
+          print('photo_failed снят:', slug)
           PY
           git config user.name "defer-bot"; git config user.email "bot@users.noreply.github.com"
           git add "$(cat /tmp/slug_file.txt)"
@@ -58,5 +57,5 @@ jobs:
           git pull --rebase origin main && git push
           if [ -n "$ISSUE_NUM" ]; then
             gh issue close "$ISSUE_NUM" --repo bukvica49/vk-poster \
-              -c "✅ Отложено — карточка скрыта с сайта до срока, пост выйдет сам в следующем году."
+              -c "✅ Пометка снята — пост останется в списке и уйдёт сам в следующем году."
           fi

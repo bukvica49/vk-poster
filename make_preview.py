@@ -157,7 +157,6 @@ def build():
                      'post_time': h.get('post_time') or '18:00'})
     import datetime as _dtmod
     _today_iso = _dtmod.date.today().isoformat()
-    rows = [r for r in rows if not (r.get('defer_until') and r['defer_until'] > _today_iso)]
     rows.sort(key=lambda r: r['occ'])
     def card_edit_url(slug):
         """URL редактирования конкретного праздника в PagesCMS."""
