@@ -242,6 +242,23 @@ def _wall_post_retry(data, max_attempts=3):
     raise RuntimeError(f"wall.post: все {max_attempts} попытки провалились, последняя: {last_err}")
 
 
+def _wall_already_posted(token, group_id, first_line):
+    """Барьер 2: пост с таким заголовком уже на стене? (анти-дубль через VK API).
+    Спасает даже когда state потерялся (гонка тиков, падение CI, правки кода)."""
+    try:
+        r = requests.post(API + "wall.get", data={
+            "access_token": token, "owner_id": -abs(group_id),
+            "count": 20, "v": "5.199",
+        }, timeout=15).json()
+        items = r.get("response", {}).get("items", [])
+        head = first_line.strip()[:60]
+        return any(it.get("text", "").strip().startswith(head) for it in items)
+    except Exception as e:
+        # проверка не удалась — НЕ блокируем постинг (state-дедуп остаётся страховкой)
+        print(f"  ⚠ wall.get не удался ({e}) — анти-дубль пропущен", file=sys.stderr)
+        return False
+
+
 def post(token, group_id, message, attachments=None):
     data = {
         "access_token": token, "owner_id": -abs(group_id),
@@ -517,6 +534,14 @@ def main(dry_run=False, test=False, force=False, republish=False, override_date=
                         continue
                 except Exception:
                     pass
+            # Барьер 2: анти-дубль — пост с этим заголовком уже на стене?
+            _head = message.split("\n")[0].strip()
+            if _wall_already_posted(CONFIG["token"], CONFIG["group_id"], _head):
+                print(f'SKIP (уже на стене): «{_head[:60]}»')
+                if key:
+                    state["posted"].append(key)
+                    save_state(state)
+                continue
             pid = post(CONFIG["token"], CONFIG["group_id"], message, attach)
             print(f"OK post_id={pid}: «{text[:60]}» attach={attach or 'none'}")
             # флаг для сайта: кнопка только у постов, вышедших БЕЗ картинки
