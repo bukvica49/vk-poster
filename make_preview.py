@@ -209,7 +209,7 @@ def build():
             # ближайший грядущий слот, где слав. день недели == _wi
             _day = _start
             for _ in range(10):
-                if _sc.krugолет(_day)[3] == _wi:
+                if _sc.krugолет(_day)[3] == (_wi - 1) % 9:   # header(D) = wi+1 (сутки от 18:00 D)
                     break
                 _day += timedelta(days=1)
             _key = f"{_day.isoformat()}|{_d['text']}"
