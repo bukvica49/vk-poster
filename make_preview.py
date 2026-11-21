@@ -186,13 +186,9 @@ def build():
     for _i, _r in enumerate(rows):
         _k = _r.get("slug") or f"_idx{_i}"
         posts_map[_k] = build_post_text(_r)
-    # ── Секция «Неделя»: 9 карточек дней недели (окно одной слав. недели) ──
-    def _key(day, t):
-        return f"{day.isoformat()}|{t}"
-
-    def _week_cards():
+    # ── Дни недели: встроить 9 карточек в общий rows (вперемешку с праздниками) ──
+    def _add_week_rows():
         import slavic_calendar as _sc
-        _arr = []
         for n in range(9):
             jf = HERE / f"content/holidays/den-dnya-{n}.json"
             if not jf.is_file():
@@ -202,68 +198,33 @@ def build():
             except Exception as _e:
                 print(f"warn: {jf.name}: {_e}")
                 continue
-            _d.setdefault("_wi", n)
-            _arr.append(_d)
-        if not _arr:
-            return ""
-        _today = today_civil
-        _wi0 = _sc.krugолет(_today)[3]
-        _order = [(_wi0 + k) % 9 for k in range(9)]
-        _items = []
-        for k, wi in enumerate(_order):
-            day = _today + timedelta(days=k)
-            d = next((x for x in _arr if x["_wi"] == wi), None)
-            if not d:
-                continue
-            published = _key(day, d["text"]) in posted
-            _items.append({"d": d, "day": day, "published": published, "delta": k})
-        _items.sort(key=lambda x: (x["published"], x["delta"]))
-        _img_out2 = OUT / "images"
-        _img_out2.mkdir(parents=True, exist_ok=True)
-        _cards = []
-        for it in _items:
-            d = it["d"]; day = it["day"]; wi = d["_wi"]
-            img = f"den-dnya-{wi}.jpg"
+            _wi = n
+            _k = (_wi - _sc.krugолет(today_civil)[3]) % 9
+            _day = today_civil + timedelta(days=_k)
+            _key = f"{_day.isoformat()}|{_d['text']}"
+            _img_out2 = OUT / "images"
+            _img_out2.mkdir(parents=True, exist_ok=True)
+            img = f"den-dnya-{_wi}.jpg"
             _src_img = None
             for _c in (HERE / img, HERE / "images/Дни_недели" / img,
-                       HERE / "images/Дни_недели" / ("d_p_inglyn.jpg" if wi == 0 else img)):
+                       HERE / "images/Дни_недели" / ("d_p_inglyn.jpg" if _wi == 0 else img)):
                 if _c.is_file():
                     _src_img = _c
                     break
             if _src_img:
                 shutil.copy2(_src_img, _img_out2 / img)
-            img_html = ('<img src="images/' + img + '" alt="">' if _src_img
-                        else '<div class="no-img">нет фото</div>')
-            badge = ('<span style="background:#dcfce7;color:#166534;padding:2px 8px;border-radius:4px;font-size:12px">✅ опубликован</span>'
-                     if it["published"] else
-                     '<span style="background:#e5e7eb;color:#666;padding:2px 8px;border-radius:4px;font-size:12px">⏳ ожидает</span>')
-            when = day.strftime("%d.%m.%Y") + " " + str(d.get("post_time") or "19:00").replace("-", ":")
-            delta = ("сегодня" if it["delta"] == 0 else "завтра" if it["delta"] == 1
-                     else f"через {it['delta']} дн.")
-            _slav = _sc.header_full(day, add_smzh=add_krug)
-            _head = _slav + chr(10) * 2 + (d.get("text_md") or d.get("text") or "")
-            _k2 = d.get("slug") or f"_day{wi}"
-            posts_map[_k2] = _head
-            card = (
-                chr(10)
-                + '    <div class="card card-week">'
-                + '      <div class="head"><div>' + badge + ' <span class="when">' + when + '</span> <span class="in">' + delta + '</span></div>'
-                + '        <div class="card-actions card-actions-inline">'
-                + '          <button class="btn-copy" data-slug="' + _k2 + '" onclick="copyPost(this)" title="Скопировать текст для VK">📋</button>'
-                + '        </div>'
-                + '      </div>'
-                + '      <div class="body"><div class="img">' + img_html + '</div>'
-                + '      <div class="meta"><h2>' + (d.get("text") or "") + '</h2><div class="slavic">' + _slav + '</div>'
-                + '      <div class="info-md">' + md_to_html(d.get("text_md") or "") + '</div></div></div>'
-                + '    </div>'
-            )
-            _cards.append(card)
-        if not _cards:
-            return ""
-        return (chr(10) + '<h2 style="margin:18px 0 8px">🗓 Неделя — дни недели (9 карточек)</h2>'
-                + chr(10).join(_cards))
-
-    week_cards_html = _week_cards()
+            rows.append({
+                'text': _d['text'], 'text_md': _d.get('text_md') or _d.get('text') or '',
+                'info': [], 'info_md': _d.get('info') or '',
+                'img': img if _src_img else None,
+                'slavic': _sc.header_full(_day, add_smzh=add_krug),
+                'posted': _key in posted, 'slug': _d.get('slug') or f'_day{_wi}',
+                'filename': '',
+                'post_time': _d.get('post_time') or '19:00',
+                'occ': _day, 'fire_civil': _day, 'delta': _k,
+                'week': True})
+    _add_week_rows()
+    rows.sort(key=lambda r: r["occ"])
     posts_json = json.dumps(posts_map, ensure_ascii=False).replace("</", "<\\/")
 
     _warn = [x for x in rows if x.get("info_md") and not x.get("text_md")]
@@ -386,7 +347,7 @@ function copyPost(btn) {
 {css_extra}</style></head><body><h1>📅 VK Poster</h1>
 <div class="toolbar"><span>{len(rows)} праздников · {today_civil.strftime('%d.%m.%Y')}</span>
 <div><a href="https://app.pagescms.org/bukvica49/vk-poster/main/collection/holidays" target="_blank" rel="noopener">📅 Праздники</a><a class="secondary" href="https://app.pagescms.org/bukvica49/vk-poster/main/file/chertogs" target="_blank" rel="noopener">🕯 Чертоги</a><a class="secondary" href="https://app.pagescms.org/bukvica49/vk-poster/main/file/krugolyety" target="_blank" rel="noopener">🌀 Круголеты</a><a class="secondary" href="https://app.pagescms.org/bukvica49/vk-poster/main/collection/holidays/new" target="_blank" rel="noopener" title="Добавить новый праздник">➕ Новый</a></div></div>
-{''.join(week_cards_html)}{''.join(cards)}{js_extra}<script src="config.js"></script><script src="app.js?v={APP_V}" defer></script></body></html>'''
+{''.join(cards)}{js_extra}<script src="config.js"></script><script src="app.js?v={APP_V}" defer></script></body></html>'''
     (OUT / 'index.html').write_text(html, encoding='utf-8')
     print(f'✅ _site/index.html — {len(rows)} постов')
 
