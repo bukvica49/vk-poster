@@ -186,9 +186,16 @@ def build():
     for _i, _r in enumerate(rows):
         _k = _r.get("slug") or f"_idx{_i}"
         posts_map[_k] = build_post_text(_r)
-    # ── Дни недели: встроить 9 карточек в общий rows (вперемешку с праздниками) ──
+    # ── Дни недели: встроить 9 карточек в общий rows (очередь будущих выходов) ──
     def _add_week_rows():
         import slavic_calendar as _sc
+        from datetime import datetime as _dt, time as _time
+        from zoneinfo import ZoneInfo as _ZI
+        _now_krat = _dt.now(_ZI("Asia/Krasnoyarsk"))
+        _fire = _time(19, 0)
+        _start = today_civil
+        if _now_krat.timetz().replace(tzinfo=None) >= _fire:
+            _start = today_civil + timedelta(days=1)   # слот 19:00 сегодня уже прошёл
         for n in range(9):
             jf = HERE / f"content/holidays/den-dnya-{n}.json"
             if not jf.is_file():
@@ -199,8 +206,12 @@ def build():
                 print(f"warn: {jf.name}: {_e}")
                 continue
             _wi = n
-            _k = (_wi - _sc.krugолет(today_civil)[3]) % 9
-            _day = today_civil + timedelta(days=_k)
+            # ближайший грядущий слот, где слав. день недели == _wi
+            _day = _start
+            for _ in range(10):
+                if _sc.krugолет(_day)[3] == _wi:
+                    break
+                _day += timedelta(days=1)
             _key = f"{_day.isoformat()}|{_d['text']}"
             _img_out2 = OUT / "images"
             _img_out2.mkdir(parents=True, exist_ok=True)
@@ -221,7 +232,7 @@ def build():
                 'posted': _key in posted, 'slug': _d.get('slug') or f'_day{_wi}',
                 'filename': '',
                 'post_time': _d.get('post_time') or '19:00',
-                'occ': _day, 'fire_civil': _day, 'delta': _k,
+                'occ': _day, 'fire_civil': _day, 'delta': (_day - today_civil).days,
                 'week': True})
     _add_week_rows()
     rows.sort(key=lambda r: r["occ"])
