@@ -236,7 +236,7 @@ def build():
                 'img': img if _src_img else None,
                 'slavic': _sc.header_full(_day, add_smzh=add_krug),
                 'posted': _key in posted, 'slug': _d.get('slug') or f'_day{_wi}',
-                'filename': '',
+                'filename': _d.get('slug') or '',
                 'post_time': _d.get('post_time') or '19:00',
                 'occ': _day, 'fire_civil': _day, 'delta': (_day - today_civil).days,
                 'week': True})
