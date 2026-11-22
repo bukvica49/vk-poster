@@ -1,5 +1,13 @@
 # Сайт bukvica49.github.io — шпаргалка
-## Изменения 22.11.2026 — карточки дней недели 1020×1020 (пейзаж+буквица), фиксы poster.py и make_preview.py
+# Изменения 22.11.2026 (вечер) — дни недели в PagesCMS: slug, схема, кнопка ✏️
+
+- Дни недели редактируются в PagesCMS: `content/holidays/den-dnya-0..8.json`. Поля: `slug` (должен совпадать с именем файла), `daily: true`, `slavic` (0–8), `text`, `text_md`, `post_time`, `image`. Поля `date`/`date_to`/`post_time` допускают пустые значения — «Invalid format» больше не появляется (коммит `a3b316d`, схема: `d7a8d59`).
+- Slug переименован `daily-day-N` → `den-dnya-N` (совпадает с именем файла); правки через CMS — `b228f35`.
+- `make_preview.py`: у daily-карточек `filename` берётся из slug → кнопка ✏️ открывает конкретную запись `den-dnya-N` в PagesCMS, а не список (`c502db6`).
+- ⚠ Поле `slavic` НЕ менять вручную: оно совпадает с расчётом постера; сдвиг ломает выход дня недели в свой слот.
+- Проверка: `python3 poster.py config.main.json --dry-run --date <дата>` — вывод не меняется; `grep -o 'holidays/edit/content%2Fholidays%2Fden-dnya-[0-9].json' _site/index.html | sort -u` — 9 ссылок.
+
+ недели 1020×1020 (пейзаж+буквица), фиксы poster.py и make_preview.py
 
 ## Summary
 Заменены карточки дней недели: вместо фона «день/ночь» с глючной буквой — 9 карточек den-dnya-0..8.png (1020×1020) с природными пейзажами (лес, скалы, водопад, горы, озеро, луг, каньон, курган; Flux Schnell, генерация БЕЗ текста) и наложенными кодом (Pillow, make_day_card.py) золотой буквицей (А, В, Г, Д, Є, Ѕ, Ȥ, И, Ѳ) и подписями дня без наложений. Патчи: poster.py — фикс _resolve_image для daily ('str' has no 'get'); make_preview.py _add_week_rows — чтение image из JSON (вместо захардкоженного .jpg), нормализация до _p.name, поиск картинки добавлен в images/. Проверено curl и dry-run.
@@ -150,3 +158,12 @@ den-dnya-7 Осьмiца -> 30.11.2026 19:00, шапка Осьмiца (ниже
 - e78f581 — дни недели в общей очереди
 - 9b4a8a1 — очередь будущих выходов (после 19:00 — со следующего дня)
 - 0ba2d57 — синхрон с шапкой: пост N в сутки wi = N-1 (правило 18:00)
+# Изменения 22.11.2026 (вечер) — дни недели в PagesCMS: slug, схема, кнопка ✏️
+
+- Дни недели редактируются в PagesCMS: `content/holidays/den-dnya-0..8.json`. Поля: `slug` (должен совпадать с именем файла), `daily: true`, `slavic` (0–8), `text`, `text_md`, `post_time`, `image`. Поля `date`/`date_to`/`post_time` допускают пустые значения — «Invalid format» больше не появляется (коммит `a3b316d`, схема: `d7a8d59`).
+- Slug переименован `daily-day-N` → `den-dnya-N` (совпадает с именем файла); правки через CMS — `b228f35`.
+- `make_preview.py`: у daily-карточек `filename` берётся из slug → кнопка ✏️ открывает конкретную запись `den-dnya-N` в PagesCMS, а не список (`c502db6`).
+- ⚠ Поле `slavic` НЕ менять вручную: оно совпадает с расчётом постера; сдвиг ломает выход дня недели в свой слот.
+- Проверка: `python3 poster.py config.main.json --dry-run --date <дата>` — вывод не меняется; `grep -o 'holidays/edit/content%2Fholidays%2Fden-dnya-[0-9].json' _site/index.html | sort -u` — 9 ссылок.
+
+# Сайт bukvica49.github.io — шпаргалка
