@@ -223,7 +223,7 @@ def build():
             except Exception:
                 img = f"den-dnya-{_wi}.jpg"
             _src_img = None
-            for _c in (HERE / img, HERE / "images/Дни_недели" / img,
+            for _c in (HERE / "images" / img, HERE / img, HERE / "images/Дни_недели" / img,
                        HERE / "images/Дни_недели" / ("d_p_inglyn.jpg" if _wi == 0 else img)):
                 if _c.is_file():
                     _src_img = _c
