@@ -23,7 +23,7 @@ content:
       - name: date
         label: Дата поста (MM-DD)
         type: string
-        required: true
+        required: false
         pattern: '\d{2}-\d{2}'
         description: "Дата поста: MM-DD (напр. 11-10 = 10 ноября). Пост выйдет в этот день в 18:00 KRAT."
       - name: date_to
@@ -62,6 +62,18 @@ content:
         placeholder: "18:00"
         pattern: '^\d{2}[-:]\d{2}$'
         description: "Время публикации в KRAT (UTC+7). Пусто = 18:00. Примеры: 09:00, 21:30, 19-50, 02-00 (допустимы как :, так и -)."
+
+      - name: daily
+        label: "🔁 Ежедневный пост (день недели)"
+        type: boolean
+        required: false
+        description: "Включено только у постов 9-дневного круга (den-dnya-0…8). Не включать у обычных праздников."
+
+      - name: weekday
+        label: "Славянский день (0-8) — не менять!"
+        type: number
+        required: false
+        description: "0 = Понєдѣльнiкъ (Азъ), далее по кругу до 8. Постер сам вычисляет текущий день — поле должно совпадать с расчётным. При обычной правке не трогать."
 
   - name: chertogs
     label: Чертоги
