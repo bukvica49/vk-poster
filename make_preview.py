@@ -218,7 +218,8 @@ def build():
             # image из JSON (может быть .png), fallback на старый .jpg
             _jf = HERE / f"content/holidays/den-dnya-{_wi}.json"
             try:
-                img = json.load(open(_jf, encoding="utf-8")).get("image") or f"den-dnya-{_wi}.jpg"
+                _p = HERE / json.load(open(_jf, encoding="utf-8")).get("image").lstrip("/")
+                img = _p.name if _p.is_file() else f"den-dnya-{_wi}.jpg"
             except Exception:
                 img = f"den-dnya-{_wi}.jpg"
             _src_img = None
