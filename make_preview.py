@@ -215,7 +215,12 @@ def build():
             _key = f"{_day.isoformat()}|{_d['text']}"
             _img_out2 = OUT / "images"
             _img_out2.mkdir(parents=True, exist_ok=True)
-            img = f"den-dnya-{_wi}.jpg"
+            # image из JSON (может быть .png), fallback на старый .jpg
+            _jf = HERE / f"content/holidays/den-dnya-{_wi}.json"
+            try:
+                img = json.load(open(_jf, encoding="utf-8")).get("image") or f"den-dnya-{_wi}.jpg"
+            except Exception:
+                img = f"den-dnya-{_wi}.jpg"
             _src_img = None
             for _c in (HERE / img, HERE / "images/Дни_недели" / img,
                        HERE / "images/Дни_недели" / ("d_p_inglyn.jpg" if _wi == 0 else img)):
