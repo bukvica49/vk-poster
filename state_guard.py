@@ -13,8 +13,14 @@ def valid(p: Path) -> bool:
         print(f"✗ {p.name}: {e}")
         return False
     pub = d.get("published")
-    if not isinstance(pub, list) or not all(isinstance(k, str) for k in pub):
-        print(f"✗ {p.name}: 'published' не список строк")
+    if isinstance(pub, list):
+        ok = all(isinstance(k, str) for k in pub)
+    elif isinstance(pub, dict):
+        ok = all(isinstance(k, str) for k in pub)
+    else:
+        ok = False
+    if not ok:
+        print(f"✗ {p.name}: 'published' не список и не словарь строковых ключей")
         return False
     return True
 
