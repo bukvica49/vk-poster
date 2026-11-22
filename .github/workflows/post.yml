@@ -57,6 +57,7 @@ jobs:
           TZ: Asia/Krasnoyarsk           # ⚠️ КРИТИЧНО — без этого slavic_now не сдвинется
           GIT_SSH_COMMAND: 'ssh -i ~/.ssh/deploy_key -o IdentitiesOnly=yes'
         run: |
+          python3 state_guard.py
           set -euo pipefail
           if [ "${{ github.event_name }}" = "workflow_dispatch" ] && [ "${{ inputs.force }}" = "true" ]; then
             echo "── Mode: FORCE (ignore post_time) ──"
