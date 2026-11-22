@@ -315,7 +315,7 @@ def daily_items(today_d):
             continue
         text = h.get("text") or ""
         img = h.get("image")
-        img_path = _resolve_image(img) if img else None
+        img_path = (BASE / img.lstrip("/")) if img else None
         out.append((text, img_path, h.get("info") or []))
     return out
 
