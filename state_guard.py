@@ -14,7 +14,7 @@ def valid(p: Path) -> bool:
         return False
     pub = d.get("posted")
     if not isinstance(pub, list) or not all(isinstance(k, str) for k in pub):
-        print(f"\u2717 {p.name}: 'posted' не список строк")
+        print(f"✗ {p.name}: 'posted' не список строк")
         return False
     return True
 
@@ -27,7 +27,7 @@ if not STATE.exists():
 
 if valid(STATE):
     shutil.copy(STATE, BAK)
-    n = len(json.loads(STATE.read_text(encoding="utf-8"))["published"])
+    n = len(json.loads(STATE.read_text(encoding="utf-8"))["posted"])
     print(f"✓ state валиден ({n} ключей), .bak обновлён")
 else:
     if BAK.exists() and valid(BAK):
