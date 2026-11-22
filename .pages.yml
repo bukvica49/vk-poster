@@ -24,13 +24,13 @@ content:
         label: Дата поста (MM-DD)
         type: string
         required: false
-        pattern: '\d{2}-\d{2}'
+        pattern: '^(\d{2}-\d{2})?$'
         description: "Дата поста: MM-DD (напр. 11-10 = 10 ноября). Пост выйдет в этот день в 18:00 KRAT."
       - name: date_to
         label: Дата окончания (MM-DD, для диапазона)
         type: string
         required: false
-        pattern: '\d{2}-\d{2}'
+        pattern: '^(\d{2}-\d{2})?$'
         description: "Для диапазонных постов (вход в Чертог): дата окончания периода, MM-DD. Пример: 12-15. Пусто = однодневный пост."
       - name: chertog
         label: Чертог (для диапазона)
@@ -60,7 +60,7 @@ content:
         type: string
         required: false
         placeholder: "18:00"
-        pattern: '^\d{2}[-:]\d{2}$'
+        pattern: '^(\d{2}[-:]\d{2})?$'
         description: "Время публикации в KRAT (UTC+7). Пусто = 18:00. Примеры: 09:00, 21:30, 19-50, 02-00 (допустимы как :, так и -)."
 
       - name: daily
