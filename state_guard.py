@@ -12,15 +12,9 @@ def valid(p: Path) -> bool:
     except Exception as e:
         print(f"✗ {p.name}: {e}")
         return False
-    pub = d.get("published")
-    if isinstance(pub, list):
-        ok = all(isinstance(k, str) for k in pub)
-    elif isinstance(pub, dict):
-        ok = all(isinstance(k, str) for k in pub)
-    else:
-        ok = False
-    if not ok:
-        print(f"✗ {p.name}: 'published' не список и не словарь строковых ключей")
+    pub = d.get("posted")
+    if not isinstance(pub, list) or not all(isinstance(k, str) for k in pub):
+        print(f"\u2717 {p.name}: 'posted' не список строк")
         return False
     return True
 
