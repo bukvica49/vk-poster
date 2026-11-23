@@ -77,3 +77,13 @@
 ---
 
 История: старые мануалы и docs удалены (git хранит их при необходимости). Журнал изменений — `HANDOFF.md`.
+
+## Редактор: проверка после правок
+
+    python3 make_preview.py
+    xdg-open _site/index.html    # Ctrl+Shift+R
+
+В консоли браузера:
+
+    JSON.parse(localStorage.getItem('vp-ed-size'))
+    localStorage.removeItem('vp-ed-size'); location.reload();  # сброс
