@@ -57,7 +57,11 @@ def main():
             errors.append(f"Лѣто {Y}: сдвиг чёт/нечёт = {(list(even)[0]-list(odd)[0]) % 9}, канон требует 5")
 
     kind = "СВЯЩЕННОЕ (369)" if sacred else "обычное (365)"
-    print(f"Лѣто {Y} — {kind}: дней {days}, месяцев {len(months)}, начал: нечётные wd {odd}, чётные wd {even}")
+    if sacred:
+        starts_str = ", ".join(f"м{m}: wd{starts[m]}" for m in sorted(starts))
+    else:
+        starts_str = f"нечётные wd {odd}, чётные wd {even}"
+    print(f"Лѣто {Y} — {kind}: дней {days}, месяцев {len(months)}, начала: {starts_str}")
     if errors:
         for e in errors: print("✗", e)
         sys.exit(1)
