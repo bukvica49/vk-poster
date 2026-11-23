@@ -82,7 +82,7 @@ def render_js(chertogs: dict, starts: list[int]) -> str:
   const MONTH_LENS_SACRED = [41,41,41,41,41,41,41,41,41];
   const DAY_START_HOUR = 18;
 
-  const ANCHOR_DATE  = new Date(2026, 8, 20);
+  const ANCHOR_DATE  = new Date(2026, 8, 19);
   const ANCHOR_LETO  = 7535;
   const ANCHOR_MONTH = 0;
   const ANCHOR_DAY   = 1;
