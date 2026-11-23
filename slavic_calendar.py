@@ -214,3 +214,5 @@ def header_full(dt=None, add_smzh: bool = True, range_to=None, chertog_block=Non
     """Делегация: единый движок дат (calendar_engine.py)."""
     from calendar_engine import header_full as _hf
     return _hf(dt, add_smzh=add_smzh, range_to=range_to, chertog_block=chertog_block)
+
+from calendar_engine import post_slavic_date  # noqa: E402 — единый движок

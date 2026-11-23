@@ -356,3 +356,16 @@ if __name__ == "__main__":
     print()
     print("ИТОГ:", "ВСЁ СХОДИТСЯ" if ok else "ЕСТЬ РАСХОЖДЕНИЯ")
     raise SystemExit(0 if ok else 1)
+
+
+def post_slavic_date(civil: date, post_time: str) -> date:
+    """Славянский день поста — от момента публикации (граница суток 18:00).
+
+    Пост в 19:00 кануна: праздник уже начался в 18:00 -> следующий civil день.
+    Ночной пост (04:30): сутки ещё те же -> тот же civil день.
+    """
+    try:
+        hh, mm = (int(x) for x in post_time.strip().replace("-", ":").split(":", 1))
+    except Exception:
+        hh, mm = 19, 0
+    return civil + timedelta(days=1) if (hh, mm) >= (18, 0) else civil

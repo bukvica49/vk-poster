@@ -6,6 +6,7 @@ from datetime import date, datetime, time
 from pathlib import Path
 import requests
 import slavic_calendar
+from slavic_calendar import post_slavic_date, krugолет  # единый движок
 from md_to_vk import md_to_vk    # Круголет Числобога
 
 BASE      = Path(__file__).resolve().parent
@@ -129,7 +130,7 @@ def load_holidays():
             continue
         out.append((d_this.month, d_this.day, h["text"],
                     _resolve_image(h),
-                    _build_info_safe(d_this) + _resolve_manual_info(h)))
+                    _build_info_safe(post_slavic_date(d_this, h.get("post_time") or "19:00")) + _resolve_manual_info(h)))
     return out
 
 
@@ -148,7 +149,7 @@ def holidays_for_year(year: int):
             continue
         rows.append((d, h["text"],
                      _resolve_image(h),
-                     _build_info_safe(d) + _resolve_manual_info(h)))
+                     _build_info_safe(post_slavic_date(d, h.get("post_time") or "19:00")) + _resolve_manual_info(h)))
     return sorted(rows)
 
 
@@ -308,7 +309,7 @@ def _daily_weekday(d):
 def daily_items(today_d):
     """Посты с daily:true — матч по славянскому дню недели."""
     out = []
-    wi = _daily_weekday(today_d)
+    wi = None
     for f in sorted(BASE.glob("content/holidays/*.json")):
         try:
             h = json.loads(f.read_text(encoding="utf-8"))
@@ -316,7 +317,8 @@ def daily_items(today_d):
             continue
         if not h.get("daily"):
             continue
-        if int(h.get("weekday", -1)) != wi:
+        _wday = post_slavic_date(today_d, h.get("post_time") or "19:00")
+        if int(h.get("weekday", -1)) != krugолет(_wday)[3]:
             continue
         text = h.get("text") or ""
         img = h.get("image")
@@ -400,7 +402,7 @@ def main(dry_run=False, test=False, force=False, republish=False, override_date=
             try:
                 from slavic_auto import build_info as _build_info
                 _flag = bool(h.get('chertog'))
-                _auto = _build_info(today_d, chertog=_flag)
+                _auto = _build_info(post_slavic_date(today_d, h.get("post_time") or "19:00"), chertog=_flag)
                 _manual = _resolve_manual_info(h)
                 info = _auto + _manual
                 info_auto, info_manual = _auto, _manual
