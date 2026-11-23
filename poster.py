@@ -129,7 +129,7 @@ def load_holidays():
             continue
         out.append((d_this.month, d_this.day, h["text"],
                     _resolve_image(h),
-                    _build_info_safe(d_this + timedelta(days=1)) + _resolve_manual_info(h)))
+                    _build_info_safe(d_this) + _resolve_manual_info(h)))
     return out
 
 
@@ -148,7 +148,7 @@ def holidays_for_year(year: int):
             continue
         rows.append((d, h["text"],
                      _resolve_image(h),
-                     _build_info_safe(d + timedelta(days=1)) + _resolve_manual_info(h)))
+                     _build_info_safe(d) + _resolve_manual_info(h)))
     return sorted(rows)
 
 
@@ -303,7 +303,7 @@ def post(token, group_id, message, attachments=None):
 def _daily_weekday(d):
     """Славянский день недели (0..8) огненного дня d."""
     from slavic_calendar import krugолет
-    return krugолет(d + timedelta(days=1))[3]
+    return krugолет(d)[3]
 
 def daily_items(today_d):
     """Посты с daily:true — матч по славянскому дню недели."""
@@ -400,7 +400,7 @@ def main(dry_run=False, test=False, force=False, republish=False, override_date=
             try:
                 from slavic_auto import build_info as _build_info
                 _flag = bool(h.get('chertog'))
-                _auto = _build_info(today_d + timedelta(days=1), chertog=_flag)
+                _auto = _build_info(today_d, chertog=_flag)
                 _manual = _resolve_manual_info(h)
                 info = _auto + _manual
                 info_auto, info_manual = _auto, _manual

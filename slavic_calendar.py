@@ -40,7 +40,7 @@ def month_lens(leto: int):
     return MONTH_LENS_SACRED if is_sacred(leto) else MONTH_LENS_SIMPLE
 
 # ───── ЯКОРЬ ─────
-ANCHOR_DATE  = date(2026, 9, 20)   # 1 Рамхатъ, начало лѣта 7535 (по info)
+ANCHOR_DATE  = date(2026, 9, 19)   # 1 Рамхатъ, начало лѣта 7535 (по info)
 ANCHOR_LETO  = 7535
 ANCHOR_MONTH = 0    # Рамхатъ
 ANCHOR_DAY   = 1
@@ -139,7 +139,7 @@ def header(dt=None) -> str:
     return f"{SLAVIC_DAYS[wi]} · {d} {SLAVIC_MONTHS[mi]} · Лѣто {leto}"
 
 
-def header_full(dt=None, add_smzh: bool = True, range_to=None, chertog_block=None) -> str:
+def header_full_old(dt=None, add_smzh: bool = True, range_to=None, chertog_block=None) -> str:
     """Полная шапка поста.
 
     dt            — fire-дата (канун слав.дня)
@@ -207,3 +207,10 @@ if __name__ == "__main__":
     for iso in ["2026-10-28","2026-10-30","2026-11-01","2026-12-08","2027-01-01"]:
         dt = date.fromisoformat(iso)
         print(f"{iso}  →  {header(dt)}")
+
+
+
+def header_full(dt=None, add_smzh: bool = True, range_to=None, chertog_block=None) -> str:
+    """Делегация: единый движок дат (calendar_engine.py)."""
+    from calendar_engine import header_full as _hf
+    return _hf(dt, add_smzh=add_smzh, range_to=range_to, chertog_block=chertog_block)

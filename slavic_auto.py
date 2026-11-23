@@ -45,8 +45,8 @@ def _load_chertogs():
 
 # ─── Дата → базовые номера ─────────────────────────────────
 def summer_start(d: date) -> date:
-    y = d.year - 1 if (d.month, d.day) < (9, 20) else d.year
-    return date(y, 9, 20)
+    y = d.year - 1 if (d.month, d.day) < (9, 19) else d.year
+    return date(y, 9, 19)
 
 def summer_smzh(d: date) -> int:
     return summer_start(d).year + 5509
