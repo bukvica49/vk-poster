@@ -31,12 +31,12 @@ jobs:
             }
             const ageMin = (Date.now() - new Date(last.created_at)) / 60000;
             core.info(`Последний УСПЕШНЫЙ тик: ${last.created_at} (${ageMin.toFixed(0)} мин назад)`);
-            if (ageMin > 30) {
+            if (ageMin > 70) {
               await github.rest.actions.createWorkflowDispatch({
                 owner: context.repo.owner, repo: context.repo.repo,
                 workflow_id: 'post.yml', ref: 'main'
               });
-              core.info('Успешных тиков нет >30 мин — разбудил post.yml');
+              core.info('Успешных тиков нет >70 мин — разбудил post.yml');
             } else {
               core.info('Тики живы — не трогаю');
             }
