@@ -44,6 +44,11 @@ CONFIG    = _cfg if _cfg is not None else {"group_id": "dry-run", "token": ""}
 STATE_FILE = BASE / f"state-{CONFIG['group_id']}.json"
 HOLIDAYS   = BASE / "holidays.json"
 API        = "https://api.vk.com/method/"
+from vk_guard import guard
+
+@guard
+def vk(method, **kw):
+    return vk(method, **kw)
 
 
 # ─── праздники из holidays.json ─────────────────────────────────
@@ -159,7 +164,7 @@ def upload_photo(token, group_id, filepath):
         return None
 
     # 1. адрес загрузки
-    r = requests.post(API + "photos.getWallUploadServer", data={
+    r = vk("photos.getWallUploadServer", data={
         "access_token": token, "group_id": group_id, "v": "5.199",
     }, timeout=30).json()
     if "error" in r:
@@ -176,7 +181,7 @@ def upload_photo(token, group_id, filepath):
     up = None
     for attempt in (1, 2, 3):
         with open(filepath, "rb") as f:
-            up = requests.post(upload_url,
+            up = vk(upload_url,
                                files={"photo": (fname, f, mime)},
                                timeout=120).json()
         if up.get("photo"):
@@ -184,7 +189,7 @@ def upload_photo(token, group_id, filepath):
             break
         print(f"  ⚠ upload попытка {attempt} пустой ({size}B, '{fname}'): {up}", file=sys.stderr)
         if attempt < 3:
-            r2 = requests.post(API + "photos.getWallUploadServer", data={
+            r2 = vk("photos.getWallUploadServer", data={
                 "access_token": token, "group_id": group_id, "v": "5.199",
             }, timeout=30).json()
             if "error" not in r2:
@@ -193,7 +198,7 @@ def upload_photo(token, group_id, filepath):
         raise RuntimeError(f"upload: пустой ответ после 3 попыток {up}")
 
     # 3. сохранить на стене
-    r = requests.post(API + "photos.saveWallPhoto", data={
+    r = vk("photos.saveWallPhoto", data={
         "access_token": token, "group_id": group_id,
         "server": up["server"], "photo": up["photo"], "hash": up["hash"],
         "v": "5.199",
@@ -212,7 +217,7 @@ def _wall_post_retry(data, max_attempts=3):
     last_err = None
     for attempt in range(1, max_attempts + 1):
         try:
-            r = requests.post(API + "wall.post", data=data, timeout=30).json()
+            r = vk("wall.post", data=data, timeout=30).json()
         except (requests.Timeout, requests.ConnectionError) as e:
             last_err = f"network: {e}"
             print(f"  ⚠ wall.post attempt {attempt}/{max_attempts}: {last_err}", file=sys.stderr)
@@ -246,7 +251,7 @@ def _wall_already_posted(token, group_id, first_line):
     """Барьер 2: пост с таким заголовком уже на стене? (анти-дубль через VK API).
     Спасает даже когда state потерялся (гонка тиков, падение CI, правки кода)."""
     try:
-        r = requests.post(API + "wall.get", data={
+        r = vk("wall.get", data={
             "access_token": token, "owner_id": -abs(group_id),
             "count": 20, "v": "5.199",
         }, timeout=15).json()
@@ -277,7 +282,7 @@ def post(token, group_id, message, attachments=None):
         for delay in (0, 3, 7):
             if delay: time.sleep(delay)
             try:
-                r1 = requests.post(API + "wall.getById",
+                r1 = vk("wall.getById",
                     data={"posts": f"-{group_id}_{pid}", "access_token": token, "v": "5.199"},
                     timeout=20).json()
                 resp = r1.get("response")
