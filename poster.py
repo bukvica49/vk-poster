@@ -317,7 +317,10 @@ def daily_items(today_d):
             continue
         if not h.get("daily"):
             continue
-        _wday = post_slavic_date(today_d, h.get("post_time") or "19:00")
+        # post_slavic_date отдаёт дату, на которую слviанский день ЗАКАНЧИВАЕТСЯ
+        # (18:00, конвенция build_info). krugолет нумерует по дате НАЧАЛА дня —
+        # поэтому для подбора карточки отнимаем сутки.
+        _wday = post_slavic_date(today_d, h.get("post_time") or "19:00") - timedelta(days=1)
         if int(h.get("weekday", -1)) != krugолет(_wday)[3]:
             continue
         text = h.get("text") or ""
