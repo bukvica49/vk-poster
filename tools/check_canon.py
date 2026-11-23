@@ -42,12 +42,19 @@ def main():
         if L != want:
             errors.append(f"Лѣто {Y}, месяц {m}: {L} дней, канон требует {want}")
 
-    odd = {v for k, v in starts.items() if k % 2 == 0}
-    even = {v for k, v in starts.items() if k % 2 == 1}
-    if len(odd) != 1 or len(even) != 1:
-        errors.append(f"Лѣто {Y}: нечётные месяцы стартуют с {odd}, чётные с {even} — инвариант недель нарушен")
-    elif (list(even)[0] - list(odd)[0]) % 9 != 5:
-        errors.append(f"Лѣто {Y}: сдвиг чёт/нечёт = {(list(even)[0]-list(odd)[0]) % 9}, канон требует 5")
+    if sacred:
+        # В Священном Лѣте все месяцы по 41 дню: каждый следующий
+        # месяц начинается на 5 дней недели позже (41 mod 9 = 5)
+        for a, b in zip(sorted(starts), sorted(starts)[1:]):
+            if (starts[b] - starts[a]) % 9 != 5:
+                errors.append(f"Лѣто {Y}: месяц {a}→{b}: сдвиг {(starts[b]-starts[a])%9}, канон требует 5")
+    else:
+        odd = {v for k, v in starts.items() if k % 2 == 0}
+        even = {v for k, v in starts.items() if k % 2 == 1}
+        if len(odd) != 1 or len(even) != 1:
+            errors.append(f"Лѣто {Y}: нечётные месяцы стартуют с {odd}, чётные с {even} — инвариант недель нарушен")
+        elif (list(even)[0] - list(odd)[0]) % 9 != 5:
+            errors.append(f"Лѣто {Y}: сдвиг чёт/нечёт = {(list(even)[0]-list(odd)[0]) % 9}, канон требует 5")
 
     kind = "СВЯЩЕННОЕ (369)" if sacred else "обычное (365)"
     print(f"Лѣто {Y} — {kind}: дней {days}, месяцев {len(months)}, начал: нечётные wd {odd}, чётные wd {even}")
