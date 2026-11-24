@@ -116,6 +116,12 @@ def build_info(d: date, chertog: bool = False) -> list[str]:
         f"● Стихия: {e_name};",
         f"● Цвет: {e_color}.",
     ]
+    try:
+        from slavic_calendar import krugолет
+        if krugолет(d)[3] == 6:  # 6 = Сєдьмiца в SLAVIC_DAYS
+            out.append("🕯 Сєдьмiца — однодневный пост.")
+    except Exception:
+        pass
     return out
 
 
