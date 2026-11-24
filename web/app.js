@@ -37,6 +37,7 @@
 
   const MONTHS = ['январь','февраль','март','апрель','май','июнь','июль','август','сентябрь','октябрь','ноябрь','декабрь'];
   const MONTHS_SHORT = MONTHS.map(m => m.slice(0, 3));
+  const YATNORM = s => s.replace(/[ѣѢ]/g,"е").replace(/[іІ]/g,"и");
   function expandDate(when) {
     const m = when.match(/(\d{2})\.(\d{2})\.(\d{4})/);
     if (!m) return when;
@@ -51,13 +52,21 @@
     const slug = card.querySelector('[data-slug]')?.dataset.slug || '';
     const h2 = card.querySelector('h2')?.textContent || '';
     const body = card.querySelector('.meta')?.textContent || '';
-    const text = (h2+' '+body+' '+slug+' '+expandDate(when)+' '+card.textContent).toLowerCase();
+    const text = YATNORM((h2+' '+body+' '+slug+' '+expandDate(when)+' '+card.textContent).toLowerCase());
     card.dataset.vpIdx = text; return text;
+  }
+  function hasAtBoundary(idx, s) {
+    let i = 0;
+    while ((i = idx.indexOf(s, i)) !== -1) {
+      if (i === 0 || !/[а-яё]/.test(idx[i - 1])) return true;
+      i += s.length;
+    }
+    return false;
   }
   function doFilter(q) {
     const cards = document.querySelectorAll('.card');
-    const s = q.trim().toLowerCase(); let n = 0;
-    cards.forEach(card => { const m = !s || cardIndex(card).includes(s); card.style.display = m ? '' : 'none'; if (m) n++; });
+    const s = YATNORM(q.trim().toLowerCase()); let n = 0;
+    cards.forEach(card => { const m = !s || hasAtBoundary(cardIndex(card), s); card.style.display = m ? '' : 'none'; if (m) n++; });
     const c = document.getElementById('vp-search-count');
     if (c) c.textContent = s ? `${n} / ${cards.length}` : '';
   }
