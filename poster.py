@@ -108,6 +108,34 @@ def _build_info_safe(d, chertog=False):
         return []
 
 
+def _fuse_title(text, d):
+    """Заголовок поста: имя дня и буквица — всегда из движка, описание — из json.
+
+    Трогаем только карточки дней недели: в тексте есть «, буквица — »,
+    а слово до « - » совпадает с одним из SLAVIC_DAYS. Остальное не трогаем.
+    """
+    try:
+        eng_name, eng_buk = slavic_calendar.weekday_and_bukvica(d)
+    except Exception:
+        return text
+    s = (text or "").strip()
+    if not s:
+        return f"{eng_name}, буквица — {eng_buk}"
+    if ", буквица — " not in s:
+        return s  # не карточка дня недели — не трогаем
+    head_part, _old_buk = s.rsplit(", буквица — ", 1)
+    for sep in (" - ", " – ", " — "):
+        if sep in head_part:
+            cand, desc = head_part.split(sep, 1)
+            if cand.strip() in slavic_calendar.SLAVIC_DAYS:
+                if cand.strip() != eng_name:
+                    print(f"  ⚠ день в json «{cand.strip()}» ≠ движок «{eng_name}» "
+                          f"→ заголовок от движка", file=sys.stderr)
+                return f"{eng_name} - {desc}, буквица — {eng_buk}"
+            break
+    return s
+
+
 def _resolve_image(h):
     img = h.get("image")
     return (BASE / img.lstrip("/")) if img else None
@@ -479,7 +507,7 @@ def main(dry_run=False, test=False, force=False, republish=False, override_date=
             head.append(_hl)
         parts = []
         if text and text.strip():
-            parts.append(text.strip())
+            parts.append(_fuse_title(text, today_d))
         parts.extend(head)
         if info_auto:
             parts.append("\n".join(info_auto))

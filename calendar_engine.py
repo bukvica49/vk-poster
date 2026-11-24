@@ -320,6 +320,19 @@ def daily_weekday(d: date) -> int:
     """Индекс дня 9-дневки для ежедневных постов (без компенсаций)."""
     return krugолет(d)[3]
 
+# Буквицы дней 9-дневки: 1-й день → Азъ … 9-й → Фита.
+# Написания сверены с content/holidays/den-dnya-*.json.
+WEEKDAY_BUKVICY = [
+    "Азъ", "Вѣди", "Глаголи", "Добро", "Есть",
+    "Зело", "Земля", "Иже", "Фита",
+]
+
+
+def weekday_and_bukvica(d: date):
+    """(имя дня 9-дневки, буквица) — единый источник для шапки и заголовков."""
+    i = daily_weekday(d)
+    return SLAVIC_DAYS[i], WEEKDAY_BUKVICY[i]
+
 
 if __name__ == "__main__":
     ok = True
