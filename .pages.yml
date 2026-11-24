@@ -37,8 +37,28 @@ content:
         type: string
         required: false
         description: "Название Чертога (напр. Змей, Волк). Включает специальный шаблон поста. Пусто = обычный праздник."
-      - {name: slavic,    type: object, hidden: true, fields: [{name: month, type: string}, {name: day, type: number}]}
-      - {name: slavic_to, type: object, hidden: true, fields: [{name: month, type: string}, {name: day, type: number}]}
+      - name: slavic
+        label: "Сороковник и день (главная привязка)"
+        type: object
+        fields:
+          - name: month
+            label: Сороковник
+            type: select
+            options: [Рамхатъ, Айлѣтъ, Бейлѣтъ, Гэйлѣтъ, Дайлѣтъ, Элетъ, Вэйлетъ, Хейлетъ, Тайлетъ]
+          - name: day
+            label: День сороковника (1-41)
+            type: number
+      - name: slavic_to
+        label: "Сороковник и день окончания (только для диапазона)"
+        type: object
+        fields:
+          - name: month
+            label: Сороковник
+            type: select
+            options: [Рамхатъ, Айлѣтъ, Бейлѣтъ, Гэйлѣтъ, Дайлѣтъ, Элетъ, Вэйлетъ, Хейлетъ, Тайлетъ]
+          - name: day
+            label: День сороковника (1-41)
+            type: number
       - name: text
         label: Текст поста (заголовок карточки)
         type: string
