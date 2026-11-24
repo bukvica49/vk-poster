@@ -542,11 +542,31 @@ def main(dry_run=False, test=False, force=False, republish=False, override_date=
                                   "  2) убрать поле image у поста (текст уйдёт груп-токеном).",
                                   file=sys.stderr)
                             sys.exit(2)
-                        attach = upload_photo(upload_token, CONFIG["group_id"], image_path)
+                        cd_until = (load_state().get("photo_cooldown_until") or "")
+                        _in_cd = False
+                        if cd_until:
+                            try:
+                                _in_cd = datetime.now() < datetime.fromisoformat(cd_until)
+                            except ValueError:
+                                _in_cd = False
+                        if _in_cd:
+                            print(f"  ⏳ юзер-токен на флад-карантине до {cd_until} → пост без фото", file=sys.stderr)
+                            attach = None
+                        else:
+                            attach = upload_photo(upload_token, CONFIG["group_id"], image_path)
                         if not attach:
                             print(f"  ⚠  upload_photo вернул None для {image_path.name} → пост без фото", file=sys.stderr)
                     except Exception as e:
                         print(f"  ⚠  фото не загрузилось ({e}) → пост без фото", file=sys.stderr)
+                        msg = str(e)
+                        if any(c in msg for c in (" 9:", " 6:")) and ("getWallUploadServer" in msg or "saveWallPhoto" in msg):
+                            try:
+                                st = load_state()
+                                st["photo_cooldown_until"] = (datetime.now() + timedelta(hours=6)).isoformat(timespec="seconds")
+                                save_state(st)
+                                print(f"  🧊 флад-карантин юзер-токена до {st['photo_cooldown_until']}", file=sys.stderr)
+                            except Exception as _se:
+                                print(f"  ⚠ карантин не записан: {_se}", file=sys.stderr)
                         attach = None
 
             if "ВСТАВЬ" in str(CONFIG.get("token", "")):
