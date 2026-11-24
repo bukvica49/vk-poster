@@ -361,9 +361,21 @@
   function captureTemplate(text) {
     const blocks = text.split(/\n\s*\n/).map(b => b.trim()).filter(Boolean);
     return blocks.map(b => {
-      if (!b.includes('\n') && /^\*\*.+\*\*$/.test(b)) return 'title';
-      if (/^[•\-–—*]\s+/m.test(b)) return 'list';
-      return 'para';
+      const first = b.split('\n')[0].trim();
+      let k = 'para';
+      if (!b.includes('\n') && /^\*\*.+\*\*$/.test(b)) k = 'title';
+      else if (/^[•\-–—*]\s+/m.test(b)) k = 'list';
+      const iCore = first.search(/[А-ЯЁа-яёA-Za-z0-9«"]/);
+      const lead = iCore === -1 ? '' : first.slice(0, iCore);
+      let tail = '';
+      if (iCore !== -1) {
+        let j = first.length;
+        while (j > iCore && !/[А-ЯЁа-яёA-Za-z0-9]/.test(first.charAt(j-1))) j--;
+        tail = first.slice(j).replace(/[.,!?:;…"'»)\s]+$/, '');
+      }
+      let marker = '';
+      if (k === 'list') { const m = first.match(/^[•\-–—*]\s+/); marker = m ? m[0] : '• '; }
+      return { k: k, lead: lead, tail: tail, marker: marker };
     });
   }
   function applyTemplate(src, pattern) {
@@ -371,12 +383,21 @@
     if (parts.length === 1) parts = src.split(/\n+/).map(s => s.trim()).filter(Boolean);
     const out = [];
     parts.forEach((part, i) => {
-      const type = i < pattern.length ? pattern[i] : 'para';
-      if (type === 'title') out.push('**' + part.replace(/^\*\*|\*\*$/g, '') + '**');
-      else if (type === 'list') {
+      const p = i < pattern.length ? pattern[i] : (pattern.length ? pattern[pattern.length-1] : 'para');
+      const k = (typeof p === 'string') ? p : p.k;
+      const lead = (p && p.lead) || '';
+      const tail = (p && p.tail) || '';
+      const marker = (p && p.marker) || '• ';
+      if (k === 'title') {
+        const tt = part.replace(/^\*\*|\*\*$/g, '');
+        out.push(lead + '**' + tt + '**' + tail);
+      } else if (k === 'list') {
         const lines = part.split('\n').map(l => l.trim()).filter(Boolean);
-        out.push(lines.map(l => '• ' + l.replace(/^[•\-–—*]\s+/, '')).join('\n'));
-      } else out.push(part);
+        out.push(lines.map(l => lead + marker + l.replace(/^[•\-–—*]\s+/, '') + tail).join('\n'));
+      } else {
+        const lines = part.split('\n').map(l => l.trim()).filter(Boolean);
+        out.push(lines.map((l, li) => (li === 0 ? lead + l + tail : l)).join('\n'));
+      }
     });
     return out.join('\n\n');
   }
@@ -685,7 +706,6 @@
 </div>
 <div class="btns">
   <button class="btn" data-act="format">🎨 Оформить для ВК</button>
-  <button class="btn" type="button" data-act="html-build" title="Собрать HTML-пост по шаблону сайта">📄 Сверстать HTML</button>
   <button class="btn slav-a" data-act="slav-a">🕯 Дореформенный</button>
   <button class="btn slav-b" data-act="slav-b">🏛 Древній</button>
   <button class="btn slav-c" data-act="slav-c">✨ AI старослав</button>
@@ -712,14 +732,14 @@
   <h3 style="margin-top:0">📿 Шаблон оформления</h3>
   <div class="tpl-status">Текущий: <span id="tpl-status">не задан</span></div>
   <div class="btns" style="margin:8px 0">
-    <button class="btn" data-act="tpl-save">🔒 Запомнить из верхнего поля</button>
+    <button class="btn" data-act="tpl-save">🔒 Запомнить из нижнего поля</button>
     <button class="btn" data-act="tpl-apply">📿 По шаблону</button>
     <button class="btn" data-act="tpl-clear">✖ Забыть шаблон</button>
     <label style="display:inline-flex;align-items:center;gap:6px;padding:6px 10px;font-size:12px;opacity:.85;user-select:none;cursor:pointer">
       <input type="checkbox" id="confirm-clear" style="margin:0;cursor:pointer">Подтверждать очистку
     </label>
   </div>
-  <div class="hint" style="margin:0"><b>Как:</b> вставь <b>уже оформленный</b> пост в верхнее поле → «🔒 Запомнить». Поле очистится. Потом вставь <b>сырой</b> текст → «📿 По шаблону» → результат внизу.</div>
+  <div class="hint" style="margin:0"><b>Как:</b> оформи пост (🎨 или руками) — результат в нижнем поле → «🔒 Запомнить из нижнего». Поля очистятся. Потом вставь <b>сырой</b> текст в верхнее поле → «📿 По шаблону» → результат внизу.</div>
 </div>
 <div class="toast" id="toast"></div>
 <script>
@@ -797,7 +817,7 @@
   $('bg-reset').addEventListener('click', () => { setBg(''); toast('Фон убран','ok'); });
 
   // ============ ШАБЛОН ============
-  function refreshTpl(){ const tpl=H.getTemplate(); const el=$('tpl-status'); if (!tpl){ el.textContent='не задан'; return; } el.innerHTML = tpl.pattern.map(p=>'<span class="tpl-pattern">'+p+'</span>').join(' '); }
+  function refreshTpl(){ const tpl=H.getTemplate(); const el=$('tpl-status'); if (!tpl){ el.textContent='не задан'; return; } el.innerHTML = tpl.pattern.map(p=>'<span class="tpl-pattern">'+(p.k||p)+'</span>').join(' '); }
   refreshTpl();
 
   // гарантированно скрыть палитру при открытии попапа (2-й слой — CSS #picker:not([data-vp-open]))
@@ -829,7 +849,6 @@ document.querySelectorAll('[data-act]').forEach(b => {
       const act = b.dataset.act;
       try {
         if (act === 'format') { applyCurrentPreset(); }
-        else if (act === 'html-build') { buildSiteHtml(); }
         else if (act === 'slav-a') { if (!src.value.trim()){toast('Введи текст','err');return;} dst.value=H.slavicA(src.value); updateCounter(); toast('А','ok'); }
         else if (act === 'slav-b') { if (!src.value.trim()){toast('Введи текст','err');return;} dst.value=H.slavicB(src.value); updateCounter(); toast('Б','ok'); }
         else if (act === 'slav-c') {
@@ -916,11 +935,11 @@ document.querySelectorAll('[data-act]').forEach(b => {
         else if (act === 'to-src') { if (!dst.value.trim()){toast('Сначала оформи','err');return;} src.value=dst.value; dst.value=''; updateCounter(); }
         
         else if (act === 'tpl-save') {
-          if (!src.value.trim()){toast('Вставь оформленный пример','err');return;}
-          const pattern = H.captureTemplate(src.value);
-          H.setTemplate({ pattern, example: src.value });
+          if (!dst.value.trim()){toast('Оформи текст — потом запомни','err');return;}
+          const pattern = H.captureTemplate(dst.value);
+          H.setTemplate({ pattern, example: dst.value });
           src.value=''; dst.value=''; updateCounter(); refreshTpl();
-          toast('✓ Шаблон: ' + pattern.join(' → '),'ok');
+          toast('✓ Шаблон: ' + pattern.map(x=>x.k||x).join(' → '),'ok');
         }
         else if (act === 'tpl-apply') {
           const tpl=H.getTemplate(); if (!tpl){toast('Шаблон не задан','err');return;}
@@ -1178,59 +1197,3 @@ document.querySelectorAll('[data-act]').forEach(b => {
   else makeButton();
 })();
 
-// -- Патч 54: «📄 Сверстать HTML» — сборка HTML-поста сайта по шаблону --
-// Ввод в #src: строка 1 = заголовок; [img] URL подпись; [src] URL; пустая строка = новый абзац.
-function escH(t){return String(t).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
-function buildSiteHtml(){
-  var raw = document.getElementById('src').value.trim();
-  if(!raw){ toast('Верхнее поле пустое','err'); return; }
-  var lines = raw.replace(/\r\n/g,'\n').split('\n');
-  var title = '', img = '', imgAlt = '', src = '';
-  var paras = [], cur = [];
-  for(var i=0;i<lines.length;i++){
-    var Ln = lines[i].trim();
-    if(i===0){ title = Ln; continue; }
-    var mImg = Ln.match(/^\\[img\\]\\s+(\\S+)(?:\\s+(.*))?$/);
-    if(mImg){ img = mImg[1]; imgAlt = (mImg[2]||title); continue; }
-    var mSrc = Ln.match(/^\\[src\\]\\s+(\\S+)$/);
-    if(mSrc){ src = mSrc[1]; continue; }
-    if(Ln===''){ if(cur.length){ paras.push(cur.join(' ')); cur=[]; } continue; }
-    cur.push(Ln);
-  }
-  if(cur.length) paras.push(cur.join(' '));
-  if(!title){ toast('Первая строка должна быть заголовком','err'); return; }
-  var out = [];
-  out.push('<!DOCTYPE html>');
-  out.push('<html lang="ru">');
-  out.push('<head>');
-  out.push('  <meta charset="UTF-8">');
-  out.push('  <meta name="viewport" content="width=device-width, initial-scale=1.0">');
-  out.push('  <title>' + escH(title) + '</title>');
-  out.push('  <link rel="stylesheet" href="../css/pages.css">');
-  out.push('  <script src="../js/article.js"><' + '/script>');
-  out.push('</head>');
-  out.push('<body>');
-  out.push('');
-  out.push('<h1>' + escH(title) + '</h1>');
-  out.push('');
-  if(img){
-    out.push('<figure class="center-image-block">');
-    out.push('  <img src="' + img + '" alt="' + escH(imgAlt) + '">');
-    out.push('  <figcaption style="text-align:center;font-style:italic;font-size:0.9em;color:#666;text-indent:0;padding-top:8px;margin:0;">' + escH(imgAlt) + '</figcaption>');
-    out.push('</figure>');
-    out.push('');
-  }
-  paras.forEach(function(pp){ out.push('<p>' + escH(pp) + '</p>'); out.push(''); });
-  out.push('<footer class="article-footer">');
-  out.push('  <button class="action-btn" type="button" onclick="goBackFromArticle()"><span class="icon">←</span> Назад</button>');
-  out.push('  <button class="action-btn expand" type="button" onclick="toggleExpandFromArticle()" id="vp-expand-btn"><span class="icon">⤢</span> Развернуть</button>');
-  if(src){
-    out.push('  <a class="action-btn source" href="' + src + '" target="_blank" rel="noopener noreferrer">Источник <span class="icon">→</span></a>');
-  }
-  out.push('</footer>');
-  out.push('  <br>');
-  out.push('</body>');
-  out.push('</html>');
-  document.getElementById('dst').value = out.join('\n');
-  toast('HTML собран','ok');
-}
