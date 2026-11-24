@@ -231,9 +231,14 @@ def build():
                     break
             if _src_img:
                 shutil.copy2(_src_img, _img_out2 / img)
+            try:
+                from slavic_calendar import post_slavic_date
+                _auto_w = build_info(post_slavic_date(_day, _d.get('post_time') or '19:00'))
+            except Exception:
+                _auto_w = []
             rows.append({
                 'text': _d['text'], 'text_md': _d.get('text_md') or _d.get('text') or '',
-                'info': [], 'info_md': _d.get('info') or '',
+                'info': _auto_w, 'info_md': _d.get('info') or '',
                 'img': img if _src_img else None,
                 'slavic': _sc.header_full(_day, add_smzh=add_krug),
                 'posted': _key in posted, 'slug': _d.get('slug') or f'_day{_wi}',
