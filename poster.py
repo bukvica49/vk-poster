@@ -49,7 +49,9 @@ from vk_guard import guard
 
 @guard
 def vk(method, **kw):
-    return vk(method, **kw)
+    url = method if method.startswith("http") else API + method
+    r = requests.post(url, **kw)
+    return r
 
 
 # ─── праздники из holidays.json ─────────────────────────────────

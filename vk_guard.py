@@ -1,7 +1,7 @@
 import json, time, pathlib, functools
 
 BUDGET_FILE = pathlib.Path("vk_budget.json")
-DAILY_LIMIT = 40
+DAILY_LIMIT = 200
 QUIET_SEC = 3600
 FLOOD_CODES = (6, 9, 29)
 
@@ -31,5 +31,9 @@ def guard(fn):
             raise VkQuiet("дневной лимит")
         d["count"] += 1
         _save(d)
-        return fn(method, *a, **kw)
+        try:
+            return fn(method, *a, **kw)
+        except Exception as e:
+            print(f"[api #{d['count']}] {method} → {type(e).__name__}: {e}")
+            raise
     return wrapper
