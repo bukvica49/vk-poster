@@ -284,9 +284,20 @@ def build():
         badge = '<span style="background:#e5e7eb;color:#666;padding:2px 8px;border-radius:4px;font-size:12px">⏳ ожидает</span>'
         _vp = (VP_MAP.get(r.get('slug') or '') or '')
         _vurl = (PURLS.get(_vp, '') if _vp else '')
-        img_html = (f'<img src="images/{r["img"]}" alt="">' if r['img']
-                    else (f'<img src="{_vurl}" alt="">' if _vurl
-                          else '<div class="no-img">нет фото</div>'))
+        if _vurl:
+            img_html = (f'<img src="{_vurl}" alt="">'
+                        '<div style="font-size:11px;color:#4a8;margin-top:4px">'
+                        '🔗 фото со стены</div>')
+        elif _vp:
+            img_html = ('<div style="border:1px dashed #c9a227;background:#fdf6e3;color:#8a6d1a;'
+                        'padding:18px 10px;border-radius:8px;text-align:center;font-size:13px">'
+                        '⏳ фото — после выхода поста</div>')
+        elif r['img']:
+            img_html = (f'<img src="images/{r["img"]}" alt="">'
+                        '<div style="font-size:11px;color:#999;margin-top:4px">'
+                        '✏️ vk_photo не вписан</div>')
+        else:
+            img_html = '<div class="no-img">нет фото</div>'
         info_html = '<ul>' + ''.join(f'<li>{ln}</li>' for ln in r['info']) + '</ul>'
         desc_md = r.get('info_md') or r.get('text_md')
         if desc_md:
