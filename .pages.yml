@@ -70,6 +70,11 @@ content:
       - name: image
         label: Фото
         type: image
+      - name: vk_photo
+        label: "♻ VK фото (ID или ссылка из альбома)"
+        type: string
+        required: false
+        description: "Готовое фото из альбома ВК: ID вида photo-200796423_… или вся ссылка vk.ru/album-…?z=photo-… — постер вытащит ID сам. Если заполнено, user-token не вызывается."
       - name: info
         label: Ручной инфо-блок (пусто = авто)
         type: string

@@ -529,8 +529,21 @@ def main(dry_run=False, test=False, force=False, republish=False, override_date=
 
         try:
             attach = None
-            # ── Реюз первым путём: фото уже в группе → юзер-токен не трогаем ──
-            if image_path:
+            # ── Шаг 1: vk_photo из JSON поста — готовый ID или ссылка из альбома ──
+            try:
+                import re as _re
+                _vp = str((h.get("vk_photo") if h else "") or "").strip()
+                if _vp:
+                    _m = _re.search(r"photo-?\d+_\d+", _vp)
+                    if _m:
+                        attach = _m.group(0)
+                        print(f"  ♻ фото из поля vk_photo: {attach}")
+                    else:
+                        print(f"  ⚠ vk_photo не распознан: {_vp[:60]}", file=sys.stderr)
+            except Exception as _vp_err:
+                print(f"  ⚠ vk_photo: {_vp_err}", file=sys.stderr)
+            # ── Шаг 2: реюз из photo_map — фото уже в группе → юзер-токен не трогаем ──
+            if image_path and not attach:
                 try:
                     import json as _json, os as _os
                     _pm_path = _os.path.join(_os.path.dirname(_os.path.abspath(__file__)), "photo_map.json")
