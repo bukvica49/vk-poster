@@ -581,6 +581,22 @@ def main(dry_run=False, test=False, force=False, republish=False, override_date=
                       "Для проверки без постинга: poster.py --dry-run (плейсхолдер не мешает).",
                       file=sys.stderr)
                 sys.exit(2)
+            # ── Fallback: реюз фото из photo_map.json (user-token не нужен) ──
+            if image_path and not attach:
+                try:
+                    import json as _json, os as _os
+                    _pm_path = _os.path.join(_os.path.dirname(_os.path.abspath(__file__)), "photo_map.json")
+                    if _os.path.exists(_pm_path):
+                        _pm = _json.loads(open(_pm_path, encoding="utf-8").read()).get("map", {})
+                        for _k, _v in _pm.items():
+                            if _k.startswith("_"):
+                                continue
+                            if _k in message:
+                                attach = _v
+                                print(f"  ♻ реюз фото из photo_map: {attach}")
+                                break
+                except Exception as _pm_err:
+                    print(f"  ⚠ photo_map fallback: {_pm_err}", file=sys.stderr)
             # Если фото ожидалось, но upload провалился (3 retry) —
             # сигналим CI через PHOTO_MISSING, post уйдёт без фото
             if image_path and not attach:
