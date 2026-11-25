@@ -1,10 +1,12 @@
 {
+  "slug": "den-dazhdboga-i-mareny",
   "date": "12-09",
   "slavic": {
     "month": "Айлѣтъ",
     "day": 40
   },
   "text": "День Даждьбога и Марены",
-  "slug": "den-dazhdboga-i-mareny",
-  "post_time": "18:00"
+  "vk_photo": "https://vk.ru/album-200796423_315028415?z=photo-200796423_457330085%2Falbum-200796423_315028415",
+  "post_time": "18:00",
+  "daily": false
 }
