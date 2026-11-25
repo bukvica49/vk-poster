@@ -118,3 +118,16 @@ cd ~/site/vk-poster && python3 make_preview.py
 - В логе прогона искать: `♻ реюз фото из photo_map` — реюз сработал;
   `PHOTO_MISSING=1` — фото не прикрепилось; `9: Flood control` — user-token снова забанен.
 - Лог смотреть: gh run view -R bukvica49/vk-poster <runId> --log | grep "Run poster"
+
+## Конвейер фото (2026-11-25)
+
+Три состояния карточки на витрине (make_preview.py):
+- 🔗 фото со стены — пост вышел, резолвер взял URL из photo_urls.json;
+- ⏳ «фото — после выхода поста» — vk_photo вписан, ждём публикации;
+- ✏️ «vk_photo не вписан» — очередь на заливку фото в группу (31 шт. на 25.11).
+
+Рабочий поток: залить фото в группу → вписать ID в vk_photo в content/holidays/*.json → карточка показывает ⏳ → пост вышел → workflow гонит resolve_photo_urls.py → витрина показывает 🔗.
+
+Авто-чистка: резолвер при найденном URL сам удаляет поле image из JSON и файл из images/ (посты с vk_photo без URL не трогает). Пробный прогон: python3 resolve_photo_urls.py --dry-run. Старых картинок 31 — уйдут сами по мере выхода постов.
+
+Коммиты: 6191425 (светофор в make_preview.py) + [добавь хеш резолвера после commit].
