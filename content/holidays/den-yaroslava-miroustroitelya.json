@@ -1,11 +1,12 @@
 {
+  "slug": "den-yaroslava-miroustroitelya",
   "date": "11-27",
   "slavic": {
     "month": "Айлѣтъ",
     "day": 29
   },
   "text": "День Ярослава Мироустроителя",
-  "image": "/images/d_yaroslava_miroustroitely-1.jpeg",
-  "slug": "den-yaroslava-miroustroitelya",
-  "post_time": "18:00"
+  "vk_photo": "https://vk.ru/album-200796423_315028415?z=photo-200796423_457330084%2Falbum-200796423_315028415",
+  "post_time": "18:00",
+  "daily": false
 }
