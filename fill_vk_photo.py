@@ -79,15 +79,21 @@ def find_post_daily(title):
             return ph_id
     return ""
 
-matched, missed, skipped = 0, 0, 0
+matched, missed, skipped, pending = 0, 0, 0, 0
 for jf in sorted((HERE / "content" / "holidays").glob("*.json")):
     d = json.loads(jf.read_text(encoding="utf-8"))
     title = d.get("text", "")
     daily = bool(d.get("daily"))
     cur = norm(d.get("vk_photo", ""))
+    raw = str(d.get("vk_photo", "")).strip()
+    manual = re.fullmatch(r"photo-\d+_\d+", raw) is not None
     if cur and cur in {p for _, p in posts}:
         skipped += 1
         print(f"  ✓ уже вписан постовый ID: {title} ({cur})")
+        continue
+    if manual:
+        pending += 1
+        print(f"  ⏳ вписан вручную, поста на стене ещё нет: {title} ({cur}) — не трогаю")
         continue
     pid = find_post_daily(title) if daily else find_post_full(title)
     tag = "день недели" if daily else "праздник"
@@ -101,5 +107,5 @@ for jf in sorted((HERE / "content" / "holidays").glob("*.json")):
         missed += 1
         print(f"  ? [{tag}] пост не найден: {title}  ({jf.name})")
 
-print(f"итого: вписано {matched}, уже было {skipped}, не найдено {missed}"
+print(f"итого: вписано {matched}, уже было {skipped}, вручную-наперёд {pending}, не найдено {missed}"
       + (" (dry-run)" if DRY else ""))
