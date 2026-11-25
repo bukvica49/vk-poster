@@ -131,3 +131,4 @@ cd ~/site/vk-poster && python3 make_preview.py
 Авто-чистка: резолвер при найденном URL сам удаляет поле image из JSON и файл из images/ (посты с vk_photo без URL не трогает). Пробный прогон: python3 resolve_photo_urls.py --dry-run. Старых картинок 31 — уйдут сами по мере выхода постов.
 
 Коммиты: 6191425 (светофор в make_preview.py) + 5b3af34.
+- fill_vk_photo.py: матчинг вышедших постов → автозаполнение vk_photo в карточках. Сначала --dry-run, потом боевой. Не трогает карточки с уже вписанным ID.
