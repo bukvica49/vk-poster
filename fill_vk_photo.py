@@ -70,11 +70,12 @@ def find_post_daily(title):
     w = first_word(title)
     if len(w) < 4:
         return ""
+    stem = w[:4]  # основа дня: у всех дней недели первые 4 буквы уникальны
     for text, ph_id in posts:
         if not ph_id:
             continue
         pw = first_word(text)
-        if len(pw) >= 4 and (pw.startswith(w) or w.startswith(pw)):
+        if len(pw) >= 4 and pw[:4] == stem:
             return ph_id
     return ""
 
