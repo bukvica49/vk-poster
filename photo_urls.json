@@ -1,0 +1,4 @@
+{
+  "_comment": "кэш URL фото для витрины; обновлять: python3 resolve_photo_urls.py",
+  "urls": {}
+}

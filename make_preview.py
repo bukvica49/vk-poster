@@ -31,6 +31,24 @@ def load_holidays():
     return []
 
 IMAGES = HERE / 'images'
+
+def _load_vk_maps():
+    import re as _re
+    vp_map, purls = {}, {}
+    try:
+        purls = (json.loads((HERE / "photo_urls.json").read_text(encoding="utf-8")).get("urls") or {})
+    except Exception:
+        pass
+    try:
+        for _jf in (HERE / "content" / "holidays").glob("*.json"):
+            _d = json.loads(_jf.read_text(encoding="utf-8"))
+            _m = _re.search(r"photo-?\d+_\d+", str(_d.get("vk_photo") or ""))
+            if _m and _d.get("slug"):
+                vp_map[_d["slug"]] = _m.group(0)
+    except Exception:
+        pass
+    return vp_map, purls
+VP_MAP, PURLS = _load_vk_maps()
 OUT = HERE / '_site'
 
 def repo_full_name():
@@ -264,8 +282,11 @@ def build():
                  else f"через {r['delta']} дн." if r['delta'] > 0 else 'прошло')
         # fix: badge всегда ⏳ (пост опубликован → карточка уже внизу на след. год)
         badge = '<span style="background:#e5e7eb;color:#666;padding:2px 8px;border-radius:4px;font-size:12px">⏳ ожидает</span>'
+        _vp = (VP_MAP.get(r.get('slug') or '') or '')
+        _vurl = (PURLS.get(_vp, '') if _vp else '')
         img_html = (f'<img src="images/{r["img"]}" alt="">' if r['img']
-                    else '<div class="no-img">нет фото</div>')
+                    else (f'<img src="{_vurl}" alt="">' if _vurl
+                          else '<div class="no-img">нет фото</div>'))
         info_html = '<ul>' + ''.join(f'<li>{ln}</li>' for ln in r['info']) + '</ul>'
         desc_md = r.get('info_md') or r.get('text_md')
         if desc_md:
