@@ -1197,3 +1197,26 @@ document.querySelectorAll('[data-act]').forEach(b => {
   else makeButton();
 })();
 
+
+/* ---------- vp-lightbox: клик по карточке — раскрытие на весь экран ---------- */
+(function(){
+  var css = document.createElement('style');
+  css.textContent = '#vp-lb{position:fixed;inset:0;background:rgba(0,0,0,.88);display:none;'
+    + 'align-items:center;justify-content:center;z-index:99999;cursor:zoom-out}'
+    + '#vp-lb img{max-width:96vw;max-height:96vh;border-radius:4px}';
+  document.head.appendChild(css);
+  var lb = document.createElement('div'); lb.id = 'vp-lb';
+  var img = document.createElement('img'); img.alt = '';
+  lb.appendChild(img); document.body.appendChild(lb);
+  function close(){ lb.style.display = 'none'; img.src = ''; }
+  lb.addEventListener('click', close);
+  document.addEventListener('keydown', function(e){ if (e.key === 'Escape') close(); });
+  document.addEventListener('click', function(e){
+    var t = e.target.closest('.card img');
+    if (!t) return;
+    e.preventDefault();
+    img.src = t.getAttribute('src').replace(/cs=\d+x\d+/, 'cs=1020x0');
+    lb.style.display = 'flex';
+  });
+  console.log('[vp-lightbox] installed');
+})();
