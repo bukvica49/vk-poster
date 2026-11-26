@@ -1,0 +1,70 @@
+name: Schedule Posts (fill VK queue)
+
+on:
+  push:
+    branches: [main]
+    paths: ['content/holidays/**', 'tools/schedule_posts.py', 'state-*.json']
+  schedule:
+    - cron: '30 21 * * *'   # 04:30 KRAT — доливка окна до утренних постов
+  workflow_dispatch:
+    inputs:
+      days:
+        description: 'Горизонт доливки (дней)'
+        required: false
+        default: '30'
+
+permissions:
+  contents: write
+
+concurrency:
+  group: vk-schedule
+  cancel-in-progress: false
+
+jobs:
+  schedule:
+    timeout-minutes: 10
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with: { python-version: '3.11' }
+
+      - name: Install deps
+        run: pip install --quiet requests
+
+      - name: Write config from secret
+        env: { VK_CONFIG: '${{ secrets.VK_CONFIG }}' }
+        run: printf '%s' "$VK_CONFIG" > config.main.json
+
+      - name: Setup SSH deploy key
+        run: |
+          mkdir -p ~/.ssh
+          echo "${{ secrets.DEPLOY_KEY }}" > ~/.ssh/deploy_key
+          chmod 600 ~/.ssh/deploy_key
+          ssh-keyscan -H github.com >> ~/.ssh/known_hosts 2>/dev/null
+          git config user.name  'vk-poster-bot'
+          git config user.email 'bot@users.noreply.github.com'
+          git remote set-url origin "git@github.com:${{ github.repository }}.git"
+
+      - name: Run scheduler
+        env:
+          TZ: Asia/Krasnoyarsk          # как в post.yml — без этого слоты поплывут
+          GIT_SSH_COMMAND: 'ssh -i ~/.ssh/deploy_key -o IdentitiesOnly=yes'
+        run: |
+          set -euo pipefail
+          python3 tools/schedule_posts.py --days=${{ inputs.days || '30' }}
+
+      - name: Commit & push state
+        if: always()
+        run: |
+          if git diff --quiet -- 'state-*.json'; then
+            echo "state не изменился — пропуск"
+            exit 0
+          fi
+          git add state-*.json
+          git commit -m "schedule: auto $(date -u +%Y-%m-%d_%H:%M)" || true
+          GIT_SSH_COMMAND='ssh -i ~/.ssh/deploy_key -o IdentitiesOnly=yes' \
+            git pull --rebase --autostash origin main || true
+          GIT_SSH_COMMAND='ssh -i ~/.ssh/deploy_key -o IdentitiesOnly=yes' \
+            git push origin main
