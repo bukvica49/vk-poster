@@ -1201,7 +1201,7 @@ document.querySelectorAll('[data-act]').forEach(b => {
 /* ---------- vp-lightbox: клик по карточке — раскрытие на весь экран ---------- */
 (function(){
   var css = document.createElement('style');
-  css.textContent = '#vp-lb{position:fixed;inset:0;background:rgba(0,0,0,.88);display:none;'
+  css.textContent = '.card .img img,.card img{cursor:zoom-in;transition:filter .15s}.card .img img:hover,.card img:hover{filter:brightness(.72);outline:3px solid #4a8;outline-offset:-3px}#vp-lb{position:fixed;inset:0;background:rgba(0,0,0,.88);display:none;'
     + 'align-items:center;justify-content:center;z-index:99999;cursor:zoom-out}'
     + '#vp-lb img{max-width:96vw;max-height:96vh;border-radius:4px}';
   document.head.appendChild(css);
