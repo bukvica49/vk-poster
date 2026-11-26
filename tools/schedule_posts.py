@@ -110,6 +110,7 @@ def main():
     today0 = date.today()
     added = skipped = errors = 0
     new_keys = []
+    new_sched = {}
     for i in range(DAYS):
         d = today0 + timedelta(days=i)
         items = sorted(poster.holidays_today(d) + poster.daily_items(d),
@@ -149,9 +150,12 @@ def main():
                 data = dict(owner_id=-abs(GROUP_ID), from_group=1, message=message,
                             publish_date=int(pub.timestamp()))
                 if attach: data["attachments"] = attach
-                vk("wall.post", **data)
+                pid = vk("wall.post", **data).get("post_id")
                 print(f"✓ {d} {pub:%H:%M} «{text[:40]}»")
-                new_keys.append(key); added += 1
+                new_keys.append(key)
+                new_sched[key] = {"post_id": pid, "publish": int(pub.timestamp()),
+                                  "image": image_path.name if image_path else ""}
+                added += 1
                 time.sleep(1.0)
             except Exception as e:
                 errors += 1
@@ -160,6 +164,7 @@ def main():
     if not DRY and new_keys:
         st = poster.load_state()
         st["posted"] = sorted(set(st.get("posted", [])) | set(new_keys))
+        st.setdefault("scheduled", {}).update(new_sched)
         poster.save_state(st)
     print(f"\nИтог: в отложку {added}, уже есть/пропущено {skipped}, ошибок {errors}")
 
