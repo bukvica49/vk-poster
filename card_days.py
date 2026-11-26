@@ -22,7 +22,8 @@ BG_DIR = HERE / 'images' / 'den-dnya' / 'фон'
 OUT_DIR = HERE / 'images' / 'den-dnya'
 
 SIZE = 1024
-PLATE_FILL = (18, 20, 18, 92)        # тёмная полупрозрачная плашка
+PLATE_ALPHA = 75   # крути: 75 — светлее, 92 — сейчас, 138 — как эталон ден.2
+PLATE_FILL = (20, 20, 20, PLATE_ALPHA)
 GOLD = (232, 184, 75)
 ORANGE = (232, 150, 60)
 WHITE = (245, 245, 240)
@@ -32,8 +33,8 @@ ORDINALS = ['первый', 'второй', 'третий', 'четвёртый'
             'шестой', 'седьмой', 'восьмой', 'девятый']
 
 GLYPHS = {'Азъ': 'А', 'Вѣди': 'В', 'Глаголи': 'Г', 'Добро': 'Д',
-          'Есть': 'Е', 'Зело': 'Ѕ', 'Земля': 'З', 'Иже': 'И',
-          'Ижеи': 'И', 'Како': 'К', 'Люди': 'Л', 'Мыслете': 'М'}
+          'Есть': 'Е', 'Зело': 'Ѕ', 'Земля': 'Ȥ', 'Иже': 'И',
+          'Ижеи': 'И', 'Како': 'К', 'Люди': 'Л', 'Мыслете': 'М', 'Фита': 'Ѳ'}
 
 # ── шрифты ──────────────────────────────────────────────────────────
 def _font(name, size):
@@ -50,10 +51,10 @@ def fonts():
         out = subprocess.run(['fc-match', '-f', '%{file}', fam],
                              capture_output=True, text=True).stdout.strip()
         return out or None
-    psb, psr = path('PT Sans:bold'), path('PT Serif:bold')
+    dser = path('DejaVu Serif:bold')
     return dict(title=_font('PTSans-Bold', 52),
                 cap=_font('PTSans-Bold', 34),
-                glyph=ImageFont.truetype(psr, 280) if psr else _font('DejaVuSerif-Bold', 280))
+                glyph=ImageFont.truetype(dser, 280) if dser else _font('DejaVuSerif-Bold', 280))
 
 # ── данные из JSON ──────────────────────────────────────────────────
 def day_data(n):
@@ -65,7 +66,7 @@ def day_data(n):
     m = re.search(r'Буквицы\s*«([^»]+)»', md)
     bukv = m.group(1) if m else ''
     m = re.search(r'Покровитель дня:\s*([^\n]+)', md)
-    pokr = m.group(1).strip() if m else ''
+    pokr = m.group(1).strip().strip('*') if m else ''
     return name, bukv, pokr
 
 def find_bg(bukv, n):
@@ -106,7 +107,7 @@ def render_card(bg_path, name, ordinal, bukv, pokrovitel, out_path,
     dr.text((gx, gy), glyph, font=F['glyph'], fill=GOLD + (255,))
 
     # подпись буквицы
-    cap = f'буквица — {bukv}' if bukv else ''
+    cap = f'буквица — {glyph}{bukv[1:]}' if bukv else ''
     if cap:
         bb = dr.textbbox((0, 0), cap, font=F['cap'])
         dr.text(((SIZE - bb[2] + bb[0])//2 - bb[0], 448 - (bb[3]-bb[1])//2 - bb[1]),
@@ -120,9 +121,14 @@ def render_card(bg_path, name, ordinal, bukv, pokrovitel, out_path,
 
     # покровитель — опционально
     if with_pokrovitel and pokrovitel:
-        bb = dr.textbbox((0, 0), pokrovitel, font=F['cap'])
-        dr.text(((SIZE - bb[2] + bb[0])//2 - bb[0], 652 - (bb[3]-bb[1])//2 - bb[1]),
-                pokrovitel, font=F['cap'], fill=ORANGE + (255,))
+        parts = [x.strip() for x in pokrovitel.split(' / ')]
+        lines = ['Покровитель дня: ' + parts[0]] + parts[1:]
+        yy = 640
+        for ln in lines:
+            bb = dr.textbbox((0, 0), ln, font=F['cap'])
+            dr.text(((SIZE - bb[2] + bb[0])//2 - bb[0], yy - (bb[3]-bb[1])//2 - bb[1]),
+                    ln, font=F['cap'], fill=ORANGE + (255,))
+            yy += 48
 
     img.convert('RGB').save(out_path, 'PNG')
     print('✅', out_path)
