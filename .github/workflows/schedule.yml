@@ -1,11 +1,14 @@
 name: Schedule Posts (fill VK queue)
 
+# ПАУЗА (27.11.2026): push и cron отключены — ждём полной сборки контента.
+# Возобновление: вернуть блок ниже и заменить вызов на --days=1 (заливать только за день).
+# on:
+#   push:
+#     branches: [main]
+#     paths: ['content/holidays/**', 'tools/schedule_posts.py', 'state-*.json']
+#   schedule:
+#     - cron: '30 21 * * *'   # 04:30 KRAT — доливка окна до утренних постов
 on:
-  push:
-    branches: [main]
-    paths: ['content/holidays/**', 'tools/schedule_posts.py', 'state-*.json']
-  schedule:
-    - cron: '30 21 * * *'   # 04:30 KRAT — доливка окна до утренних постов
   workflow_dispatch:
     inputs:
       days:
