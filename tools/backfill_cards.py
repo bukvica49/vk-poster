@@ -1,6 +1,5 @@
 #!/usr/bin/env python3
-"""backfill_cards.py v2 — стена + перепосты; славянская дата из шапки поста.
-Токен: service_token (только чтение)."""
+"""backfill_cards.py v3 — стена + перепосты; дата из шапки; дозаполнение text_md."""
 import json, re, time, sys
 from pathlib import Path
 from datetime import datetime, timezone, timedelta
@@ -23,7 +22,7 @@ def vk(method, **p):
 def walk(items):
     for it in items:
         yield it
-        yield from walk(it.get("copy_history") or [])   # перепосты тоже смотрим
+        yield from walk(it.get("copy_history") or [])
 
 posts, off = [], 0
 while True:
@@ -38,66 +37,89 @@ while True:
     time.sleep(0.4)
 print("постов на стене:", len(posts))
 
-def norm(s):  # ѣ/є/э -> е, сдвоенные буквы схлопываем (Гэййлѣтъ -> гейлетъ)
+def norm(s):
     s = s.lower().replace("ѣ", "е").replace("є", "е").replace("э", "е")
     return re.sub(r"(.)\1+", r"\1", s)
 
+def canon(t):
+    t = re.sub(r"[^а-яёa-z0-9 ]+", " ", t.lower())
+    return re.sub(r"\s+", " ", norm(t)).strip()
+
 stems = sorted({norm(m)[:-1]: m for m in sc.SLAVIC_MONTHS}.items(),
-               key=lambda kv: -len(kv[0]))   # длинные сначала: дайлеть раньше айлѣтъ
+               key=lambda kv: -len(kv[0]))
 
 def slavic_from_text(text):
-    """Ищет '29-го Айлѣтъ' / '33 БЕЙЛЕТЪ' / '18 Тайлѣтъ' в шапке."""
     for line in text.splitlines():
         ln = norm(line)
-        for stem, canon in stems:
+        for stem, cn in stems:
             pos = ln.find(stem)
             if pos < 0:
                 continue
             m = re.search(r"(\d{1,2})\s*-?\s*го?\b\s*\S*\s*$", ln[:pos])
             if m and int(m.group(1)) <= 41:
-                return canon, int(m.group(1))
+                return cn, int(m.group(1))
     return None
 
-cards, known_texts, weekday_words = {}, set(), set()
+HEADER = re.compile(r"сего дня|лето|сороковник|смзх|с\.м\.з\.х")
+TITLE_RE = re.compile(r"^(⚡|✨|🔥|☀|День|Дѣнь|ДЕНЬ|Ночь|Славление|Входъ|Чертог)")
+
+cards, weekday_words = {}, set()
 for f in Path("content/holidays").glob("*.json"):
     d = json.loads(f.read_text(encoding="utf-8"))
-    known_texts.add(d.get("text", "").strip())
     sl = d.get("slavic") or {}
     if sl.get("month") and sl.get("day"):
         cards[(sl["month"], sl["day"])] = d
     if d.get("daily") or d.get("weekday"):
         w = d.get("text", "").split()
         if w:
-            weekday_words.add(w[0])
+            weekday_words.add(w[0].strip(".,:;!?"))
 
-HEADER = re.compile(r"сего дня|лето|сороковник|смзх|с\.м\.з\.х")
-TITLE_RE = re.compile(r"^(⚡|✨|🔥|☀|День|Дѣнь|ДЕНЬ|Ночь|Славление|Входъ|Чертог)")
+def first_title(text):
+    for line in (l.strip() for l in text.splitlines()):
+        if not line or HEADER.search(norm(line)):
+            continue
+        if line.split()[0].strip(".,:;!?") in weekday_words:
+            continue
+        return line
+    return None
 
-made, seen, other = [], set(), []
+made, seen, filled = [], set(), []
 for src in walk(posts):
     text = (src.get("text") or "").strip()
     if not text:
         continue
-    title = None
-    for line in (l.strip() for l in text.splitlines()):
-        if not line or HEADER.search(norm(line)):
-            continue
-        if line.split()[0] in weekday_words:
-            continue
-        title = line
-        break
+    title = first_title(text)
     if not title or not TITLE_RE.match(title):
-        dt = datetime.fromtimestamp(src["date"], KRAT).date()
-        other.append((dt, (title or text)[:60]))
         continue
-    if title in known_texts:
-        continue
+    ct = canon(title)
+    # дозаполнение существующей карточки
+    for d in cards.values():
+        if canon(d.get("text", "")) == ct:
+            changed = False
+            if not (d.get("text_md") or "").strip():
+                body = [l for l in text.splitlines()
+                        if l.strip() and l.strip() != title
+                        and not HEADER.search(norm(l))]
+                if body:
+                    d["text_md"] = "\n".join(body).strip()
+                    changed = True
+            if not d.get("vk_photo"):
+                ph = [a["photo"] for a in src.get("attachments", []) if a.get("type") == "photo"]
+                if ph:
+                    d["vk_photo"] = f"photo{ph[0]['owner_id']}_{ph[0]['id']}"
+                    changed = True
+            if changed:
+                Path(f"content/holidays/{d['slug']}.json").write_text(
+                    json.dumps(d, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
+                filled.append(d["slug"])
+            break
+    # создание недостающих
     sl = slavic_from_text(text)
     if not sl:
-        continue                                  # шапки нет — дату не угадываем
+        continue
     month, day = sl
     dt = datetime.fromtimestamp(src["date"], KRAT)
-    g = sc.to_gregorian(month, day, start=datetime(dt.year, 1, 1))
+    g = sc.to_gregorian(month, day, start=datetime(dt.year, 1, 1).date())
     gdate = g if g else dt.date()
     key = (month, day)
     ex = cards.get(key)
@@ -108,13 +130,13 @@ for src in walk(posts):
     if key in seen:
         continue
     slug = re.sub(r"[^а-яё0-9]+", "-", title.lower()).strip("-")[:40]
-    photos = [a["photo"] for a in src.get("attachments", []) if a.get("type") == "photo"]
+    ph = [a["photo"] for a in src.get("attachments", []) if a.get("type") == "photo"]
     card = {
         "slug": slug,
         "date": gdate.strftime("%m-%d"),
         "slavic": {"month": month, "day": day},
         "text": title,
-        "vk_photo": f"photo{photos[0]['owner_id']}_{photos[0]['id']}" if photos else None,
+        "vk_photo": f"photo{ph[0]['owner_id']}_{ph[0]['id']}" if ph else None,
         "post_time": "18:00",
     }
     p = Path(f"content/holidays/{slug}.json")
@@ -126,6 +148,6 @@ for src in walk(posts):
 print(f"создано карточек: {len(made)}")
 for g, t, name in made:
     print("  +", g, name, "|", t[:50])
-print(f"не похоже на праздник: {len(other)}")
-for g, t in other[:15]:
-    print("  -", g, t)
+print(f"дозаполнено карточек: {len(filled)}")
+for s in filled:
+    print("  ~", s)
