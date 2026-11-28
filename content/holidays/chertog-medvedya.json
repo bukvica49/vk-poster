@@ -5,13 +5,8 @@
     "month": "Бейлѣтъ",
     "day": 29
   },
-  "date_to": "01-30",
   "chertog": "Медведь",
   "text": "⚡ Входъ въ Чертогъ Медведя ⚡",
   "image": "/images/Медведь.jpg",
-  "post_time": "18:30",
-  "slavic_to": {
-    "month": "Гэйлѣтъ",
-    "day": 11
-  }
+  "post_time": "18:30"
 }

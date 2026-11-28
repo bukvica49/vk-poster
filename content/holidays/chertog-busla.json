@@ -5,13 +5,8 @@
     "month": "Гэйлѣтъ",
     "day": 12
   },
-  "date_to": "02-24",
   "text": "⚡ Входъ въ Чертогъ Бусла ⚡",
   "image": "/images/Бусл.jpg",
   "chertog": "Бусл",
-  "post_time": "18:30",
-  "slavic_to": {
-    "month": "Гэйлѣтъ",
-    "day": 36
-  }
+  "post_time": "18:30"
 }
