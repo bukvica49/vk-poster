@@ -123,7 +123,7 @@ def main():
             if key in poster.load_state().get("posted", []):
                 skipped += 1; continue
             h = find_h(text, image_path)
-            post_hh, post_mm = 18, 0
+            post_hh, post_mm = 19, 0   # дни недели и посты без post_time — на 19:00
             if h:
                 pt = (h.get("post_time") or "").strip().replace("-", ":")
                 if pt and ":" in pt:
