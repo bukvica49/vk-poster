@@ -158,6 +158,11 @@ def main():
                 added += 1
                 time.sleep(1.0)
             except Exception as e:
+                if "already scheduled" in str(e):
+                    skipped += 1
+                    new_keys.append(key)   # слот занят: пост уже висит в отложке
+                    print(f"  = {d} «{text[:40]}» уже стоит в отложке (слот занят)")
+                    continue
                 errors += 1
                 print(f"  ✗ {d} «{text[:40]}»: {e}", file=sys.stderr)
                 time.sleep(3.0)
