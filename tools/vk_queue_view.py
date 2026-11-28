@@ -5,7 +5,20 @@
 import json, urllib.request, urllib.parse
 from datetime import datetime, timezone, timedelta
 
-TOKEN = open("vk_token.txt").read().strip()
+import json as _json
+_budget = _json.load(open("vk_budget.json", encoding="utf-8"))
+def _tokens(d):
+    if isinstance(d, dict):
+        for k, v in d.items():
+            yield from ((k, s) for s in _tokens(v))
+    elif isinstance(d, list):
+        for v in d: yield from _tokens(v)
+    elif isinstance(d, str) and len(d) > 30 and d.isalnum():
+        yield None, d
+_tok = [s for k, s in _tokens(_budget)]
+TOKEN = _tok[0] if _tok else ""
+if not TOKEN:
+    raise SystemExit("не нашёл токен в vk_budget.json — смотри ключи шагом 1")
 API = "https://api.vk.com/method/"
 p = dict(owner_id=-200796423, filter="postponed", count=100,
          access_token=TOKEN, v="5.199")

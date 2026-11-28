@@ -192,7 +192,7 @@ Actions → Schedule Posts (fill VK queue) → Run workflow → ветка main,
 
 ### Посмотреть отложку из терминала
     python3 tools/vk_queue_view.py
-Токен берётся из vk_token.txt (строку TOKEN поправить под своё хранение).
+Токен скрипт берёт сам из vk_budget.json (как и весь конвейер).
 Вывод: id поста, дата/время публикации, первые 60 символов текста.
 
 ### Праздники в окне
