@@ -117,7 +117,7 @@ def main():
                        key=poster._post_sort_key)
         if not items:
             continue
-        _slot_pos = {}
+        _slot_used = set()
         for text, image_path, info in items:
             key = f"{d.isoformat()}|{text}"
             if key in poster.load_state().get("posted", []):
@@ -131,9 +131,12 @@ def main():
                         a, b = pt.split(":", 1); post_hh, post_mm = int(a), int(b)
                     except Exception:
                         pass
-            sk = f"{post_hh:02d}:{post_mm:02d}"
-            pos = _slot_pos.get(sk, 0); _slot_pos[sk] = pos + 1
-            pub = datetime.combine(d, dtime(post_hh, post_mm)) + timedelta(minutes=pos * 30)
+            pub = datetime.combine(d, dtime(post_hh, post_mm))
+            while pub in _slot_used:
+                pub += timedelta(minutes=30)
+            _slot_used.add(pub)
+            sk = pub.strftime("%H:%M")
+            pos = (pub - datetime.combine(d, dtime(post_hh, post_mm))) // timedelta(minutes=30)
             if pub <= datetime.now() + timedelta(minutes=15):
                 skipped += 1; continue   # время прошло — сегодняшний слот ведёт постер
             head_txt = text.strip()[:60]
