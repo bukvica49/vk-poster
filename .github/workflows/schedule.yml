@@ -53,7 +53,7 @@ jobs:
           GIT_SSH_COMMAND: 'ssh -i ~/.ssh/deploy_key -o IdentitiesOnly=yes'
         run: |
           set -euo pipefail
-          python3 tools/schedule_posts.py --days=${{ inputs.days || '2' }}
+          python3 tools/schedule_posts.py --days=${{ inputs.days || '9' }}
 
       - name: Commit & push state
         if: always()
